@@ -48,6 +48,11 @@ function VideoSource(renderer, options) {
   var _options = {};
   if ( options != undefined ) _options = options;
 
+  if ( options.texture_size ) {
+    console.log("texture size now is: ", options.texture_size)
+    texture_size = options.texture_size
+  }
+
   _self.currentSrc = "https://virtualmixproject.com/video/placeholder.mp4"
   _self.type = "VideoSource"
   _self.bypass = true;

@@ -108,7 +108,7 @@ var Monitor = class {
         want to extend the original renderer with an extra scene, insteat of
         rewriting the whole thing
       */
-
+      
       // create an internal renderer
       _self.internal_renderer = new GlRenderer({element: options.element});
 
@@ -116,8 +116,7 @@ var Monitor = class {
       _self.internal_renderer.fragmentShader = _self.renderer.fragmentShader
       _self.internal_renderer.vertexShader = _self.renderer.vertexShader
 
-      // copy the uniforms and defines so far
-      _self.internal_renderer.customUniforms = _self.renderer.customUniforms
+      _self.internal_renderer.customUniforms =_self.renderer.customUniforms
       _self.internal_renderer.customDefines = _self.renderer.customDefines
 
       // add an output node
@@ -126,6 +125,8 @@ var Monitor = class {
       // initalize local rendering
       _self.internal_renderer.init()
       _self.internal_renderer.render()
+
+      
     }
 
     /** @function Addon#Monitor~update */
