@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <script src="https://virtualmixproject.com/javascripts/build/vendor-min.js"></script>
+    <script src="https://virtualmixproject.com/javascripts/build/mixer-min.js"></script>  
+  </head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; 
+    }
+  </style>
+  <body>
+
+    <!-- the only real html element you need -->
+    <canvas id="glcanvas"></canvas>    
+    
+    <script>
+
+      // set up renderer and video
+      var renderer = new GlRenderer();
+      var testSource1 = new GifSource(   renderer, { src: 'https://assets.mixkit.co/videos/302/302-720.mp4' } );
+      // var testSource2 = new VideoSource( renderer, { src: 'https://assets.mixkit.co/videos/348/348-720.mp4' } );
+      // var testSource2 = new VideoSource( renderer, { src: 'http://localhost:3001/video/veejays.mp4' } );
+      var testSource2 = new VideoSource( renderer, { src: 'http://localhost:3001/video/MVI_4313.MOV' } );
+      // var testSource2 = new VideoSource( renderer, { src: 'http://localhost:3001/video/prisme.mov' } );
+
+      // this is the actual code for the mixer
+      var mixer1 = new Mixer( renderer, { source1: testSource1, source2: testSource2 } );
+      // var mixer1 = new Mixer( renderer, { source1: testSource2 } );
+      var output = new Output( renderer, mixer1 )
+
+        // mixer1.pod(0)    // default shows Source 1
+        // mixer1.pod(1)    // shows Source 2
+        // mixer1.pod(0.5)  // shows both sources at 50%, not that this is darker as both add to only ~75% opacity
+        // mixer1.pod(0.75) // shows Source 1 at ~25% opacity and Source 2 at ~75% opacity ( ~90% total opacity )
+
+
+        //mixer1.pod(0.5) 
+
+      // start the renderer
+      renderer.init();
+      renderer.render();
+
+      
+
+      // done!
+    </script>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- https://github.com/patriciogonzalezvivo/glslCanvas?tab=readme-ov-file -->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>GlslCanvas</title>
+
+        <script type="text/javascript" src="https://rawgit.com/patriciogonzalezvivo/glslCanvas/master/dist/GlslCanvas.js"></script>
+        <!-- <script type="text/javascript" src="https://cdn.rawgit.com/github/fetch/master/fetch.js"></script> -->
+
+        <style>
+            body {
+                background: #101515;
+            }
+
+            #glslCanvas {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+            }​
+
+        </style>
+
+    </head>
+
+    <body>
+
+
+
+        <canvas id="glslCanvas" data-fragment="
+
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+uniform float u_time;
+uniform sampler2D u_tex0;
+uniform sampler2D u_tex1;
+
+void main() {
+
+    
+    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    st.x *= u_resolution.x/u_resolution.y;
+
+    // sample texture and output to screen
+    gl_FragColor = texture2D(u_tex0, st)  * texture2D(u_tex1, st).x;
+
+    /* vec3 color = vec3(0.);
+    color = vec3(st.x,st.y,abs(sin(u_time)));
+
+    gl_FragColor = vec4(color,1.0); */
+}
+
+" width="640px" height="480px" data-textures="/images/smily1.png,/images/animal.png" ></canvas>
+
+    </body>
+
+    <script>
+        var canvas = document.getElementById("glslCanvas");
+        var sandbox = new GlslCanvas(canvas);
+
+        canvas.style.width = '640px';
+        canvas.style.height = '480px';
+
+    </script>
+
+</html>

@@ -1,9 +1,1 @@
-{
-	"version": 3,
-	"file": "keytester.css",
-	"sources": [
-		"keytester.sass"
-	],
-	"names": [],
-	"mappings": "AAAA,AAAA,IAAI,CAAC;EACH,MAAM,EAAE,CAAC;EACT,OAAO,EAAE,CAAC,GAAG"
-}
+{"version":3,"sourceRoot":"","sources":["keytester.sass"],"names":[],"mappings":"AAAA;EACE;EACA","file":"keytester.css"}

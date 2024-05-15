@@ -71,13 +71,134 @@ function DistortionEffect( _renderer, _options ) {
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
     if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+      console.log("DistortionEffect REPLACE"); 
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
 `
+
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+  // uv.x *= 1.6; 
+  uv.y *= 0.6;
+  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+  if(len < radius){
+    return true;
+  }
+  return false;
+}
+
+bool tophTest(float a){
+  return true;
+}
+
 vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+  
   // normal
   if ( currentdistortioneffect == 1 ) {
     return texture2D( src, vUv ).rgba;
   }
+
+  // TOPHER_DIST_MIRROR_CIRCLES
+  if ( currentdistortioneffect == 100 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      //gl_FragColor = texture2D( src, vUv ).rgba;
+
+      vec2 uvs = vec2(uv);
+      
+      if ( uv.x < 0.0){
+          uvs.x -= x;
+          uvs *= scale;
+      }else{
+          uvs.x += x;
+          uvs *= scale;
+          uvs.x = - uvs.x;
+      }
+
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+  if ( currentdistortioneffect == 101 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.2;
+    float x = -0.2;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+  // TOPHER_DIST_CIRCLE_3 - 3 circles
+  if ( currentdistortioneffect == 102 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+
+    if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+     
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CENTER_CIRCLE
+  if ( currentdistortioneffect == 103 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.12;
+    float x = -0.0;
+    float y = +0.0;
+    float scale = 2.5;
+
+    if(mask_circle(uv, radius, x, y)) {
+
+      vec2 uvs = vec2(uv);
+      uvs *= scale;
+      
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+    return gl_FragColor;
+  }
+
+
+
 
   // phasing sides (test)
   if ( currentdistortioneffect == 2 ) {
@@ -122,6 +243,8 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
   //}
 
 /* custom_helpers */
+
+
 `
   );
 }

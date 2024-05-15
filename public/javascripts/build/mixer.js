@@ -2771,7 +2771,8 @@ function ColorEffect( _renderer, _options ) {
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
     if ( renderer.fragmentShader.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
+console.log("ColorEffect REPLACE");   
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
 `
 /*
 float rand ( float seed ) {
@@ -2799,8 +2800,61 @@ vec4 interlace(vec2 co, vec4 col) {
 }
 */
 
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+  uv.x *= 1.6; 
+  // uv.y *= 0.75;
+  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+  if(len < radius){
+    return true;
+  }
+  return false;
+}
+
 vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
   if ( currentcoloreffect == 1 ) return vec4( src.rgba );                                                                                              // normal
+
+
+  //toph lum
+  if ( currentcoloreffect == 100 ) {
+    float brightness = (src.r + src.g + src.b) / 3.0 / 3.0;
+
+    float alpha = .0;
+    if (extra < brightness){
+      alpha = 1.0;
+    }
+    return vec4( src.r, src.g, src.b, alpha );
+  }
+
+
+  // toph circle mask
+  if ( currentcoloreffect == 101 ) {
+    
+    // gl_FragCoord.xy; is 640x480
+    // u_resolution.xy is 640x480
+    /* vec2 uv = gl_FragCoord.xy; */
+    //vec2 uv = gl_FragCoord.xy/u_resolution.xy - 0.5; // 0 to 1
+    /* uv.x *= u_resolution.x/u_resolution.y; */
+
+    // return src;
+
+    // vec2 uv = vUv.xy;
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.2;
+    float x = -0.2;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      gl_FragColor = src;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+    }
+
+
+
+    return gl_FragColor;
+  }
 
   // negative
   // negative 3 (reversed channel)
@@ -2860,6 +2914,8 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
     float alpha = red + green + blue == .0 ? .0 : src.a;
     return vec4( red, green, blue, alpha );
   }
+
+
 
   // color key; Greenkey
   if ( currentcoloreffect == 51 ) {
@@ -3187,13 +3243,134 @@ function DistortionEffect( _renderer, _options ) {
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
     if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+      console.log("DistortionEffect REPLACE"); 
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
 `
+
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+  // uv.x *= 1.6; 
+  uv.y *= 0.6;
+  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+  if(len < radius){
+    return true;
+  }
+  return false;
+}
+
+bool tophTest(float a){
+  return true;
+}
+
 vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+  
   // normal
   if ( currentdistortioneffect == 1 ) {
     return texture2D( src, vUv ).rgba;
   }
+
+  // TOPHER_DIST_MIRROR_CIRCLES
+  if ( currentdistortioneffect == 100 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      //gl_FragColor = texture2D( src, vUv ).rgba;
+
+      vec2 uvs = vec2(uv);
+      
+      if ( uv.x < 0.0){
+          uvs.x -= x;
+          uvs *= scale;
+      }else{
+          uvs.x += x;
+          uvs *= scale;
+          uvs.x = - uvs.x;
+      }
+
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+  if ( currentdistortioneffect == 101 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.2;
+    float x = -0.2;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+  // TOPHER_DIST_CIRCLE_3 - 3 circles
+  if ( currentdistortioneffect == 102 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+
+    if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+     
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CENTER_CIRCLE
+  if ( currentdistortioneffect == 103 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.12;
+    float x = -0.0;
+    float y = +0.0;
+    float scale = 2.5;
+
+    if(mask_circle(uv, radius, x, y)) {
+
+      vec2 uvs = vec2(uv);
+      uvs *= scale;
+      
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+    return gl_FragColor;
+  }
+
+
+
 
   // phasing sides (test)
   if ( currentdistortioneffect == 2 ) {
@@ -3238,6 +3415,8 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
   //}
 
 /* custom_helpers */
+
+
 `
   );
 }
@@ -3590,6 +3769,239 @@ _self.update = function() {
   }
 }
 
+/**
+ * @summery
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @description
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @constructor GlRenderer
+ * @example
+ *    <!-- a Canvas element with id: glcanvas is required! -->
+ *    <canvas id="glcanvas"></canvas>
+ *
+ *
+ *    <script>
+ *      let renderer = new GlRenderer();
+ *
+ *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
+ *      let output = new Output( renderer, red )
+ *
+ *      renderer.init();
+ *      renderer.render();
+ *    </script>
+ */
+
+/*
+    We might try and change THREEJS and move to regl;
+    https://github.com/regl-project, http://regl.party/examples => video
+    133.6 => ~26kb
+ */
+
+var GlRenderer = function (_options) {
+  var _self = this;
+
+  /** Set uop options */
+  _self.options = { element: "glcanvas" };
+  if (_options != undefined) {
+    _self.options = _options;
+  }
+
+  // set up threejs scene
+  //_self.element = _self.options.element
+  _self.element = document.getElementById(_self.options.element);
+
+  _self.onafterrender = function () {};
+
+  // default
+  // window.innerWidth, window.innerHeight
+  _self.width = window.innerWidth; //_self.element.offsetWidth
+  _self.height = window.innerHeight; //_self.element.offsetHeight
+
+  _self.scene = new THREE.Scene();
+  _self.camera = new THREE.PerspectiveCamera(
+    75,
+    _self.width / _self.height,
+    0.1,
+    1000
+  );
+  _self.camera.position.z = 20;
+
+  // container for all elements that inherit init() and update()
+  _self.nodes = []; // sources modules and effects
+
+  // containers for custom customUniforms and customDefines
+  _self.customUniforms = {};
+  _self.customDefines = {};
+
+  // base config, screensize and time
+  var cnt = 0;
+  _self.customUniforms["time"] = { type: "f", value: cnt };
+  _self.customUniforms["screenSize"] = {
+    type: "v2",
+    value: new THREE.Vector2(_self.width, _self.height),
+  };
+
+  /**
+   * The vertex shader
+   * @member GlRenderer#vertexShader
+   */
+  _self.vertexShader = `
+    varying vec2 vUv;\
+    void main() {\
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
+      vUv = uv;\
+    }
+  `;
+
+  /**
+   * The fragment shader
+   * @member GlRenderer#fragmentShader
+   */
+  // base fragment shader
+  _self.fragmentShader = `
+    uniform float time;
+    uniform vec2 screenSize;
+
+    /* custom_uniforms */\
+    /* custom_helpers */\
+    varying vec2 vUv;\
+    void main() {\
+      /* custom_main */\
+    }
+  `;
+
+  // ---------------------------------------------------------------------------
+  /** @function GlRenderer.init */
+  _self.init = function () {
+    console.log("init renderer");
+    _self.glrenderer = new THREE.WebGLRenderer({
+      canvas: glcanvas,
+      alpha: false,
+    });
+
+    // init nodes
+    // reset the renderer, for a new lay out
+    /**
+     * All the nodes currently added to this renderer
+     * @member GlRenderer#nodes
+     */
+    _self.nodes.forEach(function (n) {
+      n.init();
+    });
+
+    // create the shader
+    _self.shaderMaterial = new THREE.ShaderMaterial({
+      uniforms: _self.customUniforms,
+      defines: _self.customDefines,
+      vertexShader: _self.vertexShader,
+      fragmentShader: _self.fragmentShader,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+
+    // apply the shader material to a surface
+    _self.flatGeometry = new THREE.PlaneGeometry(67, 38);
+    _self.flatGeometry.translate(0, 0, 0);
+    _self.surface = new THREE.Mesh(_self.flatGeometry, _self.shaderMaterial);
+    // surface.position.set(60,50,150);
+
+    /**
+     * A reference to the threejs scene
+     * @member GlRenderer#scene
+     */
+    _self.scene.add(_self.surface);
+  };
+
+  // ---------------------------------------------------------------------------
+
+  /** @function GlRenderer.render */
+  _self.render = function () {
+    requestAnimationFrame(_self.render);
+    _self.glrenderer.render(_self.scene, _self.camera);
+    _self.onafterrender();
+    _self.glrenderer.setSize(_self.width, _self.height);
+    _self.nodes.forEach(function (n) {
+      n.update();
+    });
+
+    cnt++;
+    _self.customUniforms["time"].value = cnt;
+  };
+
+  // update size!
+  _self.resize = function () {
+    _self.customUniforms["screenSize"] = {
+      type: "v2",
+      value: new THREE.Vector2(_self.width, _self.height),
+    };
+
+    // resize viewport (write exception for width >>> height, now gives black bars )
+    _self.camera.aspect = _self.width / _self.height;
+    _self.camera.updateProjectionMatrix();
+    _self.glrenderer.setSize(_self.width, _self.height);
+  };
+
+  window.addEventListener("resize", function () {
+    _self.resize();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+
+  // adds nodes to the renderer
+  // function is implicit, and is colled by the modules
+  _self.add = function (module) {
+    _self.nodes.push(module);
+  };
+
+  // reset the renderer, for a new lay out
+  /**
+   * Disposes the renderer
+   * @function GlRenderer#dispose
+   */
+  _self.dispose = function () {
+    _self.shaderMaterial;
+    _self.flatGeometry;
+    _self.scene.remove(_self.surface);
+    _self.glrenderer.resetGLState();
+    _self.customUniforms = {};
+    _self.customDefines = {};
+
+    cnt = 0;
+    _self.customUniforms["time"] = { type: "f", value: cnt };
+    _self.customUniforms["screenSize"] = {
+      type: "v2",
+      value: new THREE.Vector2(_self.width, _self.height),
+    };
+
+    // reset the vertexshader
+    _self.vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        vUv = uv;
+      }
+    `;
+
+    // reset the fragment shader
+    _self.fragmentShader = `
+      uniform int time;
+      uniform vec2 screenSize;
+
+      /* custom_uniforms */
+      /* custom_helpers */
+      varying vec2 vUv;
+      void main() {
+        /* custom_main */
+      }
+    `;
+
+    _self.nodes = [];
+  };
+};
+
 
 /**
  * @summery
@@ -3621,189 +4033,401 @@ _self.update = function() {
     133.6 => ~26kb
  */
 
-var GlRenderer = function( _options ) {
+    var GlRenderer = function( _options ) {
 
-  var _self = this
+      var _self = this
+    
+      /** Set uop options */
+      _self.options = { element: 'glcanvas' }
+      if ( _options != undefined ) {
+        _self.options = _options
+      }
+    
+      // set up threejs scene
+      if ( _self.options.canvas ) {
+        _self.element = _self.options.canvas
+      } else {
+        _self.element = document.getElementById(_self.options.element)
+      }
+    
+      _self.onafterrender = function() {}
+      
+      // default
+      // window.innerWidth, window.innerHeight
+      if ( _self.options.width && _self.options.height  ) {
+        _self.width = _self.options.width
+        _self.height = _self.options.height
+      }else{
+        _self.width = window.innerWidth //_self.element.offsetWidth
+        _self.height = window.innerHeight //_self.element.offsetHeight
+      }
+    
+      _self.scene = new THREE.Scene();
+      _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
+      _self.camera.position.z = 20
+    
+      // container for all elements that inherit init() and update()
+      _self.nodes = [] // sources modules and effects
+    
+      // containers for custom customUniforms and customDefines
+      _self.customUniforms = {}
+      _self.customDefines = {}
+    
+      // base config, screensize and time
+      var cnt = 0.;
+      _self.customUniforms['time'] = { type: "f", value: cnt }
+      _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+    
+      /**
+       * The vertex shader
+       * @member GlRenderer#vertexShader
+       */
+      _self.vertexShader = `
+        varying vec2 vUv;\
+        void main() {\
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
+          vUv = uv;\
+        }
+      `
+    
+       /**
+        * The fragment shader
+        * @member GlRenderer#fragmentShader
+        */
+         // base fragment shader
+      _self.fragmentShader = `
+        uniform float time;
+        uniform vec2 screenSize;
+    
+        /* custom_uniforms */\
+        /* custom_helpers */\
+        varying vec2 vUv;\
+        void main() {\
+          /* custom_main */\
+        }
+      `
+    
+      // ---------------------------------------------------------------------------
+      /** @function GlRenderer.init */
+      _self.init = function(  ) {
+        console.log("init renderer")
+        //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
+        _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
+    
+        // init nodes
+        // reset the renderer, for a new lay out
+        /**
+         * All the nodes currently added to this renderer
+         * @member GlRenderer#nodes
+         */
+        _self.nodes.forEach(function(n){ n.init() });
+    
+        // create the shader
+        _self.shaderMaterial = new THREE.ShaderMaterial({
+           uniforms: _self.customUniforms,
+           defines: _self.customDefines,
+           vertexShader: _self.vertexShader,
+           fragmentShader: _self.fragmentShader,
+           side: THREE.DoubleSide,
+           transparent: true
+        })
+    
+        // apply the shader material to a surface
+        _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
+        _self.flatGeometry.translate( 0, 0, 0 );
+        _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
+        // surface.position.set(60,50,150);
+    
+        /**
+         * A reference to the threejs scene
+         * @member GlRenderer#scene
+         */
+        _self.scene.add( _self.surface );
+      }
+    
+      // ---------------------------------------------------------------------------
+    
+      /** @function GlRenderer.render */
+      _self.render = function() {
+        requestAnimationFrame( _self.render );
+        _self.glrenderer.render( _self.scene, _self.camera );
+        _self.onafterrender()
+        _self.glrenderer.setSize( _self.width, _self.height );
+        _self.nodes.forEach( function(n) { n.update() } );
+    
+        cnt++;
+        _self.customUniforms['time'].value = cnt;
+      }
+    
+      // update size!
+      _self.resize = function() {
+    
+        if ( _self.options.autosize ) {
+          _self.height = window.innerHeight
+          _self.width = window.innerWidth
+        }
+        
+        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+        // console.log("resize", _self.width, _self.height)
+        // resize viewport (write exception for width >>> height, now gives black bars )
+        _self.camera.aspect = _self.width / _self.height;
+        _self.camera.updateProjectionMatrix();
+        _self.glrenderer.setSize( _self.width, _self.height );
+      }
+    
+      window.addEventListener('resize', function() {
+        _self.resize()
+      })
+    
+      // ---------------------------------------------------------------------------
+      // Helpers
+    
+      // adds nodes to the renderer
+      // function is implicit, and is colled by the modules
+      _self.add = function( module ) {
+        _self.nodes.push( module )
+      }
+    
+      // reset the renderer, for a new lay out
+      /**
+       * Disposes the renderer
+       * @function GlRenderer#dispose
+       */
+      _self.dispose = function() {
+        _self.shaderMaterial
+        _self.flatGeometry
+        _self.scene.remove(_self.surface)
+        _self.glrenderer.resetGLState()
+        _self.customUniforms = {}
+        _self.customDefines = {}
+    
+        cnt = 0.;
+        _self.customUniforms['time'] = { type: "f", value: cnt }
+        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+    
+        // reset the vertexshader
+        _self.vertexShader = `
+          varying vec2 vUv;
+          void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            vUv = uv;
+          }
+        `
+    
+        // reset the fragment shader
+        _self.fragmentShader = `
+          uniform int time;
+          uniform vec2 screenSize;
+    
+          /* custom_uniforms */
+          /* custom_helpers */
+          varying vec2 vUv;
+          void main() {
+            /* custom_main */
+          }
+        `
+    
+        _self.nodes = []
+      }
+    }
+    
 
-  /** Set uop options */
-  _self.options = { element: 'glcanvas' }
-  if ( _options != undefined ) {
-    _self.options = _options
-  }
+/**
+  * @summary
+  *  takes a mapping file and copies the output from ant to the configuration
+  * @description
+  *  takes a node somewhere in your network, and copies the output according
+  *  to the mapping fike, a json file that configures the ins and outs of
+  *  the map and slices. Might take multiple source, might render multiple outputs
+  * @example
+  *  Not available yet
+  */
 
-  // set up threejs scene
-  //_self.element = _self.options.element
-  _self.element = document.getElementById(_self.options.element)
 
-  _self.onafterrender = function() {}
+var Mapping = class {
+
+    // information functions
+    static function_list() {
+      return []
+    }
   
-  // default
-  // window.innerWidth, window.innerHeight
-  _self.width = window.innerWidth //_self.element.offsetWidth
-  _self.height = window.innerHeight //_self.element.offsetHeight
-
-  _self.scene = new THREE.Scene();
-  _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
-  _self.camera.position.z = 20
-
-  // container for all elements that inherit init() and update()
-  _self.nodes = [] // sources modules and effects
-
-  // containers for custom uniforms and cosutomDefines
-  _self.customUniforms = {}
-  _self.customDefines = {}
-
-  // base config, screensize and time
-  var cnt = 0.;
-  _self.customUniforms['time'] = { type: "f", value: cnt }
-  _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-
-  /**
-   * The vertex shader
-   * @member GlRenderer#vertexShader
-   */
-  _self.vertexShader = `
-    varying vec2 vUv;\
-    void main() {\
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
-      vUv = uv;\
+    static help() {
+      return "ownoes"
     }
-  `
-
-   /**
-    * The fragment shader
-    * @member GlRenderer#fragmentShader
-    */
-     // base fragment shader
-  _self.fragmentShader = `
-    uniform float time;
-    uniform vec2 screenSize;
-
-    /* custom_uniforms */\
-    /* custom_helpers */\
-    varying vec2 vUv;\
-    void main() {\
-      /* custom_main */\
+  
+    constructor( renderer, options ) {
+  
+      // create and instance
+      var _self = this;
+      if (renderer == undefined) return
+  
+      // set or get uid
+      if ( options.uuid == undefined ) {
+        _self.uuid = "Mapping_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+      } else {
+        _self.uuid = options.uuid
+      }
+  
+      _self.renderer = renderer
+      _self.source = options.source
+  
+      // add to renderer
+      renderer.add(_self)
+  
+      // set options
+      var _options;
+      if ( options != undefined ) _options = options
+  
+      // set type
+      _self.type = "Module";
+      _self.internal_renderer = null
+  
+      /**
+       * @description
+       *  initializes the mapping through the (main) renderer
+       * @example
+       *  none
+       * @function Addon#Mapping~init
+       */
+  
+      _self.init = function() {
+  
+        /* TODO: rewrite into scenes?
+  
+          https://discourse.threejs.org/t/how-can-i-copy-a-webglrendertarget-texture-to-a-canvas/6897
+          https://threejs.org/examples/webgl_multiple_canvases_grid.html
+          https://stackoverflow.com/questions/41841441/three-js-drawing-texture-directly-to-canvas-without-creating-a-plane-in-a-bill
+          https://threejs.org/docs/#api/en/renderers/WebGLRenderer.copyTextureToTexture
+  
+          okay, so this works, but! it could be more robust,
+          if I read the documentation righg, there is a maximum of 8 canvasses
+          for WebGL, but one renderer can adress different canvasses, so we might
+          want to extend the original renderer with an extra scene, insteat of
+          rewriting the whole thing
+        */
+        
+  
+        // copy the fragment and vertex shader so far
+        /**
+         * The vertex shader
+         * @member GlRenderer#vertexShader
+         */
+          _self.vertexShader_test = `
+          varying vec2 vUv;\
+          void main() {\
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
+            vUv = uv;\
+          }
+        `
+  
+        /**
+          * The fragment shader
+          * @member GlRenderer#fragmentShader
+          */
+          // base fragment shader
+          _self.fragmentShader_test = `
+            uniform float time;
+            uniform vec2 screenSize;
+  
+            /* custom_uniforms */\
+            /* custom_helpers */\
+            varying vec2 vUv;\
+            void main() {\
+              /* custom_main */\
+            }
+          `
+       
+        // create an internal renderer
+        _self.internal_renderer = new GlRenderer({element: options.element});
+  
+        // copy the fragment and vertex shader so far
+        console.log(" fragment_shader: ")
+        // console.log(_self.renderer.fragmentShader)
+        _self.internal_renderer.fragmentShader = _self.renderer.fragmentShader
+        _self.internal_renderer.vertexShader = _self.renderer.vertexShader
+  
+        // copy the uniforms and defines so far
+        console.log(" uniforms: ")
+        console.log(_self.renderer.customUniforms)
+        
+        //_self_internal_uniforms = JSON.parse(JSON.stringify(_self.renderer.customUniforms));
+        //_self_internal_defines =  JSON.parse(JSON.stringify(_self.renderer.customDefines));
+        
+        //_self_internal_uniforms = structuredClone( _self.renderer.customUniforms  )
+        //_self_internal_defines = structuredClone( _self.renderer.customDefines  )
+  
+         
+        //_self_internal_uniforms = structuredClone( _self.renderer.customUniforms  )
+        //_self_internal_defines = structuredClone( _self.renderer.customDefines  )
+  
+  
+        _self.internal_renderer.customUniforms = _self.renderer.customUniforms
+        _self.internal_renderer.customDefines = _self.renderer.customDefines
+  
+        // add an output node
+        var internal_output = new Output( _self.internal_renderer, _self.source )
+  
+        // initalize local rendering
+        _self.internal_renderer.init()
+        _self.internal_renderer.render()
+      }
+  
+      /** @function Addon#Mapping~update */
+      /**
+       * @description
+       *  description
+       * @example
+       *  example
+       * @function Module#Mapping#update
+       *
+       */
+  
+      _self.update = function() {
+        // TODO: we could handle render update functions locally, this would allow
+        // to set lower framerate or color depth, making the previews less resource
+        // intensive.
+  
+        const sourceCanvas = document.getElementById('sourceCanvas');
+  
+      }
+  
+      /**
+       * @description
+       *  loads a pixelmap into the mapping addon
+       * @example
+       *  myMapping.load_pixelmap
+       * @function Addon#Mapping~load_pixelmap
+       */
+  
+      _self.mapping = {}
+      _self.load_pixelmap = function( _pixel_map ) {
+        var u = new Utils()
+        u.get( _pixel_map, function(d) {
+          _self.mapping = JSON.parse(d)
+        })
+      }
+  
+      /*
+        example mappings
+  
+        in: any node in the network
+        out: mapping windows
+        for each in we can have multiple outs?
+        
+        slice1: {
+          slice_in: { node: node, x: 0, y: 0, w: 1, h: 1 }
+          slice_out: [
+            { canvas: "monit1", x:0  , y:0, w:100, h:100 },
+            { canvas: "monit2", x:100, y:0, w:100, h:100 },
+            { canvas: "monit3", x:200, y:0, w:100, h:100 }, 
+          ]
+        },
+        slice2: {}
+      */
+  
     }
-  `
-
-  // ---------------------------------------------------------------------------
-  /** @function GlRenderer.init */
-  _self.init = function(  ) {
-    console.log("init renderer")
-    _self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
-
-    // init nodes
-    // reset the renderer, for a new lay out
-    /**
-     * All the nodes currently added to this renderer
-     * @member GlRenderer#nodes
-     */
-    _self.nodes.forEach(function(n){ n.init() });
-
-    // create the shader
-    _self.shaderMaterial = new THREE.ShaderMaterial({
-       uniforms: _self.customUniforms,
-       defines: _self.customDefines,
-       vertexShader: _self.vertexShader,
-       fragmentShader: _self.fragmentShader,
-       side: THREE.DoubleSide,
-       transparent: true
-    })
-
-    // apply the shader material to a surface
-    _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
-    _self.flatGeometry.translate( 0, 0, 0 );
-    _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-    // surface.position.set(60,50,150);
-
-    /**
-     * A reference to the threejs scene
-     * @member GlRenderer#scene
-     */
-    _self.scene.add( _self.surface );
   }
-
-  // ---------------------------------------------------------------------------
-
-  /** @function GlRenderer.render */
-  _self.render = function() {
-  	requestAnimationFrame( _self.render );
-  	_self.glrenderer.render( _self.scene, _self.camera );
-    _self.onafterrender()
-    _self.glrenderer.setSize( _self.width, _self.height );
-    _self.nodes.forEach( function(n) { n.update() } );
-
-    cnt++;
-    _self.customUniforms['time'].value = cnt;
-  }
-
-  // update size!
-  _self.resize = function() {
-    _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-
-    // resize viewport (write exception for width >>> height, now gives black bars )
-    _self.camera.aspect = _self.width / _self.height;
-    _self.camera.updateProjectionMatrix();
-    _self.glrenderer.setSize( _self.width, _self.height );
-  }
-
-  window.addEventListener('resize', function() {
-    _self.resize()
-  })
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-
-  // adds nodes to the renderer
-  // function is implicit, and is colled by the modules
-  _self.add = function( module ) {
-    _self.nodes.push( module )
-  }
-
-  // reset the renderer, for a new lay out
-  /**
-   * Disposes the renderer
-   * @function GlRenderer#dispose
-   */
-  _self.dispose = function() {
-    _self.shaderMaterial
-    _self.flatGeometry
-    _self.scene.remove(_self.surface)
-    _self.glrenderer.resetGLState()
-    _self.customUniforms = {}
-    _self.customDefines = {}
-
-    cnt = 0.;
-    _self.customUniforms['time'] = { type: "f", value: cnt }
-    _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-
-    // reset the vertexshader
-    _self.vertexShader = `
-      varying vec2 vUv;
-      void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        vUv = uv;
-      }
-    `
-
-    // reset the fragment shader
-    _self.fragmentShader = `
-      uniform int time;
-      uniform vec2 screenSize;
-
-      /* custom_uniforms */
-      /* custom_helpers */
-      varying vec2 vUv;
-      void main() {
-        /* custom_main */
-      }
-    `
-
-    _self.nodes = []
-  }
-}
-
+  
 /**
  * @constructor Module
  * @interface
@@ -4568,16 +5192,15 @@ var Monitor = class {
         want to extend the original renderer with an extra scene, insteat of
         rewriting the whole thing
       */
-
+      
       // create an internal renderer
-      _self.internal_renderer = new GlRenderer({element: options.element});
+      _self.internal_renderer = new GlRenderer(options);
 
       // copy the fragment and vertex shader so far
       _self.internal_renderer.fragmentShader = _self.renderer.fragmentShader
       _self.internal_renderer.vertexShader = _self.renderer.vertexShader
 
-      // copy the uniforms and defines so far
-      _self.internal_renderer.customUniforms = _self.renderer.customUniforms
+      _self.internal_renderer.customUniforms =_self.renderer.customUniforms
       _self.internal_renderer.customDefines = _self.renderer.customDefines
 
       // add an output node
@@ -4586,6 +5209,8 @@ var Monitor = class {
       // initalize local rendering
       _self.internal_renderer.init()
       _self.internal_renderer.render()
+
+      
     }
 
     /** @function Addon#Monitor~update */
@@ -4748,29 +5373,32 @@ vec4 '+_self.uuid+'_output = get_source_'+_self.uuid+'('+_self.uuid+'_active_sou
  * @author Sense studios
  */
 
-function Source( renderer, options ) {
-  var _self = this
+var Source = class Source {
+  constructor( renderer, options ) {
+      
+    var _self = this
 
-  _self.type = "Source"
-  _self.function_list = [["JUMP","method","jump"]]
+    _self.type = "Source"
+    _self.function_list = [["JUMP","method","jump"]]
 
-  // override these
-  // program interface
-  _self.init =         function() {}
-  _self.update =       function() {}
-  _self.render =       function() {}
-  _self.start =        function() {}
+    // override these
+    // program interface
+    _self.init =         function() {}
+    _self.update =       function() {}
+    _self.render =       function() {}
+    _self.start =        function() {}
 
-  // control interface
-  _self.src =          function( _file ) {} // .gif
-  _self.play =         function() {}
-  _self.pause =        function() {}
-  _self.paused =       function() {}
-  _self.currentFrame = function( _num ) {}  // seconds
-  _self.duration =     function() {}        // seconds
+    // control interface
+    _self.src =          function( _file ) {} // .gif
+    _self.play =         function() {}
+    _self.pause =        function() {}
+    _self.paused =       function() {}
+    _self.currentFrame = function( _num ) {}  // seconds
+    _self.duration =     function() {}        // seconds
 
-  _self.jump =         function() {}
-  //_self.cue =          function() {}      // still no solid solution
+    _self.jump =         function() {}
+    //_self.cue =          function() {}      // still no solid solution
+  }
 }
 
 GifSource.prototype = new Source(); // assign prototype to marqer
@@ -4948,9 +5576,13 @@ MultiVideoSource.constructor = MultiVideoSource;  // re-assign constructor
  *  In doing so it allows for very fast jumping through the video even when it is loading from a remote server.
  *  The main features are random jumping and a cue list, allowing for smart referincing in video files.
  *
+ * 
  * @implements Source
  * @constructor Source#MultiVideoSource
- * @example let myMultiVideoSource = new MultiVideoSource( renderer, { src: 'myfile.mp4', cues: [ 0, 10, 20, 30 ] } );
+ * @example 
+ * let myMultiVideoSource = new MultiVideoSource( renderer, { src: 'myfile.mp4', cues: [ 0, 10, 20, 30 ] } );
+ * myMultiVideoSource.jump();
+ * 
  * @param {GlRenderer} renderer - GlRenderer object
  * @param {Object} options - JSON Object, with src (file path) and cues, cuepoints in seconds
  */
@@ -5576,7 +6208,8 @@ function TextSource(renderer, options) {
   // _self.init()
 }
 
-VideoSource.prototype = new Source(); // assign prototype to marqer
+// old school way to define a class in javascripts
+VideoSource.prototype = new Source();   // assign prototype to Class
 VideoSource.constructor = VideoSource;  // re-assign constructor
 
 /**
@@ -5592,9 +6225,20 @@ VideoSource.constructor = VideoSource;  // re-assign constructor
 *
 * @implements Source
 * @constructor Source#VideoSource
-* @example let myVideoSource = new VideoSource( renderer, { src: 'myfile.mp4' } );
+* @example 
+* //create source
+* let myVideoSource = new VideoSource( renderer, { src: 'myfile.mp4' } );
+*
+* // add to mixer
+* someMixer = new Mixer( renderer, { source1: myVideoSource, source2: someOtherSource })
+*
+* // after init:
+* myVideoSource.jump()
+* myVideoSource.video.src = "anotherfile.mp4"
+* myVideoSource.video.playbackRate = 0.4
+*
 * @param {GlRenderer} renderer - GlRenderer object
-* @param {Object} options - JSON Object
+* @param {Object} options - (optional) JSON Object containing the initial src (source) and/or uuid
 */
 
 function VideoSource(renderer, options) {
@@ -5614,12 +6258,17 @@ function VideoSource(renderer, options) {
   var _options = {};
   if ( options != undefined ) _options = options;
 
+  if ( options.texture_size ) {
+    console.log("texture size now is: ", options.texture_size)
+    texture_size = options.texture_size
+  }
+
   _self.currentSrc = "https://virtualmixproject.com/video/placeholder.mp4"
   _self.type = "VideoSource"
   _self.bypass = true;
 
   // create elements (private)
-  var canvasElement, videoElement, canvasElementContext, videoTexture; // wrapperElemen
+  var canvasElement, videoElement, canvasElementContext, videoTexture; // wrapperElement
   var alpha = 1;
 
   // add to renderer
@@ -5707,18 +6356,22 @@ function VideoSource(renderer, options) {
     // set the uniforms
     renderer.customUniforms[_self.uuid] = { type: "t", value: videoTexture }
     renderer.customUniforms[_self.uuid+'_alpha'] = { type: "f", value: alpha }
-    // renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 0., 0. ) }
+    renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
     // renderer.customUniforms[_self.uuid+'_uvmap_mod'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
 
     // add uniform
     renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
     renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
-    // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
+    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
     // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
 
     // add main
     // split output in distorted and orig?
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */')
+    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', `
+      vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
+      /* custom_main */
+      `
+    )
 
     // expose video and canvas
     /**
@@ -5840,15 +6493,29 @@ function VideoSource(renderer, options) {
 
   // ===========================================================================
   // For now only here, move to _source?
+  // there should be a way te set up initial source data
   // ===========================================================================
+  /**
+   * @description skip to _time_ (in seconds) or gets `currentTime` in seconds
+   * @function Source#VideoSource#setUVMap
+   * @param {float} u - U (x) horizontal spacing for the texture, 1 is 1 texture, below zero is 'zooming' over 1 is tiling
+   * @param {float} v - V (y) vertical spacing for the texture, 1 is 1 texture, below zero is 'zooming' over 1 is tiling
+   * 
+   */
   _self.setUVMap = function( _x, _y ) {
      renderer.customUniforms[_self.uuid+'_uvmap'].value = new THREE.Vector2( _x, _y )
   }
 
+    /**
+   * @description Not used at this moment
+   * @function Source#VideoSource#setUVMapMod
+   * @param x (u)
+   * @param y (v)
+   */
   _self.setUVMapMod = function( _x, _y ) {
+    console.log(renderer.customUniforms)
     renderer.customUniforms[_self.uuid+'_uvmap_mod'].value = new THREE.Vector2( _x, _y )
   }
-
 
   _self.alpha = function(a) {
     if (a == undefined) {
@@ -5869,8 +6536,8 @@ function VideoSource(renderer, options) {
     // check num, with error handling
     if ( _num == undefined || isNaN(_num) ) {
       try {
-        // var jumpto = Math.floor( ( Math.random() * videoElement.duration ) )
-        var jumpto = Math.floor( ( Math.random() * videoElement.video.buffered.end(0) ) )        
+        // var jumpto = Math.floor( ( Math.random() * videoElement.duration ) )        
+        var jumpto = Math.floor( ( Math.random() * videoElement.buffered.end(0) ) )        
         console.log("jump to ", jumpto)
         videoElement.currentTime = jumpto
       }catch(e){

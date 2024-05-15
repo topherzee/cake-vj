@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <script src="/javascripts/build/vendor-min.js"></script>
+    <script src="/javascripts/build/mixer-min.js"></script>  
+  </head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; 
+    }
+
+    #mainGLCanvas {
+      width: 100px;
+      height: 100px;
+      left: 0;
+      top: 0;
+
+    }
+
+    #monitor1-GLCanvas {
+      width: 100px;
+      height: 100px;
+      right: 0;
+      top: 0;
+
+    }
+  </style>
+  <body>
+
+    <!-- the only real html element you need -->
+    <canvas id="mainGLCanvas" ></canvas>    
+    <canvas id="monitor1-GLCanvas" ></canvas>    
+    
+    <script>
+
+      // set up renderer and video
+      var renderer = new GlRenderer({element: 'mainGLCanvas'});
+
+      var source1 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 grate 03 texture_0640.mp4",
+});
+var source2 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 container 02 scape_0640.mp4",
+});
+var source3 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 poles 01 pure_0640.mp4",
+});
+var source4 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 wires 03 shift_0640.mp4",
+});
+
+      // this is the actual code for the mixer
+      var mixer1 = new Mixer( renderer, { source1: source1, source2: source4 } );
+
+      var mixer2 = new Mixer( renderer, { source1: mixer1, source2: source3 } );
+
+      // preview out
+var monitor = new Monitor( renderer, { source: source3, element: 'monitor1-GLCanvas' })
+
+      // var mixer1 = new Mixer( renderer, { source1: testSource2 } );
+      var output = new Output( renderer, mixer1 )
+
+            // // start the renderer
+            renderer.init();
+      renderer.render();
+
+      //   // mixer1.pod(0)    // default shows Source 1
+      //   // mixer1.pod(1)    // shows Source 2
+      //   // mixer1.pod(0.5)  // shows both sources at 50%, not that this is darker as both add to only ~75% opacity
+      //   //mixer1.pod(0.75) // shows Source 1 at ~25% opacity and Source 2 at ~75% opacity ( ~90% total opacity )
+
+      mixer1.pod(0.9) 
+      // mixer2.pod(0.5) 
+
+      // mixer1.blendMode(3)
+      mixer2.blendMode(14)
+
+
+      // var c = 0;
+      //   var f = 0;
+      //   setInterval( function() {
+      //     c += 0.1 // << try and change this in 0.1
+      //     f = ( Math.sin(c) * 0.5 ) + 0.5  
+      //     mixer1.pod ( f );
+      //   }, 1)
+              
+
+      // done!
+    </script>
+  </body>
+</html>

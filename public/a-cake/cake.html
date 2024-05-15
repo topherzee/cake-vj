@@ -1,0 +1,200 @@
+<html>
+
+<head>
+    <title>CAKE VJ</title>
+    <script src="/javascripts/build/vendor.js"></script>
+    <script src="/javascripts/build/mixer.js"></script>
+
+    <script src="/live.js"></script> 
+
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="cake.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<style>
+#glcanvas{
+ 
+}
+.monitor{
+
+}
+
+.layer_stack{
+    width: 128px;
+    display:inline-block;
+}
+
+.layer_fader{
+    width: 50px;
+    height: 96px;
+    display:inline-block;
+    background-color:blue;
+    vertical-align:top;
+}
+
+.layer_controls{
+    color:white;
+    width:128px;
+}
+
+.layer_fader_input{
+    transform: rotateZ(-90deg);
+    width: 80px;
+    top: 40px;
+    position: relative;
+  }
+
+  .layer_time_input{
+    width: 120px;
+  }
+  .layer_speed_input{
+    width: 80px;
+  }
+  .layer_effect_input{
+    width: 120px;
+  }
+  
+
+.monitor{
+    display:inline-block;
+}
+
+</style>
+</head>
+
+<body>
+    <a class="logo" href="/"></a>
+   
+    <div id="cake-mixer">
+        <div class="monitor_final">
+            <canvas id="glcanvas" width="400" height="300" style=""></canvas>
+        </div>
+
+        <div id="layer_2"class="layer">
+            <div class="layer_stack">
+                <canvas id="monitor_2" class="monitor"></canvas>
+                <div class="layer_controls">
+                    <input id="layer_2_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
+                    <input id="layer_2_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
+                    <div class="layer_blendmode_select">
+                        <select id="layer_2_blendmode"></select>
+                    </div>
+                    EFFECT
+                    <input id="layer_2_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
+                </div>
+            </div>
+            <div class="layer_fader">
+                   <!-- effects_a_control -->
+                   <input id="layer_2_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
+            </div>
+            
+        </div>
+
+        <div id="layer_1"class="layer">
+            <div class="layer_stack">
+                <canvas id="monitor_1" class="monitor"></canvas>
+                <div class="layer_controls">
+                    <input id="layer_1_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
+                    <input id="layer_1_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
+                    EFFECT
+                    <input id="layer_1_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
+                 </div>
+            </div>
+            <div class="layer_fader">
+                   <!-- effects_a_control -->
+                   <input id="layer_1_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
+            </div>
+            
+        </div>
+
+
+
+   </div>
+    
+    <div id="mixer">
+
+        <div class="switch_a">
+            <button class="" id="btn_switch_a_1"></button>
+            <button id="btn_switch_a_2" class=""></button>
+            <button id="btn_switch_a_3" class=""></button>
+            <button id="btn_switch_a_4" class="active"></button>
+        </div>
+
+        <div class="switch_b">
+            <button id="btn_switch_b_1" class="active"></button>
+            <button class="" id="btn_switch_b_2"></button>
+            <button id="btn_switch_b_3" class=""></button>
+            <button id="btn_switch_b_4" class=""></button>
+        </div>
+
+        <div class="bpm_control">
+            <div class="display" id="bpm_display">128</div>
+            <button id="bpm_tab"></button>
+            <input id="bpm_slide" type="range" min="20" max="240" step="1">
+        </div>
+
+        <div class="mix_control">
+            <button class="mix_control round greenish active" id="bpm_control_mix"></button>
+            <button class="mix_control round greenish" id="bpm_control_wipe"></button>
+            <button class="mix_control round greenish" id="bpm_control_efx"></button>
+            <button class="round redish" id="bpm_control_bpm_sync"></button>
+        </div>
+
+        <div class="main_pod">
+            <input id="main_pod" type="range" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="effects_a">
+            <button class="effect_a round" id="btn_effects_a_1">
+                <label>MONO</label>
+            </button>
+            <button class="effect_a round" id="btn_effects_a_2">
+                <label>NEGA </label>
+            </button>
+            <button class="effect_a round" id="btn_effects_a_3">
+                <label>B-KEY </label>
+            </button>
+            <button class="effect_a round" id="btn_effects_a_4">
+                <label>COLRZ2 </label>
+            </button>
+        </div>
+
+        <div class="effects_a_control">
+            <input id="effects_a_control" type="range" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="effects_b">
+            <button class="effect_b round " id="btn_effects_b_1">
+                <label>PAINT</label>
+            </button>
+            <button class="effect_b round " id="btn_effects_b_2">
+                <label>MULTI</label>
+            </button>
+            <button class="effect_b round " id="btn_effects_b_3">
+                <label>PiP</label>
+            </button>
+            <button class="effect_b round" id="btn_effects_b_4">
+                <label>FDBCK</label>
+            </button>
+        </div>
+
+        <div class="effects_b_control">
+            <input id="effects_b_control" type="range" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="transform_a">
+            <button id="btn_transform_a"></button>
+        </div>
+
+        <div class="transform_b">
+            <button id="btn_transform_b"></button>
+        </div>
+
+        <div class="dark"></div>
+
+    </div>
+    <script src="cake.js"></script>
+ 
+</body>
+
+</html>

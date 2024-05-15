@@ -99,7 +99,8 @@ function ColorEffect( _renderer, _options ) {
     _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
     if ( renderer.fragmentShader.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
+console.log("ColorEffect REPLACE");   
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
 `
 /*
 float rand ( float seed ) {
@@ -127,8 +128,61 @@ vec4 interlace(vec2 co, vec4 col) {
 }
 */
 
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+  uv.x *= 1.6; 
+  // uv.y *= 0.75;
+  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+  if(len < radius){
+    return true;
+  }
+  return false;
+}
+
 vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
   if ( currentcoloreffect == 1 ) return vec4( src.rgba );                                                                                              // normal
+
+
+  //toph lum
+  if ( currentcoloreffect == 100 ) {
+    float brightness = (src.r + src.g + src.b) / 3.0 / 3.0;
+
+    float alpha = .0;
+    if (extra < brightness){
+      alpha = 1.0;
+    }
+    return vec4( src.r, src.g, src.b, alpha );
+  }
+
+
+  // toph circle mask
+  if ( currentcoloreffect == 101 ) {
+    
+    // gl_FragCoord.xy; is 640x480
+    // u_resolution.xy is 640x480
+    /* vec2 uv = gl_FragCoord.xy; */
+    //vec2 uv = gl_FragCoord.xy/u_resolution.xy - 0.5; // 0 to 1
+    /* uv.x *= u_resolution.x/u_resolution.y; */
+
+    // return src;
+
+    // vec2 uv = vUv.xy;
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.2;
+    float x = -0.2;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      gl_FragColor = src;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+    }
+
+
+
+    return gl_FragColor;
+  }
 
   // negative
   // negative 3 (reversed channel)
@@ -188,6 +242,8 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
     float alpha = red + green + blue == .0 ? .0 : src.a;
     return vec4( red, green, blue, alpha );
   }
+
+
 
   // color key; Greenkey
   if ( currentcoloreffect == 51 ) {

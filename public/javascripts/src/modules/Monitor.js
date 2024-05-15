@@ -110,7 +110,7 @@ var Monitor = class {
       */
       
       // create an internal renderer
-      _self.internal_renderer = new GlRenderer({element: options.element});
+      _self.internal_renderer = new GlRenderer(options);
 
       // copy the fragment and vertex shader so far
       _self.internal_renderer.fragmentShader = _self.renderer.fragmentShader

@@ -5,3 +5,10 @@ ignore
 /ignore/
 /public/video/ignore/
 public/video/ignore
+
+# Toppher Added
+public/video/
+public/images/
+
+docs/reference/
+public/javascripts/build/

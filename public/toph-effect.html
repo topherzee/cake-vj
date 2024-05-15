@@ -1,0 +1,110 @@
+<html>
+  <head>
+    <!-- <script src="https://virtualmixproject.com/javascripts/build/vendor-min.js"></script>
+    <script src="https://virtualmixproject.com/javascripts/build/mixer-min.js"></script>   -->
+    <script src="/javascripts/build/vendor-min.js"></script>
+    <script src="/javascripts/build/mixer-min.js"></script> 
+    <script src="/live.js"></script> 
+  </head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; 
+    }
+
+    #glcanvas {
+      width: 640px;
+      height: 480px;
+
+    }
+
+    #canvasPlacer{
+      width:640px;
+      height:480px;
+    }
+  </style>
+  <body>
+
+    <div id="canvasPlacer">
+    <canvas id="glcanvas" ></canvas>    
+    </div>
+    <script>
+
+      // set up renderer and video
+      var renderer = new GlRenderer();
+
+      var source1 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 grate 03 texture_0640.mp4",
+});
+var source2 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 container 02 scape_0640.mp4",
+});
+var source3 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 poles 01 pure_0640.mp4",
+});
+var source4 = new VideoSource(renderer, {
+  src: "/video/DCVS01/DCVS01 wires 03 shift_0640.mp4",
+});
+
+var source5 = new GifSource(renderer, {
+  src: "/images/smily1.gif",
+});
+
+var source6 = new GifSource(renderer, {
+  src: "/images/640x480.gif",
+});
+
+// this is the actual code for the mixer
+// var mixer1 = new Mixer( renderer, { source1: source1, source2: source4 } );
+// var mixer1 = new Mixer( renderer, { source1: testSource2 } );
+
+// var contrast = new ColorEffect( renderer, { source: mixer1 } )
+
+// var mixer1 = new Mixer( renderer, { source1: source1, source2: source4 } );
+var c_effect = new DistortionEffect( renderer, { source: source4, effect: 6 } )
+
+var mixer2 = new Mixer( renderer, { source1: source2, source2: c_effect } );
+
+
+var output = new Output( renderer, mixer2 )
+// var output = new Output( renderer, c_effect )
+// var output = new Output( renderer, c_effect )
+
+renderer.init();
+renderer.render();
+
+mixer2.pod(0)
+c_effect.effect(6)
+
+
+
+// var contrast = new ColorEffect( renderer, { source: mixer1 } )
+// var c_effect = new DistortionEffect( renderer, { source: source4, effect: 4 } )
+
+// // var output = new Output( renderer, mixer1 )
+// var output = new Output( renderer, c_effect )
+
+// renderer.init();
+// renderer.render();
+
+// c_effect.effect(4)
+
+
+// add some effects
+// var contrast = new ColorEffect( renderer, { source: mixer1 } )
+// var c_effect = new ColorEffect( renderer, { source: contrast } )
+
+// // var output = new Output( renderer, mixer1 )
+// var output = new Output( renderer, c_effect )
+
+// // // start the renderer
+// renderer.init();
+// renderer.render();
+
+// c_effect.effect(2)
+// contrast.effect(61)
+// contrast.extra(0.4)
+    </script>
+  </body>
+</html>

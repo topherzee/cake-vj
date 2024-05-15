@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- https://github.com/patriciogonzalezvivo/glslCanvas?tab=readme-ov-file -->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>GlslCanvas</title>
+
+        <script type="text/javascript" src="https://rawgit.com/patriciogonzalezvivo/glslCanvas/master/dist/GlslCanvas.js"></script>
+
+        <style>
+            body {
+                background: #101515;
+            }
+            #glslCanvas {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+            }​
+        </style>
+        <script src="/live.js"></script> 
+    </head>
+
+    <body>
+
+        <canvas id="glslCanvas" data-fragment="
+
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+uniform float u_time;
+uniform sampler2D u_tex0; //squirrel
+uniform sampler2D u_tex1; //face
+
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+    /* uv.x *= 1.33; */
+    uv.y *= 0.75;
+    float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+    if(len < radius){
+    	return true;
+    }
+    return false;
+}
+
+void main() {
+
+    // gl_FragCoord.xy; is 640x480
+    // u_resolution.xy is 640x480
+    /* vec2 uv = gl_FragCoord.xy; */
+    vec2 uv = gl_FragCoord.xy/u_resolution.xy - 0.5; // 0 to 1
+    /* uv.x *= u_resolution.x/u_resolution.y; */
+
+    float radius = 0.09;
+    float x = -0.4;
+    float y = 0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+
+        vec2 uvs = vec2(uv);
+        
+        if ( uv.x < 0.0){
+            uvs.x -= x;
+            uvs *= scale;
+        }else{
+            uvs.x += x;
+            uvs *= scale;
+            uvs.x = - uvs.x;
+        }
+
+        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else{
+            vec4 pixelColor = texture2D(u_tex0, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+            gl_FragColor = vec4(pixelColor);
+        }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.1, 1.0);	
+    }
+}
+
+"  data-textures="/images/animal.png,/images/smily1.png" ></canvas>
+
+    </body>
+
+    <script>
+        var canvas = document.getElementById("glslCanvas");
+        var sandbox = new GlslCanvas(canvas);
+
+        canvas.style.width = '640px';
+        canvas.style.height = '480px';
+
+    </script>
+
+</html>
