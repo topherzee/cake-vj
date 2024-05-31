@@ -89,6 +89,7 @@ function ColorEffect( _renderer, _options ) {
   if ( _options.extra != undefined ) currentExtra = _options.currentExtra
 
   _self.init = function() {
+    console.log("ColorEffect init"); 
     // add uniforms to renderer
     _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }

@@ -31,6 +31,8 @@
 
     var GlRenderer = function( _options ) {
 
+      console.log("START GlRenderer  -------------------")
+
       var _self = this
     
       /** Set uop options */
@@ -106,7 +108,7 @@
       // ---------------------------------------------------------------------------
       /** @function GlRenderer.init */
       _self.init = function(  ) {
-        console.log("init renderer")
+        console.log("INIT Renderer -------------------")
         //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
     
@@ -118,6 +120,7 @@
          */
         _self.nodes.forEach(function(n){ n.init() });
     
+        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
         // create the shader
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,

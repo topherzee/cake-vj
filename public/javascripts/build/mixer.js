@@ -1087,7 +1087,7 @@ FileManager.constructor = FileManager;
 */
 
 function FileManager( _source ) {
-
+ console.log("FileManager START ----------------");
   var _self = this
   _self.function_list = [["CHZ", "method","changez"]]
 
@@ -1110,6 +1110,8 @@ function FileManager( _source ) {
    * @param {object} json encoded array object
   */
   _self.load_set = function( _set ) {
+    console.log("FileManager load_set ----------------");
+    
     var u = new Utils()
     u.get( _set, function(d) {
       _self.set = JSON.parse(d)
@@ -1192,6 +1194,7 @@ function FileManager( _source ) {
    *
   */
   _self.change = function( _num ) {
+    console.log("FileManager Change ----------------");
     if ( _self.set.length != 0 ) {
       if ( _num != undefined ) {
         _self.changeToNum( _num );
@@ -2761,6 +2764,7 @@ function ColorEffect( _renderer, _options ) {
   if ( _options.extra != undefined ) currentExtra = _options.currentExtra
 
   _self.init = function() {
+    console.log("ColorEffect init"); 
     // add uniforms to renderer
     _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }
@@ -4035,6 +4039,8 @@ var GlRenderer = function (_options) {
 
     var GlRenderer = function( _options ) {
 
+      console.log("START GlRenderer  -------------------")
+
       var _self = this
     
       /** Set uop options */
@@ -4110,7 +4116,7 @@ var GlRenderer = function (_options) {
       // ---------------------------------------------------------------------------
       /** @function GlRenderer.init */
       _self.init = function(  ) {
-        console.log("init renderer")
+        console.log("INIT Renderer -------------------")
         //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
     
@@ -4122,6 +4128,7 @@ var GlRenderer = function (_options) {
          */
         _self.nodes.forEach(function(n){ n.init() });
     
+        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
         // create the shader
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,

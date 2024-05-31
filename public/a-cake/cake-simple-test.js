@@ -8,97 +8,35 @@
 
 console.log("CAKE Start --------------------");
 
-var TIME_BY_TOPHER = true;
+var TIME_BY_TOPHER = false;
 
 // renderer
-var renderer = new GlRenderer({element: 'glcanvas', width:800, height:600});
+var renderer = new GlRenderer({element: 'glcanvas', width:320, height:240});
 
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer )
-var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4",});
+var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4",uuid: "Video_GRATE"});
 //   var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4",});
-var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
+// var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 
-var source3 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 poles 01 pure.mp4",});
-var source4 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
-var source5 = new GifSource(renderer, {src: "/images/smily1.gif",});
-var source6 = new GifSource(renderer, {src: "/images/640x480.gif",});
-var source7 = new GifSource(renderer, {src: "/images/animal.gif",});
-
-var files1 = new FileManager( source1 )
-var files2 = new FileManager( source2 )
-
-var FILE_URL = "http://localhost:4000/files"
-// myFilemanager.load_set( "cliplist-DCVS01.json")
-files1.load_set( FILE_URL)
-files2.load_set( FILE_URL)
-
-function handleClipClick(url) {
-    // const messageParagraph = document.getElementById('message');
-    // messageParagraph.textContent = 'Button was clicked!';
-    console.log("clipp click:" + url);
-    files1.changeToUrl(url);
-}
-
-// Function to fetch image URLs and create image elements
-async function fetchAndDisplayImages() {
-    try {
-        // Replace 'https://example.com/api/images' with the actual URL of the REST endpoint
-        const response = await fetch(FILE_URL);
-        
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
-
-        // Assuming the API returns an array of image URLs
-        const imageUrls = await response.json();
-
-        // Get the container div
-        const container = document.getElementById('clip_bank');
-
-        // Iterate over the image URLs and create image elements
-        imageUrls.forEach(url => {
-            const div = document.createElement('div');
-            div.className = 'clip';
-
-            const text = document.createElement('span');
-            const msg = url.replace("/video/DCVS01/DCVS01 ","");
-            text.textContent = msg;
- 
-
-            // const img = document.createElement('img');
-            // img.src = url;
-            // img.alt = 'Image';
-
-            // div.appendChild(img);
-            div.appendChild(text);
-            // div.onclick = handleClipClick(url);
-            div.onclick = () => handleClipClick(url);
-
-            container.appendChild(div);
-        });
-    } catch (error) {
-        console.error('Error fetching images:', error);
-    }
-}
-
-// Call the function to fetch and display images on page load
-window.onload = fetchAndDisplayImages;
+// var source3 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 poles 01 pure.mp4",});
+var source4 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",uuid: "Video_WIRES"});
+// var source5 = new GifSource(renderer, {src: "/images/smily1.gif",});
+// var source6 = new GifSource(renderer, {src: "/images/640x480.gif",});
+// var source7 = new GifSource(renderer, {src: "/images/animal.gif",});
 
 
-//TODO - does not seem like is should be necessary - or setTimeout() instead.
 var playInterval = setInterval( function() {
     // source2.video.pause();
     source1.pause();
-    source2.pause();
-    source3.pause();
+    // source2.pause();
+    // source3.pause();
     source4.pause();
-    // console.log("FDSFDSFDSFDSFDSFDFSFS-------")
 },1000);
   
 // preview out
-var monitor1 = new Monitor( renderer, { source: source1, element: 'monitor_1',width:128, height:96 })
-var monitor2 = new Monitor( renderer, { source: source2, element: 'monitor_2',width:128, height:96 })
+// var monitor1 = new Monitor( renderer, { source: source1, element: 'monitor_1',width:128, height:96 })
+// var monitor2 = new Monitor( renderer, { source: source4, element: 'monitor_2',width:128, height:96 })
 
 
 
@@ -106,8 +44,8 @@ var monitor2 = new Monitor( renderer, { source: source2, element: 'monitor_2',wi
 
 // transformers
 // mix transformer signals (white and black)
-var trans_white = new SolidSource( renderer, { color: { r:1.0, g:1.0, b:1.0 } } );
-var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 } } );
+// var trans_white = new SolidSource( renderer, { color: { r:1.0, g:1.0, b:1.0 } } );
+var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid: "BLACK" } );
 
 
 // var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: source1 }  )
@@ -116,18 +54,18 @@ var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 } } 
 // var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: source2 }  )
 // var layer_2_effect = new ColorEffect(renderer, { source: layer_2_mixer } ); 
 
-var layer_1_effect = new DistortionEffect(renderer, { source: source1 } );
+var layer_1_effect = new DistortionEffect(renderer, { source: source1, uuid: "D1" } );
 
-var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_1_effect }  )
+var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_1_effect, uuid: "M1" }  )
 // var layer_1_effect = new ColorEffect(renderer, { source: layer_1_mixer } ); 
 
 // var layer_2_effect = new ColorEffect(renderer, { source: source7 } ); 
-var layer_2_effect = new DistortionEffect(renderer, { source: source2 } ); 
-var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: layer_2_effect }  )
+// var layer_2_effect = new DistortionEffect(renderer, { source: source4 } ); 
+// var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: layer_2_effect }  )
 
 
 // wire the last one to the output
-var output = new Output( renderer, layer_2_mixer )
+var output = new Output( renderer, layer_1_mixer )
 
 console.log("CAKE Call renderer.init() --------------------");
 
@@ -151,8 +89,8 @@ const TOPHER_DIST_CIRCLE = 103;
 
 layer_1_effect.effect(TOPHER_DIST_CIRCLE);
 layer_1_effect.extra(0.5);
-layer_2_effect.effect(TOPHER_DIST_MIRROR_CIRCLES);
-layer_2_effect.extra(0.5);
+// layer_2_effect.effect(TOPHER_DIST_MIRROR_CIRCLES);
+// layer_2_effect.extra(0.5);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;
@@ -160,24 +98,16 @@ const FAM = 4;
 const LUM1 = 10;
 const LUM2 = 11;
 const BOOM = 9
-layer_2_mixer.mixMode(NAM)
+// layer_2_mixer.mixMode(NAM)
 layer_1_mixer.mixMode(NAM)
 
 
 
 setTimeout(() => {
-    layer_2_mixer.pod(0.0)
+    // layer_2_mixer.pod(0.0)
     layer_1_mixer.pod(0.0)
     document.getElementById('layer_2_fader').value = 1.0
     document.getElementById('layer_1_fader').value = 1.0
-
-      // randomly choose one from the set.
-  files1.change();
-  files2.change();
-
-
-      // randomly choose one from the set.
-//   myFilemanager.change()
   }, 1000);
 
 // we're done here
@@ -212,17 +142,6 @@ for(var i=0; i<blendModes.length; i++){
     option.value = blendModes[i];
     blend_select_2.add(option);
 
-}
-
-document.getElementById('btn_switch_layer_1').onclick = function() {
-    files1.change();
-    // source2.play();
-    console.log("btn_switch_layer_1 >>");
-}
-document.getElementById('btn_switch_layer_2').onclick = function() {
-    files2.change();
-    // source2.play();
-    console.log("btn_switch_layer_2 >>");
 }
 
 document.getElementById('layer_2_blendmode').oninput = function() {
@@ -295,7 +214,7 @@ function updateVideo(video, rate, time, layer){
 function playVideos () {
     if (frameCheck==0){
         time1 = updateVideo(source1.video, rate1, time1, "1");
-        time2 = updateVideo(source2.video, rate2, time2, "2");
+        time2 = updateVideo(source4.video, rate2, time2, "2");
     }
     frameCheck++;
     if (frameCheck == 3){
@@ -306,12 +225,10 @@ function playVideos () {
 };
 
 if (TIME_BY_TOPHER){
-    playVideos();
-}else{
-    //something
+
 }
 
-
+playVideos();
 
 document.getElementById('layer_2_speed').oninput = function() {
     rate2 = this.value

@@ -1,0 +1,241 @@
+GLRenderer. Shader: 
+        uniform float time;
+        uniform vec2 screenSize;
+    
+        uniform sampler2D GRATE;
+uniform float GRATE_alpha;
+uniform vec2 GRATE_uvmap;
+uniform sampler2D WIRES;
+uniform float WIRES_alpha;
+uniform vec2 WIRES_uvmap;
+uniform vec4 BLACK_color;
+uniform vec4 BLACK_output;
+uniform vec4 D1_output;
+uniform int D1_currentdistortioneffect;
+uniform float D1_extra;
+uniform int M1_mixmode;
+uniform int M1_blendmode;
+uniform float M1_alpha1;
+uniform float M1_alpha2;
+uniform vec4 M1_output;
+/* custom_uniforms */        
+
+bool mask_circle(vec2 uv, float radius, float x, float y){
+    
+  // uv.x *= 1.6; 
+  uv.y *= 0.6;
+  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+  if(len < radius){
+    return true;
+  }
+  return false;
+}
+
+bool tophTest(float a){
+  return true;
+}
+
+vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+  
+  // normal
+  if ( currentdistortioneffect == 1 ) {
+    return texture2D( src, vUv ).rgba;
+  }
+
+  // TOPHER_DIST_MIRROR_CIRCLES
+  if ( currentdistortioneffect == 100 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      //gl_FragColor = texture2D( src, vUv ).rgba;
+
+      vec2 uvs = vec2(uv);
+      
+      if ( uv.x < 0.0){
+          uvs.x -= x;
+          uvs *= scale;
+      }else{
+          uvs.x += x;
+          uvs *= scale;
+          uvs.x = - uvs.x;
+      }
+
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+  if ( currentdistortioneffect == 101 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.2;
+    float x = -0.2;
+    float y = +0.0;
+    float scale = 4.0;
+
+    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+  // TOPHER_DIST_CIRCLE_3 - 3 circles
+  if ( currentdistortioneffect == 102 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+    float radius = 0.06;
+    float x = -0.24;
+    float y = +0.0;
+
+    if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+     
+      gl_FragColor = texture2D( src, vUv ).rgba;
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    return gl_FragColor;
+  }
+
+
+  // TOPHER_DIST_CENTER_CIRCLE
+  if ( currentdistortioneffect == 103 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.12;
+    float x = -0.0;
+    float y = +0.0;
+    float scale = 2.5;
+
+    if(mask_circle(uv, radius, x, y)) {
+
+      vec2 uvs = vec2(uv);
+      uvs *= scale;
+      
+      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      } else{
+          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+          gl_FragColor = vec4(pixelColor);
+      }
+
+    }else{
+    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    }
+    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+    return gl_FragColor;
+  }
+
+
+
+
+  // phasing sides (test)
+  if ( currentdistortioneffect == 2 ) {
+    vec2 wuv = vec2(0,0);
+    if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
+    if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
+    wuv = wuv + vec2( .0, .0 );
+    return texture2D( src, wuv ).rgba;
+  }
+
+  // multi
+  if ( currentdistortioneffect == 3 ) {
+    vec2 wuv = vec2(0,0);
+    wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
+    // wuv = vUv + vec2( extra, extra );
+    return texture2D( src, wuv ).rgba;
+  }
+
+  // pip
+  if ( currentdistortioneffect == 4 ) {
+    vec2 wuv = vec2(0,0);
+    wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
+    float sil = 1.;
+
+    // top-left
+    if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
+    if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
+    return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
+  }
+}
+
+
+
+
+  // -------------
+
+  // wipes (move these to mixer?)
+  //if ( gl_FragCoord.x > 200.0 ) {
+  //  return vec4(0.0,0.0,0.0,0.0);
+  //}else {
+  //  return src;
+  //}
+
+
+  vec4 blend ( vec4 src, vec4 dst, int blendmode ) {
+    if ( blendmode ==  1 ) return src + dst;
+    if ( blendmode ==  2 ) return src - dst;
+    if ( blendmode ==  3 ) return src * dst;
+    if ( blendmode ==  4 ) return min(src, dst);
+    if ( blendmode ==  5)  return vec4((src.x == 0.0) ? 0.0 : (1.0 - ((1.0 - dst.x) / src.x)), (src.y == 0.0) ? 0.0 : (1.0 - ((1.0 - dst.y) / src.y)), (src.z == 0.0) ? 0.0 : (1.0 - ((1.0 - dst.z) / src.z)),1.0);
+    if ( blendmode ==  6 ) return (src + dst) - 1.0;
+    if ( blendmode ==  7 ) return max(src, dst);
+    if ( blendmode ==  8 ) return (src + dst) - (src * dst);
+    if ( blendmode ==  9 ) return vec4((src.x == 1.0) ? 1.0 : min(1.0, dst.x / (1.0 - src.x)), (src.y == 1.0) ? 1.0 : min(1.0, dst.y / (1.0 - src.y)), (src.z == 1.0) ? 1.0 : min(1.0, dst.z / (1.0 - src.z)), 1.0);
+    if ( blendmode == 10 ) return src + dst;
+    if ( blendmode == 11 ) return vec4((dst.x <= 0.5) ? (2.0 * src.x * dst.x) : (1.0 - 2.0 * (1.0 - dst.x) * (1.0 - src.x)), (dst.y <= 0.5) ? (2.0 * src.y * dst.y) : (1.0 - 2.0 * (1.0 - dst.y) * (1.0 - src.y)), (dst.z <= 0.5) ? (2.0 * src.z * dst.z) : (1.0 - 2.0 * (1.0 - dst.z) * (1.0 - src.z)), 1.0);
+    if ( blendmode == 12 ) return vec4((src.x <= 0.5) ? (dst.x - (1.0 - 2.0 * src.x) * dst.x * (1.0 - dst.x)) : (((src.x > 0.5) && (dst.x <= 0.25)) ? (dst.x + (2.0 * src.x - 1.0) * (4.0 * dst.x * (4.0 * dst.x + 1.0) * (dst.x - 1.0) + 7.0 * dst.x)) : (dst.x + (2.0 * src.x - 1.0) * (sqrt(dst.x) - dst.x))), (src.y <= 0.5) ? (dst.y - (1.0 - 2.0 * src.y) * dst.y * (1.0 - dst.y)) : (((src.y > 0.5) && (dst.y <= 0.25)) ? (dst.y + (2.0 * src.y - 1.0) * (4.0 * dst.y * (4.0 * dst.y + 1.0) * (dst.y - 1.0) + 7.0 * dst.y)) : (dst.y + (2.0 * src.y - 1.0) * (sqrt(dst.y) - dst.y))), (src.z <= 0.5) ? (dst.z - (1.0 - 2.0 * src.z) * dst.z * (1.0 - dst.z)) : (((src.z > 0.5) && (dst.z <= 0.25)) ? (dst.z + (2.0 * src.z - 1.0) * (4.0 * dst.z * (4.0 * dst.z + 1.0) * (dst.z - 1.0) + 7.0 * dst.z)) : (dst.z + (2.0 * src.z - 1.0) * (sqrt(dst.z) - dst.z))), 1.0);
+    if ( blendmode == 13 ) return vec4((src.x <= 0.5) ? (2.0 * src.x * dst.x) : (1.0 - 2.0 * (1.0 - src.x) * (1.0 - dst.x)), (src.y <= 0.5) ? (2.0 * src.y * dst.y) : (1.0 - 2.0 * (1.0 - src.y) * (1.0 - dst.y)), (src.z <= 0.5) ? (2.0 * src.z * dst.z) : (1.0 - 2.0 * (1.0 - src.z) * (1.0 - dst.z)), 1.0);
+    if ( blendmode == 14 ) return vec4((src.x <= 0.5) ? (1.0 - (1.0 - dst.x) / (2.0 * src.x)) : (dst.x / (2.0 * (1.0 - src.x))), (src.y <= 0.5) ? (1.0 - (1.0 - dst.y) / (2.0 * src.y)) : (dst.y / (2.0 * (1.0 - src.y))), (src.z <= 0.5) ? (1.0 - (1.0 - dst.z) / (2.0 * src.z)) : (dst.z / (2.0 * (1.0 - src.z))),1.0);
+    if ( blendmode == 15 ) return 2.0 * src + dst - 1.0;
+    if ( blendmode == 16 ) return vec4((src.x > 0.5) ? max(dst.x, 2.0 * (src.x - 0.5)) : min(dst.x, 2.0 * src.x), (src.x > 0.5) ? max(dst.y, 2.0 * (src.y - 0.5)) : min(dst.y, 2.0 * src.y), (src.z > 0.5) ? max(dst.z, 2.0 * (src.z - 0.5)) : min(dst.z, 2.0 * src.z),1.0);
+    if ( blendmode == 17 ) return abs(dst - src);
+    if ( blendmode == 18 ) return src + dst - 2.0 * src * dst;
+    return src + dst;
+  }
+  /* custom_helpers */
+  
+
+
+varying vec2 vUv;  
+
+void main() {          
+    vec4 GRATE_output = ( texture2D( GRATE, vUv * GRATE_uvmap ).rgba * GRATE_alpha );
+
+    vec4 WIRES_output = ( texture2D( WIRES, vUv * WIRES_uvmap ).rgba * WIRES_alpha );
+
+    vec4 BLACK_output = BLACK_color;
+
+    vec4 D1_output = distortioneffect( GRATE, D1_currentdistortioneffect, D1_extra, vUv );
+
+    vec4 M1_output = 
+        vec4( blend( BLACK_output * M1_alpha1, D1_output * M1_alpha2, M1_blendmode ) ) //alpha1 and alph2 is for the mixmode.
+        + vec4(  BLACK_output.a < 1.0 
+            ? D1_output.rgba * ( M1_alpha1 - BLACK_output.a ) 
+            : vec4( 0.,0.,0.,0. )  )  
+        + vec4(  D1_output.a < 1.0 
+            ? BLACK_output.rgba * ( M1_alpha2 - - D1_output.a ) 
+            : vec4( 0.,0.,0.,0. )  
+
+    ) ;
+
+gl_FragColor = vec4( M1_output );
+  
+      
+              }

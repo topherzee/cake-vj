@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node ./bin/www",
+    "files": "nodemon ./bin/getFiles.js",
     "build": "./node_modules/.bin/gulp build",
     "buildfast": "./node_modules/.bin/gulp mixer-js",
     "fastwatch": "./node_modules/.bin/gulp mixer-js-watch",
@@ -36,33 +37,32 @@
   "author": "Sense Studios",
   "license": "MIT",
   "dependencies": {
-    "socket.io": "^4.7.2",
-    "express": "~4.18.2",    
-    "pug": ">=3.0.2",
-    "pug-code-gen": ">=2.0.3",    
-    "ytdl-core": "^4.11.5",
-    "ytsr": "^3.8.4",
-
-    "cookie-parser": "~1.4.4",    
-    "xmlhttprequest-ssl": ">=1.6.2",
+    "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
+    "express": "~4.18.2",
     "http-errors": "~1.7.3",
     "morgan": "~1.10.0",
-    "postman-request": "~2.88.1-postman.33"    
+    "postman-request": "~2.88.1-postman.33",
+    "pug": ">=3.0.2",
+    "pug-code-gen": ">=2.0.3",
+    "socket.io": "^4.7.2",
+    "xmlhttprequest-ssl": ">=1.6.2",
+    "ytdl-core": "^4.11.5",
+    "ytsr": "^3.8.4"
   },
   "bugs": {
     "url": "https://github.com/Sense-Studios/VirtualMixerProject/issues"
   },
   "homepage": "https://virtualmixproject.com",
   "devDependencies": {
+    "del": "5.1.0",
     "express-dart-sass": "",
     "gulp": "^4.0.2",
     "gulp-cli": "2.3.0",
     "gulp-concat": "^2.6.1",
     "gulp-minify": "^3.0.0",
     "jsdoc": "~4.0.2",
-    "del": "5.1.0"
+    "nodemon": "^3.1.0"
   },
-  "notes":""
+  "notes": ""
 }
-
-

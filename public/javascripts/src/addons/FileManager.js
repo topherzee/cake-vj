@@ -48,7 +48,7 @@ FileManager.constructor = FileManager;
 */
 
 function FileManager( _source ) {
-
+ console.log("FileManager START ----------------");
   var _self = this
   _self.function_list = [["CHZ", "method","changez"]]
 
@@ -71,6 +71,8 @@ function FileManager( _source ) {
    * @param {object} json encoded array object
   */
   _self.load_set = function( _set ) {
+    console.log("FileManager load_set ----------------");
+    
     var u = new Utils()
     u.get( _set, function(d) {
       _self.set = JSON.parse(d)
@@ -153,6 +155,7 @@ function FileManager( _source ) {
    *
   */
   _self.change = function( _num ) {
+    console.log("FileManager Change ----------------");
     if ( _self.set.length != 0 ) {
       if ( _num != undefined ) {
         _self.changeToNum( _num );

@@ -1,0 +1,216 @@
+Shader: 
+     
+/* custom_uniforms */        /* custom_helpers */        varying vec2 vUv;        void main() {          
+     vec4 VideoSource_2310804_output = ( texture2D( VideoSource_2310804, vUv * VideoSource_2310804_uvmap ).rgba * VideoSource_2310804_alpha );
+     
+     vec4 VideoSource_6b7e14e4_output = ( texture2D( VideoSource_6b7e14e4, vUv * VideoSource_6b7e14e4_uvmap ).rgba * VideoSource_6b7e14e4_alpha );
+     
+     vec4 VideoSource_80a891e_output = ( texture2D( VideoSource_80a891e, vUv * VideoSource_80a891e_uvmap ).rgba * VideoSource_80a891e_alpha );
+     
+     vec4 VideoSource_38b186b8_output = ( texture2D( VideoSource_38b186b8, vUv * VideoSource_38b186b8_uvmap ).rgba * VideoSource_38b186b8_alpha );
+     vec4 GifSource_8872af0_output = ( texture2D( GifSource_8872af0, vUv ).rgba * GifSource_8872af0_alpha );
+ vec4 GifSource_2f68f542_output = ( texture2D( GifSource_2f68f542, vUv ).rgba * GifSource_2f68f542_alpha );
+ vec4 GifSource_4cfa0daa_output = ( texture2D( GifSource_4cfa0daa, vUv ).rgba * GifSource_4cfa0daa_alpha );
+ 
+ gl_FragColor = vec4( VideoSource_2310804_output );
+}
+     
+
+/* custom_uniforms */        /* custom_helpers */        varying vec2 vUv;        void main() {          
+     vec4 VideoSource_2310804_output = ( texture2D( VideoSource_2310804, vUv * VideoSource_2310804_uvmap ).rgba * VideoSource_2310804_alpha );
+     
+     vec4 VideoSource_6b7e14e4_output = ( texture2D( VideoSource_6b7e14e4, vUv * VideoSource_6b7e14e4_uvmap ).rgba * VideoSource_6b7e14e4_alpha );
+     
+     vec4 VideoSource_80a891e_output = ( texture2D( VideoSource_80a891e, vUv * VideoSource_80a891e_uvmap ).rgba * VideoSource_80a891e_alpha );
+     
+     vec4 VideoSource_38b186b8_output = ( texture2D( VideoSource_38b186b8, vUv * VideoSource_38b186b8_uvmap ).rgba * VideoSource_38b186b8_alpha );
+     vec4 GifSource_8872af0_output = ( texture2D( GifSource_8872af0, vUv ).rgba * GifSource_8872af0_alpha );
+ vec4 GifSource_2f68f542_output = ( texture2D( GifSource_2f68f542, vUv ).rgba * GifSource_2f68f542_alpha );
+ vec4 GifSource_4cfa0daa_output = ( texture2D( GifSource_4cfa0daa, vUv ).rgba * GifSource_4cfa0daa_alpha );
+ 
+ gl_FragColor = vec4( VideoSource_38b186b8_output );
+}
+     
+mixer.js:5927 init solid {color: {…}}
+mixer.js:5927 init solid {color: {…}}
+mixer.js:3237 DistortionEffect init
+mixer.js:3248 DistortionEffect REPLACE
+mixer.js:3237 DistortionEffect init
+mixer.js:4129 GLRenderer. Shader: 
+       uniform float time;
+       uniform vec2 screenSize;
+   
+       uniform sampler2D VideoSource_2310804;
+uniform float VideoSource_2310804_alpha;
+uniform vec2 VideoSource_2310804_uvmap;
+uniform sampler2D VideoSource_6b7e14e4;
+uniform float VideoSource_6b7e14e4_alpha;
+uniform vec2 VideoSource_6b7e14e4_uvmap;
+uniform sampler2D VideoSource_80a891e;
+uniform float VideoSource_80a891e_alpha;
+uniform vec2 VideoSource_80a891e_uvmap;
+uniform sampler2D VideoSource_38b186b8;
+uniform float VideoSource_38b186b8_alpha;
+uniform vec2 VideoSource_38b186b8_uvmap;
+uniform sampler2D GifSource_8872af0;
+uniform vec4 GifSource_8872af0_output;
+uniform float GifSource_8872af0_alpha;
+uniform sampler2D GifSource_2f68f542;
+uniform vec4 GifSource_2f68f542_output;
+uniform float GifSource_2f68f542_alpha;
+uniform sampler2D GifSource_4cfa0daa;
+uniform vec4 GifSource_4cfa0daa_output;
+uniform float GifSource_4cfa0daa_alpha;
+uniform vec4 SolidSource_52bc8733_color;
+uniform vec4 SolidSource_52bc8733_output;
+uniform vec4 SolidSource_454a6e60_color;
+uniform vec4 SolidSource_454a6e60_output;
+uniform vec4 DistortionEffect_5a98f49b_output;
+uniform int DistortionEffect_5a98f49b_currentdistortioneffect;
+uniform float DistortionEffect_5a98f49b_extra;
+uniform int Mixer_50f1615_mixmode;
+uniform int Mixer_50f1615_blendmode;
+uniform float Mixer_50f1615_alpha1;
+uniform float Mixer_50f1615_alpha2;
+uniform vec4 Mixer_50f1615_output;
+uniform vec4 DistortionEffect_800dd30_output;
+uniform int DistortionEffect_800dd30_currentdistortioneffect;
+uniform float DistortionEffect_800dd30_extra;
+uniform int Mixer_654540b1_mixmode;
+uniform int Mixer_654540b1_blendmode;
+uniform float Mixer_654540b1_alpha1;
+uniform float Mixer_654540b1_alpha2;
+uniform vec4 Mixer_654540b1_output;
+/* custom_uniforms */        
+
+bool mask_circle(vec2 uv, float radius, float x, float y){
+   
+ // uv.x *= 1.6; 
+ uv.y *= 0.6;
+ float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+ if(len < radius){
+   return true;
+ }
+ return false;
+}
+
+bool tophTest(float a){
+ return true;
+}
+
+vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+ 
+ // normal
+ if ( currentdistortioneffect == 1 ) {
+   return texture2D( src, vUv ).rgba;
+ }
+
+ // TOPHER_DIST_MIRROR_CIRCLES
+ if ( currentdistortioneffect == 100 ) {
+
+   vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+   float radius = 0.06;
+   float x = -0.24;
+   float y = +0.0;
+   float scale = 4.0;
+
+   if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+     //gl_FragColor = texture2D( src, vUv ).rgba;
+
+     vec2 uvs = vec2(uv);
+     
+     if ( uv.x < 0.0){
+         uvs.x -= x;
+         uvs *= scale;
+     }else{
+         uvs.x += x;
+         uvs *= scale;
+         uvs.x = - uvs.x;
+     }
+
+     if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+     } else{
+         vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+         gl_FragColor = vec4(pixelColor);
+     }
+
+   }else{
+       gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+   }
+   return gl_FragColor;
+ }
+
+
+ // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+ if ( currentdistortioneffect == 101 ) {
+
+   vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+   float radius = 0.2;
+   float x = -0.2;
+   float y = +0.0;
+   float scale = 4.0;
+
+   if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+     gl_FragColor = texture2D( src, vUv ).rgba;
+   }else{
+       gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+   }
+   return gl_FragColor;
+ }
+
+ // TOPHER_DIST_CIRCLE_3 - 3 circles
+ if ( currentdistortioneffect == 102 ) {
+
+   vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+   float radius = 0.06;
+   float x = -0.24;
+   float y = +0.0;
+
+   if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+    
+     gl_FragColor = texture2D( src, vUv ).rgba;
+   }else{
+       gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+   }
+   return gl_FragColor;
+ }
+
+
+ // TOPHER_DIST_CENTER_CIRCLE
+ if ( currentdistortioneffect == 103 ) {
+
+   vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+   float radius = 0.12;
+   float x = -0.0;
+   float y = +0.0;
+   float scale = 2.5;
+
+   if(mask_circle(uv, radius, x, y)) {
+
+     vec2 uvs = vec2(uv);
+     uvs *= scale;
+     
+     if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+     } else{
+         vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+         gl_FragColor = vec4(pixelColor);
+     }
+
+   }else{
+       gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+   }
+   // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+   return gl_FragColor;
+ }
+
+
+
+
+ // phasing sides (test)
+ if ( currentdistortioneffect == 2 ) {
+   vec2 wuv = vec2(0,0);
+   if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time *
+
+   
