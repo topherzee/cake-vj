@@ -62,7 +62,7 @@
     
       _self.scene = new THREE.Scene();
       _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
-      _self.camera.position.z = 27; // 20
+      _self.camera.position.z = 20
     
       // container for all elements that inherit init() and update()
       _self.nodes = [] // sources modules and effects
@@ -127,53 +127,21 @@
            defines: _self.customDefines,
            vertexShader: _self.vertexShader,
            fragmentShader: _self.fragmentShader,
-          //  side: THREE.DoubleSide,
+           side: THREE.DoubleSide,
            transparent: true
         })
-        _self.shaderMaterial2 = new THREE.ShaderMaterial({
-          uniforms: _self.customUniforms,
-          defines: _self.customDefines,
-          vertexShader: _self.vertexShader,
-          fragmentShader: _self.fragmentShader,
-          // side: THREE.DoubleSide,
-          transparent: true
-       })
     
-       const ASPECT_RATIO = 16.0 / 9.0;
-       const PLANE_WIDTH = 71;
-       const PLANE_HEIGHT = PLANE_WIDTH / ASPECT_RATIO;
-       const SIDE_SCALE = 0.3;
-       const SEGMENTS = 10;
-       
         // apply the shader material to a surface
-        _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+        _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
         // surface.position.set(60,50,150);
-
-        _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
-        _self.flatGeometry2.translate( 80, -45, 1 );
-        
-        _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
-        
-        _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        // surface.position.set(60,50,150);
     
-        _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
-        _self.flatGeometry3.translate( -80, -45, 1 );
-        // _self.flatGeometry3.rotate( 20, 0, 0 );
-        _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
-        // surface.position.set(60,50,150);
-        _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-    
-
         /**
          * A reference to the threejs scene
          * @member GlRenderer#scene
          */
         _self.scene.add( _self.surface );
-        _self.scene.add( _self.surface2 );
-        _self.scene.add( _self.surface3 );
       }
     
       // ---------------------------------------------------------------------------
@@ -227,14 +195,7 @@
       _self.dispose = function() {
         _self.shaderMaterial
         _self.flatGeometry
-        _self.shaderMaterial2
-        _self.flatGeometry2
-        _self.shaderMaterial3
-        _self.flatGeometry3
-
         _self.scene.remove(_self.surface)
-        _self.scene.remove(_self.surface2)
-        _self.scene.remove(_self.surface3)
         _self.glrenderer.resetGLState()
         _self.customUniforms = {}
         _self.customDefines = {}

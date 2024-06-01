@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Shader Material Example</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // Initialize the scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Define the sphere geometry and material
+    const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x0077ff });
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphere.position.z = -2; // Move the sphere back so it's behind the cube
+    scene.add(sphere);
+
+    // Define the cube geometry and shader material
+    const cubeGeometry = new THREE.BoxGeometry();
+    const cubeMaterial = new THREE.ShaderMaterial({
+        uniforms: {},
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            varying vec2 vUv;
+            void main() {
+                // Create a checkerboard pattern
+                float checker = step(0.5, mod(floor(vUv.x * 10.0) + floor(vUv.y * 10.0), 2.0));
+                // Set the color and transparency
+                vec4 color = vec4(1.0, 0.5, 0.0, checker * 1.0);
+                gl_FragColor = color;
+            }
+        `,
+        transparent: true
+    });
+
+    // Create the cube mesh
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    scene.add(cube);
+
+    // Position the camera
+    camera.position.z = 3;
+
+    // Render the scene
+    function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+</body>
+</html>

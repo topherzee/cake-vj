@@ -78,7 +78,7 @@ function DistortionEffect( _renderer, _options ) {
 bool mask_circle(vec2 uv, float radius, float x, float y){
     
   // uv.x *= 1.6; 
-  uv.y *= 0.6;
+   uv.y /= (16.0 / 9.0);
   float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
   if(len < radius){
     return true;
@@ -163,7 +163,7 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
      
       gl_FragColor = texture2D( src, vUv ).rgba;
     }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    	gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
     }
     return gl_FragColor;
   }
@@ -191,12 +191,54 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
       }
 
     }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    	gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
+      // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
+      //discard;
     }
     // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
     return gl_FragColor;
-  }
+  }//103
 
+  //ONLY SQUASH
+  if ( currentdistortioneffect == 104 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.3;
+    float x = -0.0;
+    float y = +0.0;
+    float scale = 1.5;
+
+    vec2 uvs = vec2(uv);
+    // uvs *= scale;
+    uvs.x *= 1.333;
+    
+    vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+    gl_FragColor = vec4(pixelColor);
+
+
+
+    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+    return gl_FragColor;
+  }//104
+
+  //ONLY CIRCLE
+  if ( currentdistortioneffect == 105 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.28;
+    float scale = 1.0; //Size of video.
+
+    if(mask_circle(uv, radius, 0.0, 0.0)) {
+      vec2 uvs = vec2(uv);
+      uvs *= scale;
+      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+      gl_FragColor = vec4(pixelColor);
+    }else{
+    	gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
+      discard;
+    }
+    return gl_FragColor;
+  }//105
 
 
 

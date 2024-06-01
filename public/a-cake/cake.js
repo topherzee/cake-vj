@@ -11,19 +11,26 @@ console.log("CAKE Start --------------------");
 var TIME_BY_TOPHER = true;
 
 // renderer
-var renderer = new GlRenderer({element: 'glcanvas', width:800, height:600});
+var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
 
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer )
 var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4",});
 //   var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4",});
-var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
+//var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
+// var source2 = new GifSource(renderer, {src: "/images/640X480.gif",});
+var source2 = new VideoSource(renderer, {src: "/video/disco/ymca-no-sound.mp4",});
 
-var source3 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 poles 01 pure.mp4",});
-var source4 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
-var source5 = new GifSource(renderer, {src: "/images/smily1.gif",});
-var source6 = new GifSource(renderer, {src: "/images/640x480.gif",});
-var source7 = new GifSource(renderer, {src: "/images/animal.gif",});
+// var source3 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 poles 01 pure.mp4",});
+// var source4 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
+// var source5 = new GifSource(renderer, {src: "/images/smily1.gif",});
+// var source6 = new GifSource(renderer, {src: "/images/640x480.gif",});
+// var source7 = new GifSource(renderer, {src: "/images/animal.gif",});
+// debugger;
+
+
+
+
 
 var files1 = new FileManager( source1 )
 var files2 = new FileManager( source2 )
@@ -83,7 +90,7 @@ async function fetchAndDisplayImages() {
 }
 
 // Call the function to fetch and display images on page load
-window.onload = fetchAndDisplayImages;
+// window.onload = fetchAndDisplayImages;
 
 
 //TODO - does not seem like is should be necessary - or setTimeout() instead.
@@ -91,9 +98,11 @@ var playInterval = setInterval( function() {
     // source2.video.pause();
     source1.pause();
     source2.pause();
-    source3.pause();
-    source4.pause();
+    // source3.pause();
+    // source4.pause();
     // console.log("FDSFDSFDSFDSFDSFDFSFS-------")
+
+
 },1000);
   
 // preview out
@@ -117,11 +126,11 @@ var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 } } 
 // var layer_2_effect = new ColorEffect(renderer, { source: layer_2_mixer } ); 
 
 var layer_1_effect = new DistortionEffect(renderer, { source: source1 } );
+// var layer_1_effect = new ColorEffect(renderer, { source: source1 } ); 
 
 var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_1_effect }  )
-// var layer_1_effect = new ColorEffect(renderer, { source: layer_1_mixer } ); 
 
-// var layer_2_effect = new ColorEffect(renderer, { source: source7 } ); 
+// var layer_2_effect = new ColorEffect(renderer, { source: source2 } ); 
 var layer_2_effect = new DistortionEffect(renderer, { source: source2 } ); 
 var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: layer_2_effect }  )
 
@@ -146,13 +155,21 @@ const TOPHER_DIST_MIRROR_CIRCLES = 100;
 const TOPHER_DIST_CIRCLES_3 = 102;
 
 const TOPHER_DIST_CIRCLE = 103;
+const TOPHER_ONLY_SQUASH = 104;
+const TOPHER_ONLY_CIRCLE = 105;
 // layer_1_effect.effect(70);
 // layer_1_effect.extra(0.5);
 
-layer_1_effect.effect(TOPHER_DIST_CIRCLE);
-layer_1_effect.extra(0.5);
-layer_2_effect.effect(TOPHER_DIST_MIRROR_CIRCLES);
-layer_2_effect.extra(0.5);
+layer_1_effect.effect(TOPHER_ONLY_CIRCLE);
+layer_2_effect.effect(TOPHER_ONLY_CIRCLE);
+
+// layer_1_effect.extra(0.5);
+// layer_2_effect.effect(TOPHER_DIST_MIRROR_CIRCLES);
+// layer_2_effect.extra(0.5);
+// layer_1_effect.effect(RED);
+// layer_1_effect.extra(0.5);
+// layer_2_effect.effect(RED);
+// layer_2_effect.extra(0.5);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;
@@ -172,8 +189,8 @@ setTimeout(() => {
     document.getElementById('layer_1_fader').value = 1.0
 
       // randomly choose one from the set.
-  files1.change();
-  files2.change();
+//   files1.change();
+//   files2.change();
 
 
       // randomly choose one from the set.
@@ -274,6 +291,10 @@ let time2 = 0.0;
 
 function updateVideo(video, rate, time, layer){
 
+    if (video == null || ! video.hasOwnProperty("duration")){
+        return;
+
+    }
     let new_time = time + rate * FRAME_DELAY;
     if (new_time > video.duration){
         new_time = 0;

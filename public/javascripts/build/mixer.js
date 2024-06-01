@@ -3254,7 +3254,7 @@ function DistortionEffect( _renderer, _options ) {
 bool mask_circle(vec2 uv, float radius, float x, float y){
     
   // uv.x *= 1.6; 
-  uv.y *= 0.6;
+   uv.y /= (16.0 / 9.0);
   float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
   if(len < radius){
     return true;
@@ -3339,7 +3339,7 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
      
       gl_FragColor = texture2D( src, vUv ).rgba;
     }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    	gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
     }
     return gl_FragColor;
   }
@@ -3367,12 +3367,54 @@ vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra,
       }
 
     }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+    	gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
+      // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
+      //discard;
     }
     // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
     return gl_FragColor;
-  }
+  }//103
 
+  //ONLY SQUASH
+  if ( currentdistortioneffect == 104 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.3;
+    float x = -0.0;
+    float y = +0.0;
+    float scale = 1.5;
+
+    vec2 uvs = vec2(uv);
+    // uvs *= scale;
+    uvs.x *= 1.333;
+    
+    vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+    gl_FragColor = vec4(pixelColor);
+
+
+
+    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+    return gl_FragColor;
+  }//104
+
+  //ONLY CIRCLE
+  if ( currentdistortioneffect == 105 ) {
+
+    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+    float radius = 0.28;
+    float scale = 1.0; //Size of video.
+
+    if(mask_circle(uv, radius, 0.0, 0.0)) {
+      vec2 uvs = vec2(uv);
+      uvs *= scale;
+      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+      gl_FragColor = vec4(pixelColor);
+    }else{
+    	gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
+      discard;
+    }
+    return gl_FragColor;
+  }//105
 
 
 
@@ -4070,7 +4112,7 @@ var GlRenderer = function (_options) {
     
       _self.scene = new THREE.Scene();
       _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
-      _self.camera.position.z = 20
+      _self.camera.position.z = 27; // 20
     
       // container for all elements that inherit init() and update()
       _self.nodes = [] // sources modules and effects
@@ -4135,21 +4177,53 @@ var GlRenderer = function (_options) {
            defines: _self.customDefines,
            vertexShader: _self.vertexShader,
            fragmentShader: _self.fragmentShader,
-           side: THREE.DoubleSide,
+          //  side: THREE.DoubleSide,
            transparent: true
         })
+        _self.shaderMaterial2 = new THREE.ShaderMaterial({
+          uniforms: _self.customUniforms,
+          defines: _self.customDefines,
+          vertexShader: _self.vertexShader,
+          fragmentShader: _self.fragmentShader,
+          // side: THREE.DoubleSide,
+          transparent: true
+       })
     
+       const ASPECT_RATIO = 16.0 / 9.0;
+       const PLANE_WIDTH = 71;
+       const PLANE_HEIGHT = PLANE_WIDTH / ASPECT_RATIO;
+       const SIDE_SCALE = 0.3;
+       const SEGMENTS = 10;
+       
         // apply the shader material to a surface
-        _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
+        _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
         // surface.position.set(60,50,150);
+
+        _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry2.translate( 80, -45, 1 );
+        
+        _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
+        
+        _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+        // surface.position.set(60,50,150);
     
+        _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry3.translate( -80, -45, 1 );
+        // _self.flatGeometry3.rotate( 20, 0, 0 );
+        _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
+        // surface.position.set(60,50,150);
+        _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+    
+
         /**
          * A reference to the threejs scene
          * @member GlRenderer#scene
          */
         _self.scene.add( _self.surface );
+        _self.scene.add( _self.surface2 );
+        _self.scene.add( _self.surface3 );
       }
     
       // ---------------------------------------------------------------------------
@@ -4203,7 +4277,14 @@ var GlRenderer = function (_options) {
       _self.dispose = function() {
         _self.shaderMaterial
         _self.flatGeometry
+        _self.shaderMaterial2
+        _self.flatGeometry2
+        _self.shaderMaterial3
+        _self.flatGeometry3
+
         _self.scene.remove(_self.surface)
+        _self.scene.remove(_self.surface2)
+        _self.scene.remove(_self.surface3)
         _self.glrenderer.resetGLState()
         _self.customUniforms = {}
         _self.customDefines = {}
@@ -5494,7 +5575,8 @@ function GifSource( renderer, options ) {
     gifElement = document.createElement('img')
     gifElement.setAttribute('id', 'gif_'+_self.uuid)
     gifElement.setAttribute('rel:auto_play', '1')
-    supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    // supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
     supergifelement.draw_while_loading = true
 
     // sup1.load();
@@ -6313,6 +6395,13 @@ function VideoSource(renderer, options) {
     videoElement.load();              // must call after setting/changing source
     _self.firstplay = false
 
+    videoElement.addEventListener( "loadedmetadata", function (e) {
+      var width = this.videoWidth,
+          height = this.videoHeight;
+          console.log("WWWWW video width: ", width, height)
+    }, false );
+
+
     // Here we wait for a user to click and take over
     var playInterval = setInterval( function() {
       if ( videoElement.readyState == 4 ) {
@@ -6395,14 +6484,24 @@ function VideoSource(renderer, options) {
   var i = 0
   _self.update = function() {
 
+    let raw_ratio = 16.0 / 9.0;
+    let image_ratio= 4.0/ 3.0;
+    if (videoElement.videoWidth){
+      image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
+    }
+    
+    let ratio = raw_ratio / image_ratio;
+    let widthS = texture_size / ratio;
+    let offsetS = (texture_size - widthS) /2;
+
 
     if (_self.bypass = false) return    
     if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
-      canvasElementContext.drawImage( videoElement, 0, 0, texture_size, texture_size );
-
+      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
+      
       if ( videoTexture ) videoTexture.needsUpdate = true;
     }else{
-      canvasElementContext.drawImage( videoElement, 0, 0, texture_size, texture_size );  // send last image
+      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
       // TODO: console.log("SEND IN BLACK!") ?
       // canvasElementContext.clearRect(0, 0, 1024, 1024); // send nothing
       //_self.alpha = 0

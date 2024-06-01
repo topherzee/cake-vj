@@ -84,7 +84,8 @@ function GifSource( renderer, options ) {
     gifElement = document.createElement('img')
     gifElement.setAttribute('id', 'gif_'+_self.uuid)
     gifElement.setAttribute('rel:auto_play', '1')
-    supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    // supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
     supergifelement.draw_while_loading = true
 
     // sup1.load();

@@ -96,6 +96,13 @@ function VideoSource(renderer, options) {
     videoElement.load();              // must call after setting/changing source
     _self.firstplay = false
 
+    videoElement.addEventListener( "loadedmetadata", function (e) {
+      var width = this.videoWidth,
+          height = this.videoHeight;
+          console.log("WWWWW video width: ", width, height)
+    }, false );
+
+
     // Here we wait for a user to click and take over
     var playInterval = setInterval( function() {
       if ( videoElement.readyState == 4 ) {
@@ -178,14 +185,24 @@ function VideoSource(renderer, options) {
   var i = 0
   _self.update = function() {
 
+    let raw_ratio = 16.0 / 9.0;
+    let image_ratio= 4.0/ 3.0;
+    if (videoElement.videoWidth){
+      image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
+    }
+    
+    let ratio = raw_ratio / image_ratio;
+    let widthS = texture_size / ratio;
+    let offsetS = (texture_size - widthS) /2;
+
 
     if (_self.bypass = false) return    
     if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
-      canvasElementContext.drawImage( videoElement, 0, 0, texture_size, texture_size );
-
+      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
+      
       if ( videoTexture ) videoTexture.needsUpdate = true;
     }else{
-      canvasElementContext.drawImage( videoElement, 0, 0, texture_size, texture_size );  // send last image
+      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
       // TODO: console.log("SEND IN BLACK!") ?
       // canvasElementContext.clearRect(0, 0, 1024, 1024); // send nothing
       //_self.alpha = 0
