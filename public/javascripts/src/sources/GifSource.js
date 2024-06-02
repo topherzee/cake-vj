@@ -26,6 +26,14 @@ function GifSource( renderer, options ) {
     _self.uuid = options.uuid
   }
 
+  
+  if ( options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = options.fragmentChannel;
+  }
+
+
   // set type
   _self.type = "GifSource"
 
@@ -61,17 +69,32 @@ function GifSource( renderer, options ) {
     // create the texture
     gifTexture = new THREE.Texture( canvasElement );
 
+  
     // set the uniforms on the renderer
     renderer.customUniforms[_self.uuid] = { type: "t", value: gifTexture }
     renderer.customUniforms[_self.uuid+'_alpha'] = { type: "f", value: alpha }
 
-    // add uniforms to shader
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
+    
+    if (_self._fragmentChannel == 1){
+          // add uniforms to shader
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
 
-    // add output to main function
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+      // add output to main function
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+
+    }else{
+          // add uniforms to shader
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
+
+      // add output to main function
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+
+    }
+
 
     // expose gif and canvas
     _self.gif = supergifelement

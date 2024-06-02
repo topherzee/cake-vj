@@ -3224,6 +3224,12 @@ function DistortionEffect( _renderer, _options ) {
     _self.uuid = _options.uuid
   }
 
+  if ( _options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = _options.fragmentChannel;
+  }
+
   // add to renderer
   _renderer.add(_self)
   _self.type = "Effect"
@@ -3236,246 +3242,568 @@ function DistortionEffect( _renderer, _options ) {
   var currentEffect = 1
   var currentExtra = 0.8
 
+  var shaderScript = `
+
+  bool mask_circle(vec2 uv, float radius, float x, float y){
+      
+    // uv.x *= 1.6; 
+     uv.y /= (16.0 / 9.0);
+    float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+    if(len < radius){
+      return true;
+    }
+    return false;
+  }
+  
+  bool tophTest(float a){
+    return true;
+  }
+  
+  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+    
+    // normal
+    if ( currentdistortioneffect == 1 ) {
+      return texture2D( src, vUv ).rgba;
+    }
+  
+    // TOPHER_DIST_MIRROR_CIRCLES
+    if ( currentdistortioneffect == 100 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.06;
+      float x = -0.24;
+      float y = +0.0;
+      float scale = 4.0;
+  
+      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+        //gl_FragColor = texture2D( src, vUv ).rgba;
+  
+        vec2 uvs = vec2(uv);
+        
+        if ( uv.x < 0.0){
+            uvs.x -= x;
+            uvs *= scale;
+        }else{
+            uvs.x += x;
+            uvs *= scale;
+            uvs.x = - uvs.x;
+        }
+  
+        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else{
+            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+            gl_FragColor = vec4(pixelColor);
+        }
+  
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+  
+    // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+    if ( currentdistortioneffect == 101 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+      float radius = 0.2;
+      float x = -0.2;
+      float y = +0.0;
+      float scale = 4.0;
+  
+      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+        gl_FragColor = texture2D( src, vUv ).rgba;
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+    // TOPHER_DIST_CIRCLE_3 - 3 circles
+    if ( currentdistortioneffect == 102 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+      float radius = 0.06;
+      float x = -0.24;
+      float y = +0.0;
+  
+      if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+       
+        gl_FragColor = texture2D( src, vUv ).rgba;
+      }else{
+        gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+  
+    // TOPHER_DIST_CENTER_CIRCLE
+    if ( currentdistortioneffect == 103 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.12;
+      float x = -0.0;
+      float y = +0.0;
+      float scale = 2.5;
+  
+      if(mask_circle(uv, radius, x, y)) {
+  
+        vec2 uvs = vec2(uv);
+        uvs *= scale;
+        
+        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else{
+            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+            gl_FragColor = vec4(pixelColor);
+        }
+  
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
+        // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
+        //discard;
+      }
+      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+      return gl_FragColor;
+    }//103
+  
+    //ONLY SQUASH
+    if ( currentdistortioneffect == 104 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.3;
+      float x = -0.0;
+      float y = +0.0;
+      float scale = 1.5;
+  
+      vec2 uvs = vec2(uv);
+      // uvs *= scale;
+      uvs.x *= 1.333;
+      
+      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+      gl_FragColor = vec4(pixelColor);
+  
+  
+  
+      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+      return gl_FragColor;
+    }//104
+  
+    //ONLY CIRCLE
+    if ( currentdistortioneffect == 105 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.28;
+      float scale = 1.0; //Size of video.
+  
+      if(mask_circle(uv, radius, 0.0, 0.0)) {
+        vec2 uvs = vec2(uv);
+        uvs *= scale;
+        vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
+        discard;
+      }
+      return gl_FragColor;
+    }//105
+  
+    //MIRROR
+    if ( currentdistortioneffect == 106 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      
+      if (uv.y > 0.0){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+       
+      }else{
+        // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+        // discard;
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }
+
+      if (uv.y > 0.3){
+        discard;
+      }
+        	
+      gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+      
+      return gl_FragColor;
+    }//105
+  
+  
+    // phasing sides (test)
+    if ( currentdistortioneffect == 2 ) {
+      vec2 wuv = vec2(0,0);
+      if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
+      if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
+      wuv = wuv + vec2( .0, .0 );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // multi
+    if ( currentdistortioneffect == 3 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
+      // wuv = vUv + vec2( extra, extra );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // pip
+    if ( currentdistortioneffect == 4 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
+      float sil = 1.;
+  
+      // top-left
+      if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
+      if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
+      return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
+    }
+  }
+  
+  
+  
+  
+    // -------------
+  
+    // wipes (move these to mixer?)
+    //if ( gl_FragCoord.x > 200.0 ) {
+    //  return vec4(0.0,0.0,0.0,0.0);
+    //}else {
+    //  return src;
+    //}
+  
+  /* custom_helpers */
+  
+  
+  `
+
+
   _self.init = function() {
     // add uniforms to renderer
     _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'] = { type: "i", value: 1 }
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
 
-    // add uniforms to fragmentshader
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+    if (_self._fragmentChannel == 1){
 
-    if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-      console.log("DistortionEffect REPLACE"); 
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
-`
+      // add uniforms to fragmentshader
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-bool mask_circle(vec2 uv, float radius, float x, float y){
-    
-  // uv.x *= 1.6; 
-   uv.y /= (16.0 / 9.0);
-  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
-  if(len < radius){
+      if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect REPLACE"); 
+        _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
+      };
+
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
+      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      
+
+    }else{
+      // add uniforms to fragmentshader
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+
+      if ( renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect REPLACE"); 
+        _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
+
+      };
+
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
+      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+
+
+    }
+
+
+
+} // init
+
+  var i = 0.;
+  _self.update = function() {
+    i += 0.001
+    // renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .5, 1 - Math.random() * .5 ) }
+
+    /*
+    if (currentEffect == 1) {
+      source.setUVMapMod(0., 0.)
+      source.setUVMap(0., 0.)
+    }
+
+    // multi
+    if (currentEffect == 2) {
+      source.setUVMapMod(0.25, 0.25)
+      source.setUVMap(2., 2.)
+    }
+
+    // pip
+    if (currentEffect == 3 ) {
+      source.setUVMapMod(0.2,0.2)
+      source.setUVMap(0.5,0.4)
+    }
+    */
+
+    if (currentEffect == 4) {
+    }
+    //--------------------------------------------------------------------------------------------------------
+    // testSource1.setUVMapMod(0.25, 0.25)
+    // testSource1.setUVMapMod(0.25, 0.25)
+
+    // testSource1.setUVMap(1, 1)
+    // testSource1.setUVMap(1, 1)
+
+    // pip
+    /*
+    testSource1.setUVMapMod(0, 0)
+    var c = 0
+    setInterval( function() {
+      c+= 0.02
+      //testSource1.setUVMap( Math.sin(c)+2, Math.sin(c)+1 )
+      testSource1.setUVMapMod( Math.sin(c)-1, -Math.cos(c)-1 )
+    }, 50)
+    */
+    //--------------------------------------------------------------------------------------------------------
+
+
+    // ONLY WORKS ON VIDEO SOURCE, IF IT WORKS
+    //renderer.customUniforms[source.uuid+'_uvmap_mod'] = { type: "v2", value: new THREE.Vector2( i, Math.cos(i) ) }
+    //renderer.customUniforms[source.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .82, 1 - Math.random() * .82 ) }
+  }
+
+  /**
+   * @description currentDistortionffect number
+   * @function Effect#DistortionEffect#effect
+   * @param {Number} effectnumber CurrentDistortionEffect number 1
+   */
+
+  _self.effect = function( _num ){
+    if ( _num != undefined ) {
+      currentEffect = _num
+      if (renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
+      // update uniform ?
+    }
+
+    return currentEffect
+  }
+  /**
+   * @description the extra, for several effects, usually between 0 and 1, but go grazy
+   * @function Effect#DistortionEffect#extra
+   * @param {float} floatValue between 0 and 1
+   */
+  _self.extra = function( _num ){
+
+    if ( _num != undefined ) {
+      currentExtra = _num
+      if (renderer.customUniforms[_self.uuid+'_extra']) renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
+      // update uniform ?
+    }
+    return _num
+  }
+}
+
+DistortionEffect.prototype = new Effect(); // assign prototype to marqer
+DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
+
+/**
+ * @summary
+ *   The Distortion effect has a series of simple distortion effects, ie. it manipulates, broadly, the UV mapping and pixel placements
+ *   Effects Example on codepen:
+ *   <a href="https://codepen.io/xangadix/pen/eXLGwJ" target="_blank">codepen</a>
+ *
+ * @description
+ *   Distortion  effect allows for a series of color Distortion, mostly
+ *   mimicing classic mixers like MX50 and V4
+ *   ```
+ *    1. normal
+ *    2. phasing sides
+ *    3. multi
+ *    4. PiP (Picture in picture)
+ *
+ *   ```
+ *
+ * @example
+ *   let myEffect = new DistortionEffect( renderer, { source: myVideoSource, effect: 1 });
+ *
+ * @constructor Effect#DistortionEffect
+ * @implements Effect
+ * @param renderer:GlRenderer
+ * @param options:Object
+ * @author Sense Studios
+ */
+
+// fragment
+// vec3 b_w = ( source.x + source.y + source.z) / 3
+// vec3 amount = source.xyz + ( b_w.xyx * _alpha )
+// col = vec3(col.r+col.g+col.b)/3.0;
+// col = vec4( vec3(col.r+col.g+col.b)/3.0, _alpha );
+
+// TO THINK ON: Seems we need to connect this to SOURCES somehow
+
+function DistortionEffect( _renderer, _options ) {
+
+  // create and instance
+  var _self = this;
+
+  // set or get uid
+  if ( _options.uuid == undefined ) {
+    _self.uuid = "DistortionEffect_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+  } else {
+    _self.uuid = _options.uuid
+  }
+
+  if ( _options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = _options.fragmentChannel;
+  }
+
+  // add to renderer
+  _renderer.add(_self)
+  _self.type = "Effect"
+
+  var source = _options.source
+  // var currentEffect = _options.effect
+  // var currentEffect = 12
+
+  var currentEffect = _options.effect
+  var currentEffect = 1
+  var currentExtra = 0.8
+
+  var shaderScript = `
+
+  bool mask_circle(vec2 uv, float radius, float x, float y){
+      
+    // uv.x *= 1.6; 
+     uv.y /= (16.0 / 9.0);
+    float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+    if(len < radius){
+      return true;
+    }
+    return false;
+  }
+  
+  bool tophTest(float a){
     return true;
   }
-  return false;
-}
-
-bool tophTest(float a){
-  return true;
-}
-
-vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
   
-  // normal
-  if ( currentdistortioneffect == 1 ) {
-    return texture2D( src, vUv ).rgba;
-  }
-
-  // TOPHER_DIST_MIRROR_CIRCLES
-  if ( currentdistortioneffect == 100 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-    float radius = 0.06;
-    float x = -0.24;
-    float y = +0.0;
-    float scale = 4.0;
-
-    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
-      //gl_FragColor = texture2D( src, vUv ).rgba;
-
-      vec2 uvs = vec2(uv);
-      
-      if ( uv.x < 0.0){
-          uvs.x -= x;
-          uvs *= scale;
-      }else{
-          uvs.x += x;
-          uvs *= scale;
-          uvs.x = - uvs.x;
-      }
-
-      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
-          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      } else{
-          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-          gl_FragColor = vec4(pixelColor);
-      }
-
-    }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
-    }
-    return gl_FragColor;
-  }
-
-
-  // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
-  if ( currentdistortioneffect == 101 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
-    float radius = 0.2;
-    float x = -0.2;
-    float y = +0.0;
-    float scale = 4.0;
-
-    if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
-      gl_FragColor = texture2D( src, vUv ).rgba;
-    }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
-    }
-    return gl_FragColor;
-  }
-
-  // TOPHER_DIST_CIRCLE_3 - 3 circles
-  if ( currentdistortioneffect == 102 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
-    float radius = 0.06;
-    float x = -0.24;
-    float y = +0.0;
-
-    if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
-     
-      gl_FragColor = texture2D( src, vUv ).rgba;
-    }else{
-    	gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
-    }
-    return gl_FragColor;
-  }
-
-
-  // TOPHER_DIST_CENTER_CIRCLE
-  if ( currentdistortioneffect == 103 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-    float radius = 0.12;
-    float x = -0.0;
-    float y = +0.0;
-    float scale = 2.5;
-
-    if(mask_circle(uv, radius, x, y)) {
-
-      vec2 uvs = vec2(uv);
-      uvs *= scale;
-      
-      if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
-          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      } else{
-          vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-          gl_FragColor = vec4(pixelColor);
-      }
-
-    }else{
-    	gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
-      // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
-      //discard;
-    }
-    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
-    return gl_FragColor;
-  }//103
-
-  //ONLY SQUASH
-  if ( currentdistortioneffect == 104 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-    float radius = 0.3;
-    float x = -0.0;
-    float y = +0.0;
-    float scale = 1.5;
-
-    vec2 uvs = vec2(uv);
-    // uvs *= scale;
-    uvs.x *= 1.333;
+  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
     
-    vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-    gl_FragColor = vec4(pixelColor);
-
-
-
-    // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
-    return gl_FragColor;
-  }//104
-
-  //ONLY CIRCLE
-  if ( currentdistortioneffect == 105 ) {
-
-    vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-    float radius = 0.28;
-    float scale = 1.0; //Size of video.
-
-    if(mask_circle(uv, radius, 0.0, 0.0)) {
-      vec2 uvs = vec2(uv);
-      uvs *= scale;
-      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-      gl_FragColor = vec4(pixelColor);
-    }else{
-    	gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
-      discard;
+    // normal
+    if ( currentdistortioneffect == 1 ) {
+      return texture2D( src, vUv ).rgba;
     }
-    return gl_FragColor;
-  }//105
-
-
-
-  // phasing sides (test)
-  if ( currentdistortioneffect == 2 ) {
-    vec2 wuv = vec2(0,0);
-    if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
-    if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
-    wuv = wuv + vec2( .0, .0 );
-    return texture2D( src, wuv ).rgba;
+  
+    //ONLY CIRCLE
+    if ( currentdistortioneffect == 105 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.28;
+      float scale = 1.0; //Size of video.
+  
+      if(mask_circle(uv, radius, 0.0, 0.0)) {
+        vec2 uvs = vec2(uv);
+        uvs *= scale;
+        vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
+        discard;
+      }
+      return gl_FragColor;
+    }//105
+  
+    //MIRROR_VERTICAL
+    if ( currentdistortioneffect == 106 ) {
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      if (uv.y > 0.0){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }
+      // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+      return gl_FragColor;
+    }//MIRROR_VERTICAAL
+  
+    //MIRROR_HORIZONTAL
+    if ( currentdistortioneffect == 107 ) {
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      if (uv.x > 0.0){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        vec4 pixelColor = texture2D(src, vec2(-uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }
+      // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+      return gl_FragColor;
+    }//MIRROR_VERTICAAL
+  
+    
   }
+  
+  
+  
+  
+    // -------------
+  
 
-  // multi
-  if ( currentdistortioneffect == 3 ) {
-    vec2 wuv = vec2(0,0);
-    wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
-    // wuv = vUv + vec2( extra, extra );
-    return texture2D( src, wuv ).rgba;
-  }
-
-  // pip
-  if ( currentdistortioneffect == 4 ) {
-    vec2 wuv = vec2(0,0);
-    wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
-    float sil = 1.;
-
-    // top-left
-    if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
-    if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
-    return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
-  }
-}
+  
+  /* custom_helpers */
+  
+  
+  `
 
 
+  _self.init = function() {
+    // add uniforms to renderer
+    _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'] = { type: "i", value: 1 }
+    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
+
+    if (_self._fragmentChannel == 1){
+
+      // add uniforms to fragmentshader
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+
+      if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect REPLACE"); 
+        _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
+      };
+
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
+      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      
+
+    }else{
+      // add uniforms to fragmentshader
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+
+      if ( renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect REPLACE"); 
+        _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
+
+      };
+
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
+      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
 
 
-  // -------------
-
-  // wipes (move these to mixer?)
-  //if ( gl_FragCoord.x > 200.0 ) {
-  //  return vec4(0.0,0.0,0.0,0.0);
-  //}else {
-  //  return src;
-  //}
-
-/* custom_helpers */
+    }
 
 
-`
-  );
-}
 
-    // (re) use the sampler to make another output, with distortion
-//    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', '\
-//vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */')
-
-
-//renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */')
-
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
-vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
 } // init
 
   var i = 0.;
@@ -4112,7 +4440,7 @@ var GlRenderer = function (_options) {
     
       _self.scene = new THREE.Scene();
       _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
-      _self.camera.position.z = 27; // 20
+      _self.camera.position.z = 20
     
       // container for all elements that inherit init() and update()
       _self.nodes = [] // sources modules and effects
@@ -4177,15 +4505,259 @@ var GlRenderer = function (_options) {
            defines: _self.customDefines,
            vertexShader: _self.vertexShader,
            fragmentShader: _self.fragmentShader,
-          //  side: THREE.DoubleSide,
+           side: THREE.DoubleSide,
+           transparent: true
+        })
+    
+        // apply the shader material to a surface
+        _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
+        _self.flatGeometry.translate( 0, 0, 0 );
+        _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
+        // surface.position.set(60,50,150);
+    
+        /**
+         * A reference to the threejs scene
+         * @member GlRenderer#scene
+         */
+        _self.scene.add( _self.surface );
+      }
+    
+      // ---------------------------------------------------------------------------
+    
+      /** @function GlRenderer.render */
+      _self.render = function() {
+        requestAnimationFrame( _self.render );
+        _self.glrenderer.render( _self.scene, _self.camera );
+        _self.onafterrender()
+        _self.glrenderer.setSize( _self.width, _self.height );
+        _self.nodes.forEach( function(n) { n.update() } );
+    
+        cnt++;
+        _self.customUniforms['time'].value = cnt;
+      }
+    
+      // update size!
+      _self.resize = function() {
+    
+        if ( _self.options.autosize ) {
+          _self.height = window.innerHeight
+          _self.width = window.innerWidth
+        }
+        
+        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+        // console.log("resize", _self.width, _self.height)
+        // resize viewport (write exception for width >>> height, now gives black bars )
+        _self.camera.aspect = _self.width / _self.height;
+        _self.camera.updateProjectionMatrix();
+        _self.glrenderer.setSize( _self.width, _self.height );
+      }
+    
+      window.addEventListener('resize', function() {
+        _self.resize()
+      })
+    
+      // ---------------------------------------------------------------------------
+      // Helpers
+    
+      // adds nodes to the renderer
+      // function is implicit, and is colled by the modules
+      _self.add = function( module ) {
+        _self.nodes.push( module )
+      }
+    
+      // reset the renderer, for a new lay out
+      /**
+       * Disposes the renderer
+       * @function GlRenderer#dispose
+       */
+      _self.dispose = function() {
+        _self.shaderMaterial
+        _self.flatGeometry
+        _self.scene.remove(_self.surface)
+        _self.glrenderer.resetGLState()
+        _self.customUniforms = {}
+        _self.customDefines = {}
+    
+        cnt = 0.;
+        _self.customUniforms['time'] = { type: "f", value: cnt }
+        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+    
+        // reset the vertexshader
+        _self.vertexShader = `
+          varying vec2 vUv;
+          void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            vUv = uv;
+          }
+        `
+    
+        // reset the fragment shader
+        _self.fragmentShader = `
+          uniform int time;
+          uniform vec2 screenSize;
+    
+          /* custom_uniforms */
+          /* custom_helpers */
+          varying vec2 vUv;
+          void main() {
+            /* custom_main */
+          }
+        `
+    
+        _self.nodes = []
+      }
+    }
+    
+
+/**
+ * @summery
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @description
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @constructor GlRenderer
+ * @example
+ *    <!-- a Canvas element with id: glcanvas is required! -->
+ *    <canvas id="glcanvas"></canvas>
+ *
+ *
+ *    <script>
+ *      let renderer = new GlRenderer();
+ *
+ *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
+ *      let output = new Output( renderer, red )
+ *
+ *      renderer.init();
+ *      renderer.render();
+ *    </script>
+ */
+
+ /*
+    We might try and change THREEJS and move to regl;
+    https://github.com/regl-project, http://regl.party/examples => video
+    133.6 => ~26kb
+ */
+
+    var GlRenderer = function( _options ) {
+
+      console.log("START GlRenderer  -------------------")
+
+      var _self = this
+    
+      /** Set uop options */
+      _self.options = { element: 'glcanvas' }
+      if ( _options != undefined ) {
+        _self.options = _options
+      }
+    
+      // set up threejs scene
+      if ( _self.options.canvas ) {
+        _self.element = _self.options.canvas
+      } else {
+        _self.element = document.getElementById(_self.options.element)
+      }
+    
+      _self.onafterrender = function() {}
+      
+      // default
+      // window.innerWidth, window.innerHeight
+      if ( _self.options.width && _self.options.height  ) {
+        _self.width = _self.options.width
+        _self.height = _self.options.height
+      }else{
+        _self.width = window.innerWidth //_self.element.offsetWidth
+        _self.height = window.innerHeight //_self.element.offsetHeight
+      }
+    
+      _self.scene = new THREE.Scene();
+      _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
+      _self.camera.position.z = 27; // 20
+    
+      // container for all elements that inherit init() and update()
+      _self.nodes = [] // sources modules and effects
+    
+      // containers for custom customUniforms and customDefines
+      _self.customUniforms = {}
+      _self.customDefines = {}
+    
+      // base config, screensize and time
+      var cnt = 0.;
+      _self.customUniforms['time'] = { type: "f", value: cnt }
+      _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
+    
+      /**
+       * The vertex shader
+       * @member GlRenderer#vertexShader
+       */
+      _self.vertexShader = `
+        varying vec2 vUv;\
+        void main() {\
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
+          vUv = uv;\
+        }
+      `
+    
+       /**
+        * The fragment shader
+        * @member GlRenderer#fragmentShader
+        */
+         // base fragment shader
+      _self.fragmentShader = `
+        uniform float time;
+        uniform vec2 screenSize;
+    
+        /* custom_uniforms */\
+        /* custom_helpers */\
+        varying vec2 vUv;\
+        void main() {\
+          /* custom_main */\
+        }
+      `
+
+      _self.fragmentShader2 = `
+      uniform float time;
+      uniform vec2 screenSize;
+  
+      /* custom_uniforms */\
+      /* custom_helpers */\
+      varying vec2 vUv;\
+      void main() {\
+        /* custom_main */\
+      }
+    `
+    
+      // ---------------------------------------------------------------------------
+      /** @function GlRenderer.init */
+      _self.init = function(  ) {
+        console.log("INIT Renderer -------------------")
+        //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
+        _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
+    
+        // init nodes
+        // reset the renderer, for a new lay out
+        /**
+         * All the nodes currently added to this renderer
+         * @member GlRenderer#nodes
+         */
+        _self.nodes.forEach(function(n){ n.init() });
+    
+        console.log("GLRenderer. Shader: " + _self.fragmentShader);
+        // create the shader
+        _self.shaderMaterial = new THREE.ShaderMaterial({
+           uniforms: _self.customUniforms,
+           defines: _self.customDefines,
+           vertexShader: _self.vertexShader,
+           fragmentShader: _self.fragmentShader,
+           side: THREE.DoubleSide,
            transparent: true
         })
         _self.shaderMaterial2 = new THREE.ShaderMaterial({
           uniforms: _self.customUniforms,
           defines: _self.customDefines,
           vertexShader: _self.vertexShader,
-          fragmentShader: _self.fragmentShader,
-          // side: THREE.DoubleSide,
+          fragmentShader: _self.fragmentShader2,
+          side: THREE.DoubleSide,
           transparent: true
        })
     
@@ -4314,6 +4886,19 @@ var GlRenderer = function (_options) {
             /* custom_main */
           }
         `
+
+                // reset the fragment shader
+                _self.fragmentShader2 = `
+                uniform int time;
+                uniform vec2 screenSize;
+          
+                /* custom_uniforms */
+                /* custom_helpers */
+                varying vec2 vUv;
+                void main() {
+                  /* custom_main */
+                }
+              `
     
         _self.nodes = []
       }
@@ -5344,7 +5929,7 @@ var Monitor = class {
  // renderer.init()
  // renderer.render()
 
-function Output(renderer, _source ) {
+function Output(renderer, _source, _source2 ) {
 
   // create and instance
   var _self = this;
@@ -5358,10 +5943,21 @@ function Output(renderer, _source ) {
 
   // add source
   var source = _source
+  var source2 = _source2
 
   _self.init = function() {
     // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', 'final_output = '+ source.uuid +'_output;\n  /* custom_main */')
+   
     renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', '\n  gl_FragColor = vec4( '+ source.uuid +'_output );\n')
+    
+    
+    if (_source2){
+      console.log("Output. Has 2nd source.");
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_main */', '\n  gl_FragColor = vec4( '+ source2.uuid +'_output );\n')
+
+    }
+  
+
   }
 
   _self.update = function() {}
@@ -5517,6 +6113,14 @@ function GifSource( renderer, options ) {
     _self.uuid = options.uuid
   }
 
+  
+  if ( options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = options.fragmentChannel;
+  }
+
+
   // set type
   _self.type = "GifSource"
 
@@ -5552,17 +6156,32 @@ function GifSource( renderer, options ) {
     // create the texture
     gifTexture = new THREE.Texture( canvasElement );
 
+  
     // set the uniforms on the renderer
     renderer.customUniforms[_self.uuid] = { type: "t", value: gifTexture }
     renderer.customUniforms[_self.uuid+'_alpha'] = { type: "f", value: alpha }
 
-    // add uniforms to shader
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
+    
+    if (_self._fragmentChannel == 1){
+          // add uniforms to shader
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
 
-    // add output to main function
-    renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+      // add output to main function
+      renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+
+    }else{
+          // add uniforms to shader
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
+
+      // add output to main function
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
+
+    }
+
 
     // expose gif and canvas
     _self.gif = supergifelement

@@ -23,7 +23,7 @@
  // renderer.init()
  // renderer.render()
 
-function Output(renderer, _source ) {
+function Output(renderer, _source, _source2 ) {
 
   // create and instance
   var _self = this;
@@ -37,10 +37,21 @@ function Output(renderer, _source ) {
 
   // add source
   var source = _source
+  var source2 = _source2
 
   _self.init = function() {
     // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', 'final_output = '+ source.uuid +'_output;\n  /* custom_main */')
+   
     renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', '\n  gl_FragColor = vec4( '+ source.uuid +'_output );\n')
+    
+    
+    if (_source2){
+      console.log("Output. Has 2nd source.");
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_main */', '\n  gl_FragColor = vec4( '+ source2.uuid +'_output );\n')
+
+    }
+  
+
   }
 
   _self.update = function() {}

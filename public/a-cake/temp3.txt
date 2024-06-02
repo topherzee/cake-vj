@@ -1,0 +1,133 @@
+niform float time;
+        uniform vec2 screenSize;
+    
+        uniform sampler2D Gif_3;
+uniform vec4 Gif_3_output;
+uniform float Gif_3_alpha;
+uniform vec4 Dist_3_output;
+uniform int Dist_3_currentdistortioneffect;
+uniform float Dist_3_extra;
+/* custom_uniforms */        
+
+  bool mask_circle(vec2 uv, float radius, float x, float y){
+      
+    // uv.x *= 1.6; 
+     uv.y /= (16.0 / 9.0);
+    float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+    if(len < radius){
+      return true;
+    }
+    return false;
+  }
+  
+  bool tophTest(float a){
+    return true;
+  }
+  
+  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+    
+    // normal
+    if ( currentdistortioneffect == 1 ) {
+      return texture2D( src, vUv ).rgba;
+    }
+  
+    //ONLY CIRCLE
+    if ( currentdistortioneffect == 105 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.28;
+      float scale = 1.0; //Size of video.
+  
+      if(mask_circle(uv, radius, 0.0, 0.0)) {
+        vec2 uvs = vec2(uv);
+        uvs *= scale;
+        vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
+        discard;
+      }
+      return gl_FragColor;
+    }//105
+  
+    //MIRROR
+    if ( currentdistortioneffect == 106 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      
+      if (uv.y > 0.0){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+       
+      }else{
+        // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+        // discard;
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }
+
+      if (uv.y > 0.3){
+        discard;
+      }
+        	
+      gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+      
+      return gl_FragColor;
+    }//105
+  
+  
+    // phasing sides (test)
+    if ( currentdistortioneffect == 2 ) {
+      vec2 wuv = vec2(0,0);
+      if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
+      if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
+      wuv = wuv + vec2( .0, .0 );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // multi
+    if ( currentdistortioneffect == 3 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
+      // wuv = vUv + vec2( extra, extra );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // pip
+    if ( currentdistortioneffect == 4 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
+      float sil = 1.;
+  
+      // top-left
+      if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
+      if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
+      return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
+    }
+  }
+  
+  
+  
+  
+    // -------------
+  
+    // wipes (move these to mixer?)
+    //if ( gl_FragCoord.x > 200.0 ) {
+    //  return vec4(0.0,0.0,0.0,0.0);
+    //}else {
+    //  return src;
+    //}
+  
+  /* custom_helpers */
+  
+  
+          varying vec2 vUv;        
+          
+          void main() {          
+            
+            vec4 Gif_3_output = ( texture2D( Gif_3, vUv ).rgba * Gif_3_alpha );
+        
+            vec4 Dist_3_output = distortioneffect( Gif_3, Dist_3_currentdistortioneffect, Dist_3_extra, vUv );
+  
+            gl_FragColor = vec4( Gif_3_output );
+        }

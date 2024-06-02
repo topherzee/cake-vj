@@ -90,6 +90,130 @@ function DistortionEffect( _renderer, _options ) {
       return texture2D( src, vUv ).rgba;
     }
   
+    // TOPHER_DIST_MIRROR_CIRCLES
+    if ( currentdistortioneffect == 100 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.06;
+      float x = -0.24;
+      float y = +0.0;
+      float scale = 4.0;
+  
+      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+        //gl_FragColor = texture2D( src, vUv ).rgba;
+  
+        vec2 uvs = vec2(uv);
+        
+        if ( uv.x < 0.0){
+            uvs.x -= x;
+            uvs *= scale;
+        }else{
+            uvs.x += x;
+            uvs *= scale;
+            uvs.x = - uvs.x;
+        }
+  
+        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else{
+            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+            gl_FragColor = vec4(pixelColor);
+        }
+  
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+  
+    // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
+    if ( currentdistortioneffect == 101 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+      float radius = 0.2;
+      float x = -0.2;
+      float y = +0.0;
+      float scale = 4.0;
+  
+      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
+        gl_FragColor = texture2D( src, vUv ).rgba;
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+    // TOPHER_DIST_CIRCLE_3 - 3 circles
+    if ( currentdistortioneffect == 102 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
+      float radius = 0.06;
+      float x = -0.24;
+      float y = +0.0;
+  
+      if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
+       
+        gl_FragColor = texture2D( src, vUv ).rgba;
+      }else{
+        gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
+      }
+      return gl_FragColor;
+    }
+  
+  
+    // TOPHER_DIST_CENTER_CIRCLE
+    if ( currentdistortioneffect == 103 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.12;
+      float x = -0.0;
+      float y = +0.0;
+      float scale = 2.5;
+  
+      if(mask_circle(uv, radius, x, y)) {
+  
+        vec2 uvs = vec2(uv);
+        uvs *= scale;
+        
+        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        } else{
+            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+            gl_FragColor = vec4(pixelColor);
+        }
+  
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
+        // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
+        //discard;
+      }
+      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+      return gl_FragColor;
+    }//103
+  
+    //ONLY SQUASH
+    if ( currentdistortioneffect == 104 ) {
+  
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      float radius = 0.3;
+      float x = -0.0;
+      float y = +0.0;
+      float scale = 1.5;
+  
+      vec2 uvs = vec2(uv);
+      // uvs *= scale;
+      uvs.x *= 1.333;
+      
+      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
+      gl_FragColor = vec4(pixelColor);
+  
+  
+  
+      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
+      return gl_FragColor;
+    }//104
+  
     //ONLY CIRCLE
     if ( currentdistortioneffect == 105 ) {
   
@@ -109,35 +233,60 @@ function DistortionEffect( _renderer, _options ) {
       return gl_FragColor;
     }//105
   
-    //MIRROR_VERTICAL
+    //MIRROR
     if ( currentdistortioneffect == 106 ) {
+  
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      
       if (uv.y > 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
+       
       }else{
+        // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+        // discard;
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }
-      // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
-      return gl_FragColor;
-    }//MIRROR_VERTICAAL
-  
-    //MIRROR_HORIZONTAL
-    if ( currentdistortioneffect == 107 ) {
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      if (uv.x > 0.0){
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
-      }else{
-        vec4 pixelColor = texture2D(src, vec2(-uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
+
+      if (uv.y > 0.3){
+        discard;
       }
-      // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+        	
+      gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
+      
       return gl_FragColor;
-    }//MIRROR_VERTICAAL
+    }//105
   
-    
+  
+    // phasing sides (test)
+    if ( currentdistortioneffect == 2 ) {
+      vec2 wuv = vec2(0,0);
+      if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
+      if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
+      wuv = wuv + vec2( .0, .0 );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // multi
+    if ( currentdistortioneffect == 3 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
+      // wuv = vUv + vec2( extra, extra );
+      return texture2D( src, wuv ).rgba;
+    }
+  
+    // pip
+    if ( currentdistortioneffect == 4 ) {
+      vec2 wuv = vec2(0,0);
+      wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
+      float sil = 1.;
+  
+      // top-left
+      if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
+      if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
+      return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
+    }
   }
   
   
@@ -145,7 +294,12 @@ function DistortionEffect( _renderer, _options ) {
   
     // -------------
   
-
+    // wipes (move these to mixer?)
+    //if ( gl_FragCoord.x > 200.0 ) {
+    //  return vec4(0.0,0.0,0.0,0.0);
+    //}else {
+    //  return src;
+    //}
   
   /* custom_helpers */
   

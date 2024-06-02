@@ -104,6 +104,18 @@
           /* custom_main */\
         }
       `
+
+      _self.fragmentShader2 = `
+      uniform float time;
+      uniform vec2 screenSize;
+  
+      /* custom_uniforms */\
+      /* custom_helpers */\
+      varying vec2 vUv;\
+      void main() {\
+        /* custom_main */\
+      }
+    `
     
       // ---------------------------------------------------------------------------
       /** @function GlRenderer.init */
@@ -120,22 +132,22 @@
          */
         _self.nodes.forEach(function(n){ n.init() });
     
-        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
+        console.log("GLRenderer. Shader: " + _self.fragmentShader);
         // create the shader
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,
            defines: _self.customDefines,
            vertexShader: _self.vertexShader,
            fragmentShader: _self.fragmentShader,
-          //  side: THREE.DoubleSide,
+           side: THREE.DoubleSide,
            transparent: true
         })
         _self.shaderMaterial2 = new THREE.ShaderMaterial({
           uniforms: _self.customUniforms,
           defines: _self.customDefines,
           vertexShader: _self.vertexShader,
-          fragmentShader: _self.fragmentShader,
-          // side: THREE.DoubleSide,
+          fragmentShader: _self.fragmentShader2,
+          side: THREE.DoubleSide,
           transparent: true
        })
     
@@ -264,6 +276,19 @@
             /* custom_main */
           }
         `
+
+                // reset the fragment shader
+                _self.fragmentShader2 = `
+                uniform int time;
+                uniform vec2 screenSize;
+          
+                /* custom_uniforms */
+                /* custom_helpers */
+                varying vec2 vUv;
+                void main() {
+                  /* custom_main */
+                }
+              `
     
         _self.nodes = []
       }

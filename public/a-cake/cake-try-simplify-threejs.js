@@ -15,36 +15,11 @@ var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
 
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer )
-// var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4", uuid:"Video_1"});
-//   var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4",});
-//var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
-// var source2 = new GifSource(renderer, {src: "/images/640X480.gif",});
-// var source2 = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
+// var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4",});
+// var source2 = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4",});
 
-// var source3 = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
-var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:1,  uuid:"Gif_3"});
-var source4 = new GifSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4"  });
-// var source4 = new GifSource(renderer, {src: "/images/animal.gif", uuid:"Gif_4"});
-
-
-
-
-
-
-// var files1 = new FileManager( source1 )
-// var files2 = new FileManager( source2 )
-
-// var FILE_URL = "http://localhost:4000/files"
-// // myFilemanager.load_set( "cliplist-DCVS01.json")
-// files1.load_set( FILE_URL)
-// files2.load_set( FILE_URL)
-
-// function handleClipClick(url) {
-//     // const messageParagraph = document.getElementById('message');
-//     // messageParagraph.textContent = 'Button was clicked!';
-//     console.log("clipp click:" + url);
-//     files1.changeToUrl(url);
-// }
+var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:1});
+// var source4 = new GifSource(renderer, {src: "/images/animal.gif",});
 
 
 //TODO - does not seem like is should be necessary - or setTimeout() instead.
@@ -52,7 +27,7 @@ var playInterval = setInterval( function() {
     // source2.video.pause();
     // source1.pause();
     // source2.pause();
-    // source3.pause();
+    source3.pause();
     // source3.pause();
     // source4.pause();
     // console.log("FDSFDSFDSFDSFDSFDFSFS-------")
@@ -60,23 +35,43 @@ var playInterval = setInterval( function() {
 
 },1000);
   
+// preview out
+// var monitor1 = new Monitor( renderer, { source: source1, element: 'monitor_1',width:128, height:96 })
+// var monitor2 = new Monitor( renderer, { source: source4, element: 'monitor_2',width:128, height:96 })
+// var monitor3 = new Monitor( renderer, { source: source3, element: 'monitor_3',width:128, height:96 })
 
 
-var layer_3_effect = new DistortionEffect(renderer, { source: source3,  fragmentChannel:1,  uuid:"Dist_3"} );
-var layer_4_effect = new DistortionEffect(renderer, { source: source4,  fragmentChannel:2,  uuid:"Dist_4"} );
-
-var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
-
-var layer_3_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_3_effect,  uuid: "Mixer_3"  } )
 
 
-var output;
-if (typeof source4 !=='undefined'){
-    output = new Output( renderer, layer_3_effect, layer_4_effect )
-}else{
-    output = new Output( renderer, layer_3_effect )
-}
 
+// transformers
+// mix transformer signals (white and black)
+var trans_white = new SolidSource( renderer, { color: { r:1.0, g:1.0, b:1.0 } } );
+var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 } } );
+
+
+// var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: source1 }  )
+// // var layer_1_effect = new ColorEffect(renderer, { source: layer_1_mixer } ); 
+
+// var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: source2 }  )
+// var layer_2_effect = new ColorEffect(renderer, { source: layer_2_mixer } ); 
+
+// var layer_1_effect = new DistortionEffect(renderer, { source: source1 } );
+// // var layer_1_effect = new ColorEffect(renderer, { source: source1 } ); 
+
+// var layer_1_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_1_effect }  )
+
+// // var layer_2_effect = new ColorEffect(renderer, { source: source2 } ); 
+// var layer_2_effect = new DistortionEffect(renderer, { source: source2 } ); 
+// var layer_2_mixer = new Mixer( renderer, { source1: layer_1_mixer, source2: layer_2_effect }  )
+
+
+// wire the last one to the output
+// var output = new Output( renderer, source3 )
+// var output = new Output( renderer, layer_2_mixer, source3 )
+// var output = new Output( renderer, layer_2_mixer, layer_2_mixer )
+
+// var output = new Output( renderer, source3 )
 
 console.log("CAKE Call renderer.init() --------------------");
 
@@ -98,8 +93,8 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
-layer_3_effect.effect(106);
-layer_4_effect.effect(107);
+// layer_1_effect.effect(TOPHER_ONLY_CIRCLE);
+// layer_2_effect.effect(TOPHER_ONLY_CIRCLE);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;
@@ -107,15 +102,18 @@ const FAM = 4;
 const LUM1 = 10;
 const LUM2 = 11;
 const BOOM = 9
+// layer_2_mixer.mixMode(NAM)
+// layer_1_mixer.mixMode(NAM)
 
 
 
-setTimeout(() => {
-    
-    document.getElementById('layer_2_fader').value = 1.0
-    document.getElementById('layer_1_fader').value = 1.0
+// setTimeout(() => {
+//     layer_2_mixer.pod(0.0)
+//     layer_1_mixer.pod(0.0)
+//     document.getElementById('layer_2_fader').value = 1.0
+//     document.getElementById('layer_1_fader').value = 1.0
 
-  }, 1000);
+//   }, 1000);
 
 // we're done here
 // TODO document.getElementById('loader').remove()
@@ -134,22 +132,22 @@ var original_mixmode = 1
     // CAKE MIXER
 // ---------------------------------------------------------------------------
 
-// // TOPHER
-// var blend_select_2 =  document.getElementById('layer_2_blendmode')
+// TOPHER
+var blend_select_2 =  document.getElementById('layer_2_blendmode')
 
 
-// var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
-// var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
-// for(var i=0; i<blendModes.length; i++){
-//     // option(value=blendModes[i]) 
-//     // = blendModesNames[i]
+var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
+for(var i=0; i<blendModes.length; i++){
+    // option(value=blendModes[i]) 
+    // = blendModesNames[i]
 
-//     var option = document.createElement("option");
-//     option.text = blendModesNames[i];
-//     option.value = blendModes[i];
-//     blend_select_2.add(option);
+    var option = document.createElement("option");
+    option.text = blendModesNames[i];
+    option.value = blendModes[i];
+    blend_select_2.add(option);
 
-// }
+}
 
 // document.getElementById('btn_switch_layer_1').onclick = function() {
 //     files1.change();
@@ -217,60 +215,60 @@ var original_mixmode = 1
 
 
 
-const FRAME_DELAY = 1 / 60;
-let frameCheck = 0;
-let rate1 = 0.1;
-let rate2 = 0.1;
-let rate3 = 0.1;
-let rate4 = 0.1;
+// const FRAME_DELAY = 1 / 60;
+// let frameCheck = 0;
+// let rate1 = 0.1;
+// let rate2 = 0.1;
+// let rate3 = 0.1;
+// let rate4 = 0.1;
 
-let time1 = 0.0;
-let time2 = 0.0;
-let time3 = 0.0;
+// let time1 = 0.0;
+// let time2 = 0.0;
+// let time3 = 0.0;
 
-function updateVideo(video, rate, time, layer){
+// function updateVideo(video, rate, time, layer){
 
-    if (video == null || ! video.hasOwnProperty("duration")){
-        return;
+//     if (video == null || ! video.hasOwnProperty("duration")){
+//         return;
 
-    }
-    let new_time = time + rate * FRAME_DELAY;
-    if (new_time > video.duration){
-        new_time = 0;
-    }else if (new_time < 0){
-        new_time = video.duration - (rate * FRAME_DELAY);
-        // console.log("layer_2_speed >>", parseFloat(this.value) )
-    }
-    video.currentTime = new_time;
-    time = new_time;
-// console.log("updateTime : ", parseFloat(time))
+//     }
+//     let new_time = time + rate * FRAME_DELAY;
+//     if (new_time > video.duration){
+//         new_time = 0;
+//     }else if (new_time < 0){
+//         new_time = video.duration - (rate * FRAME_DELAY);
+//         // console.log("layer_2_speed >>", parseFloat(this.value) )
+//     }
+//     video.currentTime = new_time;
+//     time = new_time;
+// // console.log("updateTime : ", parseFloat(time))
 
-    var scrubber = document.getElementById('layer_' + layer + '_time');
-    if (scrubber){
-        scrubber.value = time / video.duration;
-    }
+//     var scrubber = document.getElementById('layer_' + layer + '_time');
+//     if (scrubber){
+//         scrubber.value = time / video.duration;
+//     }
     
-    return(time);
-}
-function playVideos () {
-    if (frameCheck==0){
-        // time1 = updateVideo(source1.video, rate1, time1, "1");
-        // time2 = updateVideo(source2.video, rate2, time2, "2");
-        // time3 = updateVideo(source3.video, rate3, time3, "3");
-    }
-    frameCheck++;
-    if (frameCheck == 3){
-        frameCheck = 0;
-    }
+//     return(time);
+// }
+// function playVideos () {
+//     if (frameCheck==0){
+//         time1 = updateVideo(source1.video, rate1, time1, "1");
+//         time2 = updateVideo(source2.video, rate2, time2, "2");
+//         time3 = updateVideo(source3.video, rate3, time3, "3");
+//     }
+//     frameCheck++;
+//     if (frameCheck == 3){
+//         frameCheck = 0;
+//     }
 
-  requestAnimationFrame(playVideos);
-};
+//   requestAnimationFrame(playVideos);
+// };
 
-if (TIME_BY_TOPHER){
-    playVideos();
-}else{
-    //something
-}
+// if (TIME_BY_TOPHER){
+//     playVideos();
+// }else{
+//     //something
+// }
 
 
 // document.getElementById('layer_3_speed').oninput = function() {
