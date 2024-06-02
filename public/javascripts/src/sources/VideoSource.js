@@ -44,6 +44,12 @@ function VideoSource(renderer, options) {
     _self.uuid = options.uuid
   }
 
+  if ( options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = options.fragmentChannel;
+  }
+
   // set options
   var _options = {};
   if ( options != undefined ) _options = options;
@@ -156,19 +162,37 @@ function VideoSource(renderer, options) {
     renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
     // renderer.customUniforms[_self.uuid+'_uvmap_mod'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
 
-    // add uniform
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
-    // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
 
-    // add main
-    // split output in distorted and orig?
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', `
-      vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
-      /* custom_main */
-      `
-    )
+    if (_self._fragmentChannel == 1){
+      // add uniform
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
+      // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
+      // add main
+      // split output in distorted and orig?
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', `
+        vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
+        /* custom_main */
+        `
+      )
+  }else{
+      // add uniform
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
+      // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
+      // add main
+      // split output in distorted and orig?
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_main */', `
+        vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
+        /* custom_main */
+        `
+      )
+
+  }
+
+
 
     // expose video and canvas
     /**
@@ -191,7 +215,6 @@ function VideoSource(renderer, options) {
     if (videoElement.videoWidth){
       image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
     }
-    
     let ratio = raw_ratio / image_ratio;
     let widthS = texture_size / ratio;
     let offsetS = (texture_size - widthS) /2;
