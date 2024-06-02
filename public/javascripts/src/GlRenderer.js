@@ -132,7 +132,8 @@
          */
         _self.nodes.forEach(function(n){ n.init() });
     
-        console.log("GLRenderer. Shader: " + _self.fragmentShader);
+        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
+
         // create the shader
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,

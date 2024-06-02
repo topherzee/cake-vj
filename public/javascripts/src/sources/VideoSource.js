@@ -185,6 +185,7 @@ function VideoSource(renderer, options) {
   var i = 0
   _self.update = function() {
 
+    // Handle aspect ratio of source. Convert to 16x9.
     let raw_ratio = 16.0 / 9.0;
     let image_ratio= 4.0/ 3.0;
     if (videoElement.videoWidth){

@@ -107,16 +107,30 @@ function GifSource( renderer, options ) {
     gifElement = document.createElement('img')
     gifElement.setAttribute('id', 'gif_'+_self.uuid)
     gifElement.setAttribute('rel:auto_play', '1')
-    // supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
-    supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
+    supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    // supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
     supergifelement.draw_while_loading = true
 
     // sup1.load();
     console.log(_self.uuid, " Load", _self.currentSrc, "..." )
     //supergifelement.load_url( _self.currentSrc )
+
+    _self.newImg = new Image();
+
+    _self.newImg.onload = function() {
+      var height = _self.newImg.height;
+      var width = _self.newImg.width;
+      // console.log ('MMMMMM The image size is '+width+'*'+height);
+      _self.imageWidth = width;
+      _self.imageHeight = height;
+
+    }
+    _self.newImg.src = _self.currentSrc;
+
     supergifelement.load_url( _self.currentSrc, function() {
       console.log("play initial source");
       supergifelement.play();
+      
     } )
 
     console.log('Gifsource Loaded First source!', _self.currentSrc, "!")
@@ -126,6 +140,17 @@ function GifSource( renderer, options ) {
   var c = 0;
   _self.update = function() {
 
+    // Handle aspect ratio of source. Convert to 16x9.
+    let texture_size = 1024;
+    let raw_ratio = 16.0 / 9.0;
+    let image_ratio= 4.0/ 3.0;
+    if (_self.imageWidth){
+      image_ratio= _self.imageWidth/ _self.imageHeight;
+    }
+    let ratio = raw_ratio / image_ratio;
+    let widthS = texture_size / ratio;
+    let offsetS = (texture_size - widthS) /2;
+    
     // FIXME: something evil happened here.
     // if (_self.bypass == false) return
     try {
@@ -133,7 +158,8 @@ function GifSource( renderer, options ) {
       // TODO: MAKE THE MODULE SETTABLE.
       if (c%6 == 0) {
         canvasElementContext.clearRect(0, 0, 1024, 1024);
-        canvasElementContext.drawImage( supergifelement.get_canvas(), 0, 0, 1024, 1024  );
+        canvasElementContext.drawImage( supergifelement.get_canvas(), offsetS, 0, widthS, 1024  );
+        // canvasElementContext.drawImage( supergifelement.get_canvas(), 0, 0, 1024, 1024  );
         if ( gifTexture ) gifTexture.needsUpdate = true;
       }
       c++;
