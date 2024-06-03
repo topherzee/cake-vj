@@ -136,6 +136,12 @@ var Mixer = class {
       _self.uuid = options.uuid
     }
 
+    if ( options.fragmentChannel == undefined ) {
+      _self._fragmentChannel = 1;
+      } else {
+      _self._fragmentChannel = options.fragmentChannel;
+    }
+
     // add to renderer
     renderer.add(_self)
 
@@ -168,28 +174,7 @@ var Mixer = class {
     source1 = options.source1 //|| options.src1;   // Mandatory
     source2 = options.source2 //|| options.src2;   // Mandatory
 
-    _self.init = function() {
-
-      // add uniforms to renderer
-      renderer.customUniforms[_self.uuid+'_mixmode'] = { type: "i", value: 1 }
-      renderer.customUniforms[_self.uuid+'_blendmode'] = { type: "i", value: 1 }
-      //renderer.customUniforms[_self.uuid+'_pod'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_alpha1'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_alpha2'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_sampler'] = { type: "t", value: null }
-
-      // add uniforms to fragmentshader
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_mixmode;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_blendmode;\n/* custom_uniforms */')
-      //renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_pod;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha1;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha2;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-
-      // add blendmodes helper, we only need it once
-      if ( renderer.fragmentShader.indexOf('vec4 blend ( vec4 src, vec4 dst, int blendmode )') == -1 ) {
-        renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_helpers */',
-  `
+    var shaderScript =  `
   vec4 blend ( vec4 src, vec4 dst, int blendmode ) {
     if ( blendmode ==  1 ) return src + dst;
     if ( blendmode ==  2 ) return src - dst;
@@ -213,21 +198,62 @@ var Mixer = class {
   }
   /* custom_helpers */
   `
-        );
+
+
+  var shadercode = ""
+  shadercode += "vec4 "+_self.uuid+"_output = vec4( blend( "
+  shadercode += source1.uuid+"_output * "+_self.uuid+"_alpha1, "
+  shadercode += source2.uuid+"_output * "+_self.uuid+"_alpha2, "
+  shadercode += _self.uuid+"_blendmode ) "
+  shadercode += ")"
+  shadercode += " + vec4(  "+source1.uuid+"_output.a < 1.0 ? "+source2.uuid+"_output.rgba * ( "+_self.uuid+"_alpha1 - "+source1.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
+  shadercode += " + vec4(  "+source2.uuid+"_output.a < 1.0 ? "+source1.uuid+"_output.rgba * ( "+_self.uuid+"_alpha2 - - "+source2.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
+  shadercode += ";\n"
+  shadercode += "  /* custom_main */  "
+
+
+
+    _self.init = function() {
+
+      // add uniforms to renderer
+      renderer.customUniforms[_self.uuid+'_mixmode'] = { type: "i", value: 1 }
+      renderer.customUniforms[_self.uuid+'_blendmode'] = { type: "i", value: 1 }
+      //renderer.customUniforms[_self.uuid+'_pod'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_alpha1'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_alpha2'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_sampler'] = { type: "t", value: null }
+
+      // debugger;
+      // Determine which channel to effect!
+      var _fs;
+      if (_self._fragmentChannel == 1){
+        _fs = renderer.fragmentShader;
+      }else{
+        _fs = renderer.fragmentShader2;
       }
 
-      var shadercode = ""
-      shadercode += "vec4 "+_self.uuid+"_output = vec4( blend( "
-      shadercode += source1.uuid+"_output * "+_self.uuid+"_alpha1, "
-      shadercode += source2.uuid+"_output * "+_self.uuid+"_alpha2, "
-      shadercode += _self.uuid+"_blendmode ) "
-      shadercode += ")"
-      shadercode += " + vec4(  "+source1.uuid+"_output.a < 1.0 ? "+source2.uuid+"_output.rgba * ( "+_self.uuid+"_alpha1 - "+source1.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
-      shadercode += " + vec4(  "+source2.uuid+"_output.a < 1.0 ? "+source1.uuid+"_output.rgba * ( "+_self.uuid+"_alpha2 - - "+source2.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
-      shadercode += ";\n"
-      shadercode += "  /* custom_main */  "
+      // add uniforms to fragmentshader
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_mixmode;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_blendmode;\n/* custom_uniforms */')
+      //renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_pod;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha1;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha2;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
 
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', shadercode )
+      // add blendmodes helper, we only need it once
+      if ( _fs.indexOf('vec4 blend ( vec4 src, vec4 dst, int blendmode )') == -1 ) {
+        _fs = _fs.replace('/* custom_helpers */', shaderScript);
+      }
+
+      _fs = _fs.replace('/* custom_main */', shadercode )
+
+      if (_self._fragmentChannel == 1){
+        renderer.fragmentShader = _fs;
+      }else{
+        renderer.fragmentShader2 = _fs;
+      }
+
+
     }
 
     // autofade bpm

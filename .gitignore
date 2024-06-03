@@ -11,4 +11,4 @@ public/video/
 public/images/
 
 docs/reference/
-public/javascripts/build/
+public/javascripts/build/** 

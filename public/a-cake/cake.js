@@ -29,11 +29,6 @@ var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 tex
 var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:1,  uuid:"Gif_3", elementId:"monitor_3",});
 var source4 = new GifSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
 
-
-
-
-
-
 // var files1 = new FileManager( source1 )
 // var files2 = new FileManager( source2 )
 
@@ -66,12 +61,14 @@ var playInterval = setInterval( function() {
 var layer_1_effect = new DistortionEffect(renderer, { source: source1,  fragmentChannel:1,  uuid:"Dist_1"} );
 var layer_2_effect = new DistortionEffect(renderer, { source: source2,  fragmentChannel:2,  uuid:"Dist_2"} );
 
-// var layer_3_effect = new DistortionEffect(renderer, { source: source3,  fragmentChannel:1,  uuid:"Dist_3"} );
-// var layer_4_effect = new DistortionEffect(renderer, { source: source4,  fragmentChannel:2,  uuid:"Dist_4"} );
+var layer_3_effect = new DistortionEffect(renderer, { source: source3,  fragmentChannel:1,  uuid:"Dist_3"} );
+var layer_4_effect = new DistortionEffect(renderer, { source: source4,  fragmentChannel:2,  uuid:"Dist_4"} );
 
 // var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 
 // var layer_3_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_3_effect,  uuid: "Mixer_3"  } )
+var layer_3_mixer = new Mixer( renderer, { source1: source1, source2: source3,  uuid: "Mixer_3"  } )
+var layer_4_mixer = new Mixer( renderer, { source1: source2, source2: source4,  uuid: "Mixer_4", fragmentChannel:2 } )
 
 
 var output;
@@ -80,11 +77,14 @@ var output;
 // }else{
 //     output = new Output( renderer, layer_3_effect )
 // }
-if (typeof layer_2_effect !=='undefined'){
-    output = new Output( renderer, layer_1_effect, layer_2_effect )
-}else{
-    output = new Output( renderer, layer_1_effect )
-}
+
+// if (typeof layer_2_effect !=='undefined'){
+//     output = new Output( renderer, layer_1_effect, layer_2_effect )
+// }else{
+//     output = new Output( renderer, layer_1_effect )
+// }
+
+output = new Output( renderer, layer_3_mixer, layer_4_mixer )
 
 // var monitor1 = new Monitor( renderer, { source: source1, element: 'monitor_1',width:128, height:96, uuid: "Monitor_1"});
 // var monitor2 = new Monitor( renderer, { source: layer_2_effect, element: 'monitor_2',width:128, height:96, uuid: "Monitor_2"});
@@ -111,11 +111,11 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
-layer_1_effect.effect(106);
-layer_2_effect.effect(107);
+layer_1_effect.effect(TOPHER_ONLY_CIRCLE);
+layer_2_effect.effect(TOPHER_ONLY_CIRCLE);
 
-// layer_3_effect.effect(106);
-// layer_4_effect.effect(107);
+layer_3_effect.effect(TOPHER_ONLY_CIRCLE);
+layer_4_effect.effect(TOPHER_ONLY_CIRCLE);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;

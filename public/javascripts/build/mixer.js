@@ -3722,7 +3722,7 @@ function DistortionEffect( _renderer, _options ) {
     //MIRROR_VERTICAL
     if ( currentdistortioneffect == 106 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      if (uv.y > 0.0){
+      if (uv.y >= 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }else{
@@ -3775,7 +3775,7 @@ function DistortionEffect( _renderer, _options ) {
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+      if ( _renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
         console.log("DistortionEffect REPLACE"); 
         _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
       };
@@ -3790,7 +3790,7 @@ function DistortionEffect( _renderer, _options ) {
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
+      if ( _renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
         console.log("DistortionEffect REPLACE"); 
         _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
 
@@ -3809,7 +3809,7 @@ function DistortionEffect( _renderer, _options ) {
   var i = 0.;
   _self.update = function() {
     i += 0.001
-    // renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .5, 1 - Math.random() * .5 ) }
+    // _renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .5, 1 - Math.random() * .5 ) }
 
     /*
     if (currentEffect == 1) {
@@ -3866,7 +3866,7 @@ function DistortionEffect( _renderer, _options ) {
   _self.effect = function( _num ){
     if ( _num != undefined ) {
       currentEffect = _num
-      if (renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
+      if (_renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
       // update uniform ?
     }
 
@@ -3881,7 +3881,7 @@ function DistortionEffect( _renderer, _options ) {
 
     if ( _num != undefined ) {
       currentExtra = _num
-      if (renderer.customUniforms[_self.uuid+'_extra']) renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
+      if (_renderer.customUniforms[_self.uuid+'_extra']) _renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
       // update uniform ?
     }
     return _num
@@ -4742,7 +4742,8 @@ var GlRenderer = function (_options) {
          */
         _self.nodes.forEach(function(n){ n.init() });
     
-        console.log("GLRenderer. Shader: " + _self.fragmentShader);
+        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
+
         // create the shader
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,
@@ -5366,6 +5367,12 @@ var Mixer = class {
       _self.uuid = options.uuid
     }
 
+    if ( options.fragmentChannel == undefined ) {
+      _self._fragmentChannel = 1;
+      } else {
+      _self._fragmentChannel = options.fragmentChannel;
+    }
+
     // add to renderer
     renderer.add(_self)
 
@@ -5398,28 +5405,7 @@ var Mixer = class {
     source1 = options.source1 //|| options.src1;   // Mandatory
     source2 = options.source2 //|| options.src2;   // Mandatory
 
-    _self.init = function() {
-
-      // add uniforms to renderer
-      renderer.customUniforms[_self.uuid+'_mixmode'] = { type: "i", value: 1 }
-      renderer.customUniforms[_self.uuid+'_blendmode'] = { type: "i", value: 1 }
-      //renderer.customUniforms[_self.uuid+'_pod'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_alpha1'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_alpha2'] = { type: "f", value: 0.5 }
-      renderer.customUniforms[_self.uuid+'_sampler'] = { type: "t", value: null }
-
-      // add uniforms to fragmentshader
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_mixmode;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_blendmode;\n/* custom_uniforms */')
-      //renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_pod;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha1;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha2;\n/* custom_uniforms */')
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-
-      // add blendmodes helper, we only need it once
-      if ( renderer.fragmentShader.indexOf('vec4 blend ( vec4 src, vec4 dst, int blendmode )') == -1 ) {
-        renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_helpers */',
-  `
+    var shaderScript =  `
   vec4 blend ( vec4 src, vec4 dst, int blendmode ) {
     if ( blendmode ==  1 ) return src + dst;
     if ( blendmode ==  2 ) return src - dst;
@@ -5443,21 +5429,62 @@ var Mixer = class {
   }
   /* custom_helpers */
   `
-        );
+
+
+  var shadercode = ""
+  shadercode += "vec4 "+_self.uuid+"_output = vec4( blend( "
+  shadercode += source1.uuid+"_output * "+_self.uuid+"_alpha1, "
+  shadercode += source2.uuid+"_output * "+_self.uuid+"_alpha2, "
+  shadercode += _self.uuid+"_blendmode ) "
+  shadercode += ")"
+  shadercode += " + vec4(  "+source1.uuid+"_output.a < 1.0 ? "+source2.uuid+"_output.rgba * ( "+_self.uuid+"_alpha1 - "+source1.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
+  shadercode += " + vec4(  "+source2.uuid+"_output.a < 1.0 ? "+source1.uuid+"_output.rgba * ( "+_self.uuid+"_alpha2 - - "+source2.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
+  shadercode += ";\n"
+  shadercode += "  /* custom_main */  "
+
+
+
+    _self.init = function() {
+
+      // add uniforms to renderer
+      renderer.customUniforms[_self.uuid+'_mixmode'] = { type: "i", value: 1 }
+      renderer.customUniforms[_self.uuid+'_blendmode'] = { type: "i", value: 1 }
+      //renderer.customUniforms[_self.uuid+'_pod'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_alpha1'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_alpha2'] = { type: "f", value: 0.5 }
+      renderer.customUniforms[_self.uuid+'_sampler'] = { type: "t", value: null }
+
+      // debugger;
+      // Determine which channel to effect!
+      var _fs;
+      if (_self._fragmentChannel == 1){
+        _fs = renderer.fragmentShader;
+      }else{
+        _fs = renderer.fragmentShader2;
       }
 
-      var shadercode = ""
-      shadercode += "vec4 "+_self.uuid+"_output = vec4( blend( "
-      shadercode += source1.uuid+"_output * "+_self.uuid+"_alpha1, "
-      shadercode += source2.uuid+"_output * "+_self.uuid+"_alpha2, "
-      shadercode += _self.uuid+"_blendmode ) "
-      shadercode += ")"
-      shadercode += " + vec4(  "+source1.uuid+"_output.a < 1.0 ? "+source2.uuid+"_output.rgba * ( "+_self.uuid+"_alpha1 - "+source1.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
-      shadercode += " + vec4(  "+source2.uuid+"_output.a < 1.0 ? "+source1.uuid+"_output.rgba * ( "+_self.uuid+"_alpha2 - - "+source2.uuid+"_output.a ) : vec4( 0.,0.,0.,0. )  ) "
-      shadercode += ";\n"
-      shadercode += "  /* custom_main */  "
+      // add uniforms to fragmentshader
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_mixmode;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_blendmode;\n/* custom_uniforms */')
+      //renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_pod;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha1;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha2;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
 
-      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', shadercode )
+      // add blendmodes helper, we only need it once
+      if ( _fs.indexOf('vec4 blend ( vec4 src, vec4 dst, int blendmode )') == -1 ) {
+        _fs = _fs.replace('/* custom_helpers */', shaderScript);
+      }
+
+      _fs = _fs.replace('/* custom_main */', shadercode )
+
+      if (_self._fragmentChannel == 1){
+        renderer.fragmentShader = _fs;
+      }else{
+        renderer.fragmentShader2 = _fs;
+      }
+
+
     }
 
     // autofade bpm
@@ -5817,21 +5844,26 @@ var Monitor = class {
 
   constructor( renderer, options ) {
 
+
     // create and instance
     var _self = this;
     if (renderer == undefined) return
 
     // set or get uid
     if ( options.uuid == undefined ) {
-      _self.uuid = "Mixer_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+      _self.uuid = "Monitor_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
     } else {
       _self.uuid = options.uuid
     }
+
+    // console.log("MONITOR Constructor", _self.uuid)
+
 
     _self.renderer = renderer
     _self.source = options.source
 
     // add to renderer
+
     renderer.add(_self)
 
     // set options
@@ -5842,6 +5874,8 @@ var Monitor = class {
     _self.type = "Module";
     _self.internal_renderer = null
 
+    // console.log("MONITOR Constructor 2", _self.uuid)
+
     /**
      * @description
      *  initializes the monitor through the (main) renderer
@@ -5851,6 +5885,8 @@ var Monitor = class {
      */
 
     _self.init = function() {
+
+      // console.log("MONITOR Init Start", _self.uuid)
 
       /* TODO: rewrite into scenes?
 
@@ -5883,7 +5919,7 @@ var Monitor = class {
       _self.internal_renderer.init()
       _self.internal_renderer.render()
 
-      
+      // console.log("MONITOR Init End", _self.uuid)
     }
 
     /** @function Addon#Monitor~update */
@@ -6141,6 +6177,13 @@ function GifSource( renderer, options ) {
     _self.currentSrc = options.src
   }
 
+  if ( options.elementId ) {
+    // console.log("texture size now is: ", options.texture_size)
+    _self.elementId = options.elementId
+  }else{
+    _self.elementId = "monitor_1";
+  }
+
   // create elements (private)
   var canvasElement, gifElement, canvasElementContext, gifTexture, supergifelement; // wrapperElemen
   var alpha = 1;
@@ -6148,7 +6191,8 @@ function GifSource( renderer, options ) {
   _self.init = function() {
 
     // create canvas
-    canvasElement = document.createElement('canvas');
+    // canvasElement = document.createElement('canvas');
+    canvasElement = document.getElementById(_self.elementId);
     canvasElement.width = 1024;
     canvasElement.height = 1024;
     canvasElementContext = canvasElement.getContext( '2d' );
@@ -6167,19 +6211,15 @@ function GifSource( renderer, options ) {
       renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
       renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
       renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
-
       // add output to main function
       renderer.fragmentShader = renderer.fragmentShader.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
-
     }else{
           // add uniforms to shader
       renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */' )
       renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */' )
       renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */' )
-
       // add output to main function
       renderer.fragmentShader2 = renderer.fragmentShader2.replace( '/* custom_main */', 'vec4 '+_self.uuid+'_output = ( texture2D( '+_self.uuid+', vUv ).rgba * '+_self.uuid+'_alpha );\n  /* custom_main */' )
-
     }
 
 
@@ -6194,16 +6234,30 @@ function GifSource( renderer, options ) {
     gifElement = document.createElement('img')
     gifElement.setAttribute('id', 'gif_'+_self.uuid)
     gifElement.setAttribute('rel:auto_play', '1')
-    // supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
-    supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
+    supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+    // supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
     supergifelement.draw_while_loading = true
 
     // sup1.load();
     console.log(_self.uuid, " Load", _self.currentSrc, "..." )
     //supergifelement.load_url( _self.currentSrc )
+
+    _self.newImg = new Image();
+
+    _self.newImg.onload = function() {
+      var height = _self.newImg.height;
+      var width = _self.newImg.width;
+      // console.log ('MMMMMM The image size is '+width+'*'+height);
+      _self.imageWidth = width;
+      _self.imageHeight = height;
+
+    }
+    _self.newImg.src = _self.currentSrc;
+
     supergifelement.load_url( _self.currentSrc, function() {
       console.log("play initial source");
       supergifelement.play();
+      
     } )
 
     console.log('Gifsource Loaded First source!', _self.currentSrc, "!")
@@ -6213,6 +6267,17 @@ function GifSource( renderer, options ) {
   var c = 0;
   _self.update = function() {
 
+    // Handle aspect ratio of source. Convert to 16x9.
+    let texture_size = 1024;
+    let raw_ratio = 16.0 / 9.0;
+    let image_ratio= 4.0/ 3.0;
+    if (_self.imageWidth){
+      image_ratio= _self.imageWidth/ _self.imageHeight;
+    }
+    let ratio = raw_ratio / image_ratio;
+    let widthS = texture_size / ratio;
+    let offsetS = (texture_size - widthS) /2;
+    
     // FIXME: something evil happened here.
     // if (_self.bypass == false) return
     try {
@@ -6220,7 +6285,8 @@ function GifSource( renderer, options ) {
       // TODO: MAKE THE MODULE SETTABLE.
       if (c%6 == 0) {
         canvasElementContext.clearRect(0, 0, 1024, 1024);
-        canvasElementContext.drawImage( supergifelement.get_canvas(), 0, 0, 1024, 1024  );
+        canvasElementContext.drawImage( supergifelement.get_canvas(), offsetS, 0, widthS, 1024  );
+        // canvasElementContext.drawImage( supergifelement.get_canvas(), 0, 0, 1024, 1024  );
         if ( gifTexture ) gifTexture.needsUpdate = true;
       }
       c++;
@@ -6962,6 +7028,12 @@ function VideoSource(renderer, options) {
     _self.uuid = options.uuid
   }
 
+  if ( options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = options.fragmentChannel;
+  }
+
   // set options
   var _options = {};
   if ( options != undefined ) _options = options;
@@ -6970,6 +7042,15 @@ function VideoSource(renderer, options) {
     console.log("texture size now is: ", options.texture_size)
     texture_size = options.texture_size
   }
+
+  if ( options.elementId ) {
+    // console.log("texture size now is: ", options.texture_size)
+    _self.elementId = options.elementId
+  }else{
+    _self.elementId = "monitor_1";
+  }
+
+
 
   _self.currentSrc = "https://virtualmixproject.com/video/placeholder.mp4"
   _self.type = "VideoSource"
@@ -7053,7 +7134,11 @@ function VideoSource(renderer, options) {
     // video2.currentTime = 20;
 
     // create canvas
-    canvasElement = document.createElement('canvas');
+    
+    // canvasElement = document.createElement('canvas');
+    canvasElement = document.getElementById(_self.elementId);
+    // debugger;
+
     canvasElement.width = texture_size;
     canvasElement.height = texture_size;
     canvasElementContext = canvasElement.getContext( '2d' );
@@ -7074,19 +7159,37 @@ function VideoSource(renderer, options) {
     renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
     // renderer.customUniforms[_self.uuid+'_uvmap_mod'] = { type: "v2", value: new THREE.Vector2( 1., 1. ) }
 
-    // add uniform
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
-    // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
 
-    // add main
-    // split output in distorted and orig?
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', `
-      vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
-      /* custom_main */
-      `
-    )
+    if (_self._fragmentChannel == 1){
+      // add uniform
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
+      // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
+      // add main
+      // split output in distorted and orig?
+      renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', `
+        vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
+        /* custom_main */
+        `
+      )
+  }else{
+      // add uniform
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform sampler2D '+_self.uuid+';\n/* custom_uniforms */')
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_alpha;\n/* custom_uniforms */')
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap;\n/* custom_uniforms */')
+      // renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec2 '+_self.uuid+'_uvmap_mod;\n/* custom_uniforms */')
+      // add main
+      // split output in distorted and orig?
+      renderer.fragmentShader2 = renderer.fragmentShader2.replace('/* custom_main */', `
+        vec4 ${_self.uuid+'_output'} = ( texture2D( ${_self.uuid}, vUv * ${_self.uuid+'_uvmap'} ).rgba * ${_self.uuid+'_alpha'} );
+        /* custom_main */
+        `
+      )
+
+  }
+
+
 
     // expose video and canvas
     /**
@@ -7103,12 +7206,12 @@ function VideoSource(renderer, options) {
   var i = 0
   _self.update = function() {
 
+    // Handle aspect ratio of source. Convert to 16x9.
     let raw_ratio = 16.0 / 9.0;
     let image_ratio= 4.0/ 3.0;
     if (videoElement.videoWidth){
       image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
     }
-    
     let ratio = raw_ratio / image_ratio;
     let widthS = texture_size / ratio;
     let offsetS = (texture_size - widthS) /2;
