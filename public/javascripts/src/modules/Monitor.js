@@ -60,21 +60,26 @@ var Monitor = class {
 
   constructor( renderer, options ) {
 
+
     // create and instance
     var _self = this;
     if (renderer == undefined) return
 
     // set or get uid
     if ( options.uuid == undefined ) {
-      _self.uuid = "Mixer_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+      _self.uuid = "Monitor_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
     } else {
       _self.uuid = options.uuid
     }
+
+    // console.log("MONITOR Constructor", _self.uuid)
+
 
     _self.renderer = renderer
     _self.source = options.source
 
     // add to renderer
+
     renderer.add(_self)
 
     // set options
@@ -85,6 +90,8 @@ var Monitor = class {
     _self.type = "Module";
     _self.internal_renderer = null
 
+    // console.log("MONITOR Constructor 2", _self.uuid)
+
     /**
      * @description
      *  initializes the monitor through the (main) renderer
@@ -94,6 +101,8 @@ var Monitor = class {
      */
 
     _self.init = function() {
+
+      // console.log("MONITOR Init Start", _self.uuid)
 
       /* TODO: rewrite into scenes?
 
@@ -126,7 +135,7 @@ var Monitor = class {
       _self.internal_renderer.init()
       _self.internal_renderer.render()
 
-      
+      // console.log("MONITOR Init End", _self.uuid)
     }
 
     /** @function Addon#Monitor~update */

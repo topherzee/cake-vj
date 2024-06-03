@@ -59,6 +59,15 @@ function VideoSource(renderer, options) {
     texture_size = options.texture_size
   }
 
+  if ( options.elementId ) {
+    // console.log("texture size now is: ", options.texture_size)
+    _self.elementId = options.elementId
+  }else{
+    _self.elementId = "monitor_1";
+  }
+
+
+
   _self.currentSrc = "https://virtualmixproject.com/video/placeholder.mp4"
   _self.type = "VideoSource"
   _self.bypass = true;
@@ -141,7 +150,11 @@ function VideoSource(renderer, options) {
     // video2.currentTime = 20;
 
     // create canvas
-    canvasElement = document.createElement('canvas');
+    
+    // canvasElement = document.createElement('canvas');
+    canvasElement = document.getElementById(_self.elementId);
+    // debugger;
+
     canvasElement.width = texture_size;
     canvasElement.height = texture_size;
     canvasElementContext = canvasElement.getContext( '2d' );

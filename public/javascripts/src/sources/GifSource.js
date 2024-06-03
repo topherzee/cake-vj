@@ -54,6 +54,13 @@ function GifSource( renderer, options ) {
     _self.currentSrc = options.src
   }
 
+  if ( options.elementId ) {
+    // console.log("texture size now is: ", options.texture_size)
+    _self.elementId = options.elementId
+  }else{
+    _self.elementId = "monitor_1";
+  }
+
   // create elements (private)
   var canvasElement, gifElement, canvasElementContext, gifTexture, supergifelement; // wrapperElemen
   var alpha = 1;
@@ -61,7 +68,8 @@ function GifSource( renderer, options ) {
   _self.init = function() {
 
     // create canvas
-    canvasElement = document.createElement('canvas');
+    // canvasElement = document.createElement('canvas');
+    canvasElement = document.getElementById(_self.elementId);
     canvasElement.width = 1024;
     canvasElement.height = 1024;
     canvasElementContext = canvasElement.getContext( '2d' );

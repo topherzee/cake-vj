@@ -8,6 +8,9 @@
 
 console.log("CAKE Start --------------------");
 
+function start(){
+
+
 var TIME_BY_TOPHER = true;
 
 // renderer
@@ -15,16 +18,16 @@ var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
 
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer )
-// var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4", uuid:"Video_1"});
-//   var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4",});
+var source1 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+  var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:2, elementId:"monitor_2"});
 //var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 // var source2 = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var source2 = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
 
 // var source3 = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
-var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:1,  uuid:"Gif_3"});
-var source4 = new GifSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4"  });
-// var source4 = new GifSource(renderer, {src: "/images/animal.gif", uuid:"Gif_4"});
+
+var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:1,  uuid:"Gif_3", elementId:"monitor_3",});
+var source4 = new GifSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
 
 
 
@@ -60,22 +63,32 @@ var playInterval = setInterval( function() {
 
 },1000);
   
+var layer_1_effect = new DistortionEffect(renderer, { source: source1,  fragmentChannel:1,  uuid:"Dist_1"} );
+var layer_2_effect = new DistortionEffect(renderer, { source: source2,  fragmentChannel:2,  uuid:"Dist_2"} );
 
+// var layer_3_effect = new DistortionEffect(renderer, { source: source3,  fragmentChannel:1,  uuid:"Dist_3"} );
+// var layer_4_effect = new DistortionEffect(renderer, { source: source4,  fragmentChannel:2,  uuid:"Dist_4"} );
 
-var layer_3_effect = new DistortionEffect(renderer, { source: source3,  fragmentChannel:1,  uuid:"Dist_3"} );
-var layer_4_effect = new DistortionEffect(renderer, { source: source4,  fragmentChannel:2,  uuid:"Dist_4"} );
+// var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 
-var trans_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
-
-var layer_3_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_3_effect,  uuid: "Mixer_3"  } )
+// var layer_3_mixer = new Mixer( renderer, { source1: trans_black, source2: layer_3_effect,  uuid: "Mixer_3"  } )
 
 
 var output;
-if (typeof source4 !=='undefined'){
-    output = new Output( renderer, layer_3_effect, layer_4_effect )
+// if (typeof layer_4_effect !=='undefined'){
+//     output = new Output( renderer, layer_3_effect, layer_4_effect )
+// }else{
+//     output = new Output( renderer, layer_3_effect )
+// }
+if (typeof layer_2_effect !=='undefined'){
+    output = new Output( renderer, layer_1_effect, layer_2_effect )
 }else{
-    output = new Output( renderer, layer_3_effect )
+    output = new Output( renderer, layer_1_effect )
 }
+
+// var monitor1 = new Monitor( renderer, { source: source1, element: 'monitor_1',width:128, height:96, uuid: "Monitor_1"});
+// var monitor2 = new Monitor( renderer, { source: layer_2_effect, element: 'monitor_2',width:128, height:96, uuid: "Monitor_2"});
+// var monitor3 = new Monitor( renderer, { source: source3, element: 'monitor_3',width:128, height:96, uuid: "Monitor_3"});
 
 
 console.log("CAKE Call renderer.init() --------------------");
@@ -98,8 +111,11 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
-layer_3_effect.effect(106);
-layer_4_effect.effect(107);
+layer_1_effect.effect(106);
+layer_2_effect.effect(107);
+
+// layer_3_effect.effect(106);
+// layer_4_effect.effect(107);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;
@@ -110,11 +126,13 @@ const BOOM = 9
 
 
 
+
 setTimeout(() => {
     
     document.getElementById('layer_2_fader').value = 1.0
     document.getElementById('layer_1_fader').value = 1.0
-
+    source1.pause();
+    source2.pause();
   }, 1000);
 
 // we're done here
@@ -286,4 +304,14 @@ if (TIME_BY_TOPHER){
 //     console.log("layer_1_speed >>", parseFloat(this.value) )
 // }
   
-  
+}
+
+
+// window.addEventListener('load', function () {
+//     alert("It's loaded!")
+//   })
+
+document.body.onload = function(){
+    console.log("--------- onload ------------");
+    start();
+};
