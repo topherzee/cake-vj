@@ -29,6 +29,12 @@ function SolidSource(renderer, options) {
     _self.uuid = options.uuid
   }
 
+  if ( options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = options.fragmentChannel;
+  }
+
   // no updates
   _self.bypass = true;
 
@@ -48,12 +54,24 @@ function SolidSource(renderer, options) {
     // add uniforms
     renderer.customUniforms[_self.uuid + "_color"] = { type: "v4", value: new THREE.Vector4( color.r, color.g, color.b, color.a ) }
 
-    // ad variables to shader
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_color;\n/* custom_uniforms */')
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+    if (_self._fragmentChannel == 1){
+      _fs = renderer.fragmentShader;
+    }else{
+      _fs = renderer.fragmentShader2;
+    }
 
+    // ad variables to shader
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_color;\n/* custom_uniforms */')
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
     // add output to shader
-    renderer.fragmentShader = renderer.fragmentShader.replace('/* custom_main */', 'vec4 '+_self.uuid+'_output = '+_self.uuid+'_color;\n  /* custom_main */')
+    _fs = _fs.replace('/* custom_main */', 'vec4 '+_self.uuid+'_output = '+_self.uuid+'_color;\n  /* custom_main */')
+    
+    if (_self._fragmentChannel == 1){
+      renderer.fragmentShader = _fs;
+    }else{
+      renderer.fragmentShader2 = _fs;
+    }
+
   }
 
   _self.update = function() {}
