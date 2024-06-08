@@ -27,6 +27,10 @@
     border:solid 1px grey;
 }
 
+.layer.active{
+    border:solid 1px hotpink;
+}
+
 .layer_stack{
     width: 128px;
     display:inline-block;
@@ -74,13 +78,23 @@
     top: 0;
     left: 200px;
 }
-.clip_bank{
+.sources{
     position:fixed;
     top: 600;
     bottom: 0;
     left: 200px;
     width: 800px;
+    border: solid 1px pink;
+    padding: 5px;
+}
+.clip_bank{
+    
     background: white;
+    border: solid 1px hotpink;
+    width: 48%;
+    float: left;
+    overflow-y: scroll;
+    height: 100%;
 }
 .clip{
     width: 96px;
@@ -121,9 +135,21 @@
         <div class="monitor_final">
             <canvas id="glcanvas" ></canvas>
         </div>
-        <div class="clip_bank" id="clip_bank">
-           <div class="clip" style="display:none" >Hello</div>
+
+        <div class="sources">
+
+            <div class="clip_bank" >
+                <div class="clip_bank_header">Choose: <select id="clip_bank_select_1"></select></div>
+                <div class="clip_bank_clips" id="clip_bank_1">Hello</div>
+             </div>
+
+             <div class="clip_bank" >
+                
+                <div class="clip_bank_header">Choose: <select id="clip_bank_select_2"></select></div>
+                <div class="clip_bank_clips" id="clip_bank_2">Hello</div>
+             </div>
         </div>
+       
 
         <div id="layers">
 
@@ -148,7 +174,7 @@
                 </div>
 
 
-                <div id="layer_3"class="layer">
+                <div id="layer_3"class="layer active">
                     <div class="layer_stack">
                         <canvas id="monitor_3" class="monitor"></canvas>
                         <div class="layer_controls">
