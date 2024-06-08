@@ -26,16 +26,21 @@ var source2 = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02
 
 // var source3 = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
 
-var source3 = new GifSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
-var source4 = new GifSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+var source3 = new VideoSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
+var source4 = new VideoSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
 
 var files1 = new FileManager( source1 )
 var files2 = new FileManager( source2 )
+var files3 = new FileManager( source3 )
+var files4 = new FileManager( source4 )
+
 
 var FILE_URL = "http://localhost:4000/files"
 // myFilemanager.load_set( "cliplist-DCVS01.json")
 files1.load_set( FILE_URL)
 files2.load_set( FILE_URL)
+files3.load_set( FILE_URL)
+files4.load_set( FILE_URL)
 
 function handleClipClick(url) {
     // const messageParagraph = document.getElementById('message');
@@ -152,42 +157,44 @@ var original_mixmode = 1
 // ---------------------------------------------------------------------------
 
 // // TOPHER
-// var blend_select_2 =  document.getElementById('layer_2_blendmode')
+var blend_select_2 =  document.getElementById('layer_2_blendmode')
 
 
-// var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
-// var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
-// for(var i=0; i<blendModes.length; i++){
-//     // option(value=blendModes[i]) 
-//     // = blendModesNames[i]
+var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
+for(var i=0; i<blendModes.length; i++){
+    // option(value=blendModes[i]) 
+    // = blendModesNames[i]
 
-//     var option = document.createElement("option");
-//     option.text = blendModesNames[i];
-//     option.value = blendModes[i];
-//     blend_select_2.add(option);
+    var option = document.createElement("option");
+    option.text = blendModesNames[i];
+    option.value = blendModes[i];
+    blend_select_2.add(option);
 
-// }
+}
 
-// document.getElementById('btn_switch_layer_1').onclick = function() {
-//     files1.change();
-//     // source2.play();
-//     console.log("btn_switch_layer_1 >>");
-// }
-// document.getElementById('btn_switch_layer_2').onclick = function() {
-//     files2.change();
-//     // source2.play();
-//     console.log("btn_switch_layer_2 >>");
-// }
-// document.getElementById('btn_switch_layer_3').onclick = function() {
-//     // files2.change();
-//     // source2.play();
-//     console.log("btn_switch_layer_3 >>");
-// }
+document.getElementById('btn_switch_layer_1').onclick = function() {
+    files1.change();
+    // source2.play()
+}
+document.getElementById('btn_switch_layer_2').onclick = function() {
+    files2.change();
+    // source2.play();
+}
+document.getElementById('btn_switch_layer_3').onclick = function() {
+    files3.change();
+    // source2.play();
+}
+document.getElementById('btn_switch_layer_4').onclick = function() {
+    files4.change();
+    // source2.play();
+}
 
-// document.getElementById('layer_2_blendmode').oninput = function() {
-//     layer_2_mixer.blendMode(this.value);
-//     console.log("layer_2_blendmode >>", parseFloat(this.value) )
-// }
+document.getElementById('layer_2_blendmode').oninput = function() {
+    channel_1_b_mixer.blendMode(this.value);
+    console.log("channel_1_b_mixer >>", parseFloat(this.value) )
+}
+
 
 document.getElementById('layer_1_fader').oninput = function() {
     channel_1_a_mixer.pod(this.value)
