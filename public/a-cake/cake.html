@@ -156,82 +156,37 @@
             <div id="channel_2" class="channel">
 
                 <h3>Channel 2</h3>
-                <div id="layer_4"class="layer">
-                    <div class="layer_stack">
-                        <canvas id="monitor_4" class="monitor"></canvas>
-                        <div class="layer_controls">
-                            <input id="layer_4_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
-                            <input id="layer_4_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
-                            EFFECT
-                            <input id="layer_4_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
-                            </div>
+                <div id="channel_2_layers"></div>
+
+                <template id="layer_template">
+                    <div id="layer_4"class="layer">
+                        <div class="layer_stack">
+                            <canvas id="monitor_4" class="monitor"></canvas>
+                            <div class="layer_controls">
+                                <input id="layer_4_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
+                                <input id="layer_4_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
+
+                                <select id="layer_4_blendmode"></select>
+                                
+                                EFFECT
+                                <input id="layer_4_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
+                                </div>
+                        </div>
+                        <div class="layer_fader">
+                                <!-- effects_a_control -->
+                                <input id="layer_4_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
+                        </div>
+                        <button class="" id="btn_switch_layer_4"></button>
                     </div>
-                    <div class="layer_fader">
-                            <!-- effects_a_control -->
-                            <input id="layer_4_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
-                    </div>
-                    <button class="" id="btn_switch_layer_4"></button>
-                </div>
+                </template>
 
 
-                <div id="layer_3"class="layer active">
-                    <div class="layer_stack">
-                        <canvas id="monitor_3" class="monitor"></canvas>
-                        <div class="layer_controls">
-                            <input id="layer_3_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
-                            <input id="layer_3_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
-                            EFFECT
-                            <input id="layer_3_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
-                            </div>
-                    </div>
-                    <div class="layer_fader">
-                            <!-- effects_a_control -->
-                            <input id="layer_3_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
-                    </div>
-                    <button class="" id="btn_switch_layer_3"></button>
-                </div>
             </div>
         
             <div id="channel_1" class="channel">
 
                 <h3>Channel 1</h3>
-                <div id="layer_2"class="layer">
-                    <div class="layer_stack">
-                        
-                        <canvas id="monitor_2" class="monitor"></canvas>
-                        <div class="layer_controls">
-                            <input id="layer_2_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
-                            <input id="layer_2_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
-                            <div class="layer_blendmode_select">
-                                <select id="layer_2_blendmode"></select>
-                            </div>
-                            EFFECT
-                            <input id="layer_2_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
-                        </div>
-                    </div>
-                    <div class="layer_fader">
-                        <!-- effects_a_control -->
-                        <input id="layer_2_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
-                    </div>
-                    <button class="" id="btn_switch_layer_2"></button>
-                </div>
-
-                <div id="layer_1"class="layer">
-                    <div class="layer_stack">
-                        <canvas id="monitor_1" class="monitor"></canvas>
-                        <div class="layer_controls">
-                            <input id="layer_1_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
-                            <input id="layer_1_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
-                            EFFECT
-                            <input id="layer_1_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
-                        </div>
-                    </div>
-                    <div class="layer_fader">
-                        <!-- effects_a_control -->
-                        <input id="layer_1_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
-                    </div>
-                    <button class="" id="btn_switch_layer_1"></button>
-                </div>
+                <div id="channel_1_layers"></div>
 
             </div><!--layers-->
         </div><!--layers-->
@@ -239,6 +194,11 @@
 
 
    </div>
+
+   <script>
+
+    
+   </script>
     
     <div id="mixer">
 

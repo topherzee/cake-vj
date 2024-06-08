@@ -6,15 +6,44 @@
 *
 */
 
-console.log("CAKE Start --------------------");
 
  async function start(){
+
+    console.log("CAKE Start --------------------");
 
 
 var TIME_BY_TOPHER = true;
 
 // renderer
 var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
+
+function addLayer(destId, i){
+    let template = document.getElementById("layer_template");
+
+    let innerHTML = template.innerHTML;
+    innerHTML = innerHTML.replaceAll("_4", "_"+i);
+    const placeholder = document.createElement("div");
+    placeholder.innerHTML = innerHTML;
+    const node = placeholder.firstElementChild;
+
+    let dest = document.getElementById(destId);
+    dest.appendChild(node);
+
+    document.getElementById('btn_switch_layer_' + i).onclick = function() {
+        newActiveLayer(i);
+    }
+}
+
+function addLayers() {
+    console.log("addLayers")
+    
+    addLayer("channel_2_layers", 4);
+    addLayer("channel_2_layers", 3);
+    addLayer("channel_1_layers", 2);
+    addLayer("channel_1_layers", 1);
+}
+
+addLayers();
 
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer );
@@ -161,18 +190,6 @@ function newActiveLayer(newLayer){
 
 }
 
-document.getElementById('btn_switch_layer_1').onclick = function() {
-    newActiveLayer(1);
-}
-document.getElementById('btn_switch_layer_2').onclick = function() {
-    newActiveLayer(2);
-}
-document.getElementById('btn_switch_layer_3').onclick = function() {
-    newActiveLayer(3);
-}
-document.getElementById('btn_switch_layer_4').onclick = function() {
-    newActiveLayer(4);
-}
 
 document.getElementById('layer_2_blendmode').oninput = function() {
     channel_1_b_mixer.blendMode(this.value);
@@ -259,11 +276,9 @@ async function fetchAndDisplayImages(filesUrl, domElementId) {
             const msg = url.replace("/video/DCVS01/DCVS01 ","");
             text.textContent = msg;
  
-
             // const img = document.createElement('img');
             // img.src = url;
             // img.alt = 'Image';
-
             // div.appendChild(img);
             div.appendChild(text);
             // div.onclick = handleClipClick(url);
@@ -409,7 +424,29 @@ if (TIME_BY_TOPHER){
 //     alert("It's loaded!")
 //   })
 
+
+
+// console.log("added buttons 1")
+
+
+// document.getElementById('btn_switch_layer_2').onclick = function() {
+//     newActiveLayer(2);
+// }
+// document.getElementById('btn_switch_layer_3').onclick = function() {
+//     console.log("btn_switch_layer_3")
+//     newActiveLayer(3);
+// }
+// document.getElementById('btn_switch_layer_4').onclick = function() {
+//     newActiveLayer(4);
+// }
+// console.log("added buttons 2")
+
+
+
+
+
 document.body.onload = function(){
-    console.log("--------- onload ------------");
+    console.log("--------- cake.js onload ------------");
+    
     start();
 };
