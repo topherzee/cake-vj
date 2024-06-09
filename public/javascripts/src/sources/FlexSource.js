@@ -1,12 +1,12 @@
 // old school way to define a class in javascripts
-VideoSource.prototype = new Source();   // assign prototype to Class
-VideoSource.constructor = VideoSource;  // re-assign constructor
+FlexSource.prototype = new Source();   // assign prototype to Class
+FlexSource.constructor = FlexSource;  // re-assign constructor
 
 /**
 *
 * @summary
 *  The videosource allows for playback of video files in the Mixer project
-*  VideoSource Example on codepen:
+*  FlexSource Example on codepen:
 *  <a href="https://codepen.io/xangadix/pen/zewydR" target="_blank">codepen</a>
 *
 *
@@ -14,24 +14,24 @@ VideoSource.constructor = VideoSource;  // re-assign constructor
 *  The videosource allows for playback of video files in the Mixer project
 *
 * @implements Source
-* @constructor Source#VideoSource
+* @constructor Source#FlexSource
 * @example 
 * //create source
-* let myVideoSource = new VideoSource( renderer, { src: 'myfile.mp4' } );
+* let myFlexSource = new FlexSource( renderer, { src: 'myfile.mp4' } );
 *
 * // add to mixer
-* someMixer = new Mixer( renderer, { source1: myVideoSource, source2: someOtherSource })
+* someMixer = new Mixer( renderer, { source1: myFlexSource, source2: someOtherSource })
 *
 * // after init:
-* myVideoSource.jump()
-* myVideoSource.video.src = "anotherfile.mp4"
-* myVideoSource.video.playbackRate = 0.4
+* myFlexSource.jump()
+* myFlexSource.video.src = "anotherfile.mp4"
+* myFlexSource.video.playbackRate = 0.4
 *
 * @param {GlRenderer} renderer - GlRenderer object
 * @param {Object} options - (optional) JSON Object containing the initial src (source) and/or uuid
 */
 
-function VideoSource(renderer, options) {
+function FlexSource(renderer, options) {
 
   // create and instance
   var _self = this;
@@ -39,7 +39,7 @@ function VideoSource(renderer, options) {
   var texture_size = 1024
 
   if ( options.uuid == undefined ) {
-    _self.uuid = "VideoSource_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+    _self.uuid = "FlexSource_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
   } else {
     _self.uuid = options.uuid
   }
@@ -69,8 +69,27 @@ function VideoSource(renderer, options) {
 
 
   _self.currentSrc = "https://virtualmixproject.com/video/placeholder.mp4"
-  _self.type = "VideoSource"
+  
+  _self.type = "FlexSource"
   _self.bypass = true;
+
+  _self.currentSrc = options.src;
+
+  // Determine type.
+  let ext = options.src.split('.').pop();
+  console.log("FlexSource. ext", ext)
+  if (ext == "mp4"){
+    _self.type2 = "Video" //Video or image
+  } else if (ext == "png" || ext == "jpg"  || ext == "gif"){
+    _self.type2 = "Image" //Video or image
+  } else {
+    console.log("Unknown Source:", options.src)
+  }
+
+
+  
+  
+  
 
   // create elements (private)
   var canvasElement, videoElement, canvasElementContext, videoTexture; // wrapperElement
@@ -84,77 +103,73 @@ function VideoSource(renderer, options) {
 
     // FIXME: Can we clean this up and split into several functions
 
-    console.log("init video source", _self.uuid)
+    console.log("init Flex video source", _self.uuid)
 
-    // create video element
-    videoElement = document.createElement('video');
-    videoElement.setAttribute("crossorigin","anonymous")
-    videoElement.setAttribute("playsinline",true)
-    videoElement.playsinline = true
-    videoElement.preload = 'auto'
-    videoElement.muted= true
-    videoElement.poster= "https://virtualmixproject.com/gif/telephone-pole-wire-tennis-shoes.jpg"
+    // if (_self.type2 == "Video" ){
+      // create video element
+      videoElement = document.createElement('video');
+      videoElement.setAttribute("crossorigin","anonymous")
+      videoElement.setAttribute("playsinline",true)
+      videoElement.playsinline = true
+      videoElement.preload = 'auto'
+      videoElement.muted= true
+      videoElement.poster= "https://virtualmixproject.com/gif/telephone-pole-wire-tennis-shoes.jpg"
 
-    // set the source
-    if ( options.src == undefined ) {
-      videoElement.src = _self.currentSrc;
-    } else {
-      videoElement.src = options.src
-    }
-    console.log('loaded source: ', videoElement.src )
-
-    // set properties
-    videoElement.height = texture_size;
-    videoElement.width = texture_size;
-    videoElement.volume = 0;
-    videoElement.loop = true          // must call after setting/changing source
-    videoElement.load();              // must call after setting/changing source
-    _self.firstplay = false
-
-    videoElement.addEventListener( "loadedmetadata", function (e) {
-      var width = this.videoWidth,
-          height = this.videoHeight;
-          console.log("WWWWW video width: ", width, height)
-    }, false );
-
-
-    // Here we wait for a user to click and take over
-    var playInterval = setInterval( function() {
-      if ( videoElement.readyState == 4 ) {
-        var r = Math.random() * videoElement.duration
-        //videoElement.currentTime = r
-        videoElement.play();
-        _self.firstplay = true
-        console.log(_self.uuid, "First Play; ", r)
-        clearInterval(playInterval)
+      // set the source
+      if ( options.src == undefined ) {
+        videoElement.src = _self.currentSrc;
+      } else {
+        videoElement.src = options.src
       }
-    }, 400 )
+      console.log('loaded source: ', videoElement.src )
 
-    function firstTouch() {
-      //return
-      // videoElement.play();
-      _self.firstplay = true
-      document.body.removeEventListener('click', firstTouch)
-      document.body.removeEventListener('touchstart', firstTouch)
-      console.log("first touch was denied")
-    }
-    // firstload handler for mobile; neest at least 1 user click
-    document.body.addEventListener('click', firstTouch)
-    document.body.addEventListener('touchstart', firstTouch)
+      // set properties
+      videoElement.height = texture_size;
+      videoElement.width = texture_size;
+      videoElement.volume = 0;
+      videoElement.loop = true          // must call after setting/changing source
+      videoElement.load();              // must call after setting/changing source
+      _self.firstplay = false
+
+      videoElement.addEventListener( "loadedmetadata", function (e) {
+        var width = this.videoWidth,
+            height = this.videoHeight;
+            console.log("WWWWW video width: ", width, height)
+      }, false );
+
+      // Here we wait for a user to click and take over
+      var playInterval = setInterval( function() {
+        if ( videoElement.readyState == 4 ) {
+          var r = Math.random() * videoElement.duration
+          //videoElement.currentTime = r
+          videoElement.play();
+          _self.firstplay = true
+          console.log(_self.uuid, "First Play; ", r)
+          clearInterval(playInterval)
+        }
+      }, 400 )
 
 
+      function firstTouch() {
+        //return
+        // videoElement.play();
+        _self.firstplay = true
+        document.body.removeEventListener('click', firstTouch)
+        document.body.removeEventListener('touchstart', firstTouch)
+        console.log("first touch was denied")
+      }
+      // firstload handler for mobile; neest at least 1 user click
+      document.body.addEventListener('click', firstTouch)
+      document.body.addEventListener('touchstart', firstTouch)
+  
 
-    // FOR FIREBASE
-    // listen for a timer update (as it is playing)
-    // video1.addEventListener('timeupdate', function() {firebase.database().ref('/client_1/video1').child('currentTime').set( video1.currentTime );})
-    // video2.currentTime = 20;
+    // }// Type == Video
+   
 
     // create canvas
     
     // canvasElement = document.createElement('canvas');
     canvasElement = document.getElementById(_self.elementId);
-    // debugger;
-
     canvasElement.width = texture_size;
     canvasElement.height = texture_size;
     canvasElementContext = canvasElement.getContext( '2d' );
@@ -210,14 +225,51 @@ function VideoSource(renderer, options) {
     // expose video and canvas
     /**
      * @description exposes the HTMLMediaElement Video for listeners and control
-     * @member Source#VideoSource#video
+     * @member Source#FlexSource#video
      */
     _self.video = videoElement
     _self.canvas = canvasElement
 
+
+    // if (_self.type2 == "Image" ){
+
+      // actual gif stuff
+      window.image_source = new Image()
+
+      // $('body').append("<div id='gif_"+_self.uuid+"' rel:auto_play='1'></div>");
+      gifElement = document.createElement('img')
+      gifElement.setAttribute('id', 'gif_'+_self.uuid)
+      gifElement.setAttribute('rel:auto_play', '1')
+      // supergifelement = new SuperGif( { gif: gifElement, c_w: "1024px", c_h: "576px" } );
+      // supergifelement = new SuperGif( { gif: gifElement, c_w: "640px", c_h: "480px" } );
+      // supergifelement.draw_while_loading = true
+
+      // sup1.load();
+      console.log(_self.uuid, " Load", _self.currentSrc, "..." )
+      //supergifelement.load_url( _self.currentSrc )
+
+      _self.newImg = new Image();
+
+      _self.newImg.onload = function() {
+        var height = _self.newImg.height;
+        var width = _self.newImg.width;
+        // console.log ('MMMMMM The image size is '+width+'*'+height);
+        _self.imageWidth = width;
+        _self.imageHeight = height;
+
+      }
+
+      
+      _self.newImg.src = _self.currentSrc;
+      
+
+      console.log('FlexSource/Image Loaded First source!', _self.currentSrc, "!")
+    // }
+
     // remove the bypass
     _self.bypass = false
   }
+
 
   var i = 0
   _self.update = function() {
@@ -225,26 +277,48 @@ function VideoSource(renderer, options) {
     // Handle aspect ratio of source. Convert to 16x9.
     let raw_ratio = 16.0 / 9.0;
     let image_ratio= 4.0/ 3.0;
-    if (videoElement.videoWidth){
-      image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
+    
+    if (_self.type2 == "Video" ){
+      if (videoElement.videoWidth){
+        image_ratio= videoElement.videoWidth/ videoElement.videoHeight;
+      }
     }
+    if (_self.type2 == "Image" ){
+      if (_self.imageWidth){
+        image_ratio= _self.imageWidth/ _self.imageHeight;
+      }
+    }
+
     let ratio = raw_ratio / image_ratio;
     let widthS = texture_size / ratio;
     let offsetS = (texture_size - widthS) /2;
 
 
     if (_self.bypass = false) return    
-    if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
-      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
-      
-      if ( videoTexture ) videoTexture.needsUpdate = true;
-    }else{
-      canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
-      // TODO: console.log("SEND IN BLACK!") ?
-      // canvasElementContext.clearRect(0, 0, 1024, 1024); // send nothing
-      //_self.alpha = 0
-      if ( videoTexture ) videoTexture.needsUpdate = true;
+
+
+    if (_self.type2 == "Video" ){
+      if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
+        canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
+        
+        if ( videoTexture ) videoTexture.needsUpdate = true;
+      }else{
+        canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
+        if ( videoTexture ) videoTexture.needsUpdate = true;
+      }
     }
+    if (_self.type2 == "Image" ){
+      try {
+        canvasElementContext.clearRect(0, 0, 1024, 1024);
+        // canvasElementContext.drawImage( supergifelement.get_canvas(), offsetS, 0, widthS, 1024  );
+        canvasElementContext.drawImage( _self.newImg, offsetS, 0, widthS, 1024  );
+        if ( videoTexture ) videoTexture.needsUpdate = true;
+        // if ( gifTexture ) gifTexture.needsUpdate = true;
+      }catch(e){
+        // not yet
+      }
+    }
+
   }
 
   // return the video texture, for direct customUniforms injection (or something)
@@ -262,7 +336,7 @@ function VideoSource(renderer, options) {
    *  file has to be compatible with HTMLMediaElement Video ie. webm, mp4 etc.
    *  We recommend **mp4**
    *
-   * @function Source#VideoSource#src
+   * @function Source#FlexSource#src
    * @param {file} Videofile - full path to file
    */
   _self.src = function( _file ) {
@@ -270,12 +344,33 @@ function VideoSource(renderer, options) {
 
     try {
       _self.currentSrc = _file
+      console.log("FlexSource set", _self.currentSrc)
     }catch(e){
-      console.log("VideoSource returned empty promise, retrying ...")
+      console.log("FlexSource returned empty promise, retrying ...")
       return;
     }
-    videoElement.src = _file
-    videoElement.play();
+
+      // Determine type.
+      let ext = _file.split('.').pop();
+      console.log("FlexSource. ext", ext)
+      if (ext == "mp4"){
+        _self.type2 = "Video" //Video or image
+      } else if (ext == "png" || ext == "jpg"){
+        _self.type2 = "Image" //Video or image
+      } else {
+        console.log("Unknown Source:", options.src)
+      }
+
+    if (_self.type2 == "Video" ){
+      videoElement.src = _file
+      videoElement.play();
+    }
+    if (_self.type2 == "Image" ){
+      console.log("load new src: ", _file)
+      _self.currentSrc = _file
+      _self.newImg.src = _self.currentSrc;
+    }
+    if ( videoTexture ) videoTexture.needsUpdate = true;
 
     // shouldn't be a defulat
     // setTimeout( function() { _self.jump() }, 300 )
@@ -297,25 +392,25 @@ function VideoSource(renderer, options) {
 
   /**
    * @description start the current video
-   * @function Source#VideoSource#play
+   * @function Source#FlexSource#play
    */
   _self.play =         function() { return videoElement.play() }
 
   /**
    * @description pauses the video
-   * @function Source#VideoSource#pause
+   * @function Source#FlexSource#pause
    */
   _self.pause =        function() { return videoElement.pause() }
 
   /**
    * @description returns true then the video is paused. False otherwise
-   * @function Source#VideoSource#paused
+   * @function Source#FlexSource#paused
    */
   _self.paused =       function() { return videoElement.paused }
 
   /**
    * @description skip to _time_ (in seconds) or gets `currentTime` in seconds
-   * @function Source#VideoSource#currentTime
+   * @function Source#FlexSource#currentTime
    * @param {float} time - time in seconds
    */
   _self.currentTime = function( _num ) {
@@ -331,7 +426,7 @@ function VideoSource(renderer, options) {
   // seconds
   /**
    * @description give the duration of the video in seconds (cannot be changed)
-   * @function Source#VideoSource#duration
+   * @function Source#FlexSource#duration
    */
   _self.duration =     function() { return videoElement.duration }    // seconds
 
@@ -341,7 +436,7 @@ function VideoSource(renderer, options) {
   // ===========================================================================
   /**
    * @description skip to _time_ (in seconds) or gets `currentTime` in seconds
-   * @function Source#VideoSource#setUVMap
+   * @function Source#FlexSource#setUVMap
    * @param {float} u - U (x) horizontal spacing for the texture, 1 is 1 texture, below zero is 'zooming' over 1 is tiling
    * @param {float} v - V (y) vertical spacing for the texture, 1 is 1 texture, below zero is 'zooming' over 1 is tiling
    * 
@@ -352,7 +447,7 @@ function VideoSource(renderer, options) {
 
     /**
    * @description Not used at this moment
-   * @function Source#VideoSource#setUVMapMod
+   * @function Source#FlexSource#setUVMapMod
    * @param x (u)
    * @param y (v)
    */

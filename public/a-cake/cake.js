@@ -45,27 +45,53 @@ function addLayers() {
 
 addLayers();
 
+// function AnySource(renderer, options){
+//     console.log("AnySource")
+
+// let ext = options.src.split('.').pop();
+// console.log("ext", ext)
+//  if (ext == "mp4"){
+//     return new VideoSource(renderer, options);
+//  }
+//  if (ext == "gif"){
+//     return new GifSource(renderer, options);
+//  }
+
+//  console.log("Unknown Source:", options.src)
+// }
+
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer );
 let sources = new Array();
-sources[1]= new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 grate 03 texture.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
-sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
+sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
 
 // var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
 
-sources[3] = new VideoSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
-sources[4]= new VideoSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
+// sources[4]= new AnySource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
+
 
 var FILE_URL_1 = "http://localhost:4000/files/DCVS01"
 var FILE_URL_2 = "http://localhost:4000/files/disco"
 var FILE_URL_ROOT = "http://localhost:4000/files"
   
 function handleClipClick(url) {
-    console.log("clipp click:" + url);
+    console.log("clip click:" + url);
     url = "/video/" + url;
+
+    //TODO Check if type is changed first.
+    var l = activeLayer;
+    var channel = 1;
+    if (activeLayer > 2){
+        channel = 2;
+    }
+    // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
+
     sources[activeLayer].src(url);
 }
 
@@ -92,11 +118,11 @@ var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, u
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
 // var layer_3_mixer = new Mixer( renderer, { sources[1]: trans_black, sources[2]: layer_3_effect,  uuid: "Mixer_3"  } )
-var channel_1_a_mixer = new Mixer( renderer, { source1: sources[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
-var channel_1_b_mixer = new Mixer( renderer, { source1: sources[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_1_effect, source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_2_effect, source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
-var channel_2_a_mixer = new Mixer( renderer, { source1: sources[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
-var channel_2_b_mixer = new Mixer( renderer, { source1: sources[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_3_effect, source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_4_effect, source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
 
 var output;
@@ -106,6 +132,8 @@ var output;
 //     output = new Output( renderer, layer_3_effect )
 // }
 
+// output = new Output( renderer, channel_1_b_mixer)
+// output = new Output( renderer, layer_1_effect)
 output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
 
@@ -129,11 +157,15 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
-layer_1_effect.effect(TOPHER_ONLY_CIRCLE);
-layer_2_effect.effect(TOPHER_ONLY_CIRCLE);
+const CAKE_MIRROR_VERICAL = 106;
+const CAKE_MIRROR_HORIZONTAL = 107;
+const CAKE_WIPE_HORIZONTAL = 108;
 
-layer_3_effect.effect(TOPHER_ONLY_CIRCLE);
-layer_4_effect.effect(TOPHER_ONLY_CIRCLE);
+layer_1_effect.effect(CAKE_MIRROR_VERICAL);
+layer_2_effect.effect(CAKE_MIRROR_HORIZONTAL);
+
+layer_3_effect.effect(CAKE_MIRROR_VERICAL);
+layer_4_effect.effect(CAKE_MIRROR_VERICAL);
 
 //  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
 const NAM = 3;
@@ -142,12 +174,17 @@ const LUM1 = 10;
 const LUM2 = 11;
 const BOOM = 9
 
+channel_1_b_mixer.pod(0.0);
+channel_1_a_mixer.pod(1.0);
+
 setTimeout(() => {
     
-    document.getElementById('layer_2_fader').value = 1.0
+    document.getElementById('layer_2_fader').value = 0.0
     document.getElementById('layer_1_fader').value = 1.0
-    sources[1].pause();
-    sources[2].pause();
+    // sources[1].pause();
+    // sources[2].pause();
+    // sources[3].pause();
+    // sources[4].pause();
   }, 1000);
 
 // -----------------------------------------------------------------------------
