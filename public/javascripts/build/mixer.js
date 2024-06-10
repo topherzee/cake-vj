@@ -3750,15 +3750,15 @@ function DistortionEffect( _renderer, _options ) {
     //WIPE_HORIZONTAL
     if ( currentdistortioneffect == 108 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      if (uv.x > 0.5){
+      if (uv.x > (extra - 0.5)){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }else{
-        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+        gl_FragColor = vec4(0.0, 0.2, 0.0, 0.0); 
       }
 
       return gl_FragColor;
-    }//MIRROR_VERTICAAL
+    }//WIPE_HORIZONTAL
   
     
   }
@@ -4788,19 +4788,23 @@ var GlRenderer = function (_options) {
         // surface.position.set(60,50,150);
 
         _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry2.rotateY(Math.PI / 1);
         _self.flatGeometry2.translate( 80, -45, 1 );
-        
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+        
+        // _self.surface2.rotation.set(Math.PI / 12,0,0)
         // surface.position.set(60,50,150);
     
+
         _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry3.translate( -80, -45, 1 );
-        // _self.flatGeometry3.rotate( 20, 0, 0 );
+        
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+        
     
 
         /**
@@ -5770,8 +5774,9 @@ var Mixer = class {
      * @param {boolean} autoFade to do, or do not
     */
     _self.setAutoFade = function( _bool ) {
-      if ( _bool.toLowerCase() == "true" ) _self.autoFade = true
-      if ( _bool.toLowerCase() == "false" ) _self.autoFade = false
+      _self.autoFade = _bool;
+      // if ( _bool.toLowerCase() == "true" ) _self.autoFade = true
+      // if ( _bool.toLowerCase() == "false" ) _self.autoFade = false
     }
 
     /**

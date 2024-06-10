@@ -5,7 +5,7 @@
   body {
     background-color: black;
   }
-  
+
   .logo {
     top: 24px;
     width: 48px;
@@ -24,7 +24,7 @@
     z-index: 2;
     width: 300px;
     height: 350px;
-    bottom: 500px;
+    bottom: 400px;
     left: calc(50% - 150px);
     background-color: #ccc;
     display: grid;
@@ -41,6 +41,11 @@
          " transform_a transform_a       main_pod    main_pod     transform_b         transform_b " 
          " transform_a transform_a       main_pod    main_pod     transform_b         transform_b ";
   }
+
+  #mixer{
+    display: none !important;
+  }
+
   #mixer > div {
     display: flex;
     flex-direction: row;

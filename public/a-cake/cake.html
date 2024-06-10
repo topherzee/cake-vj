@@ -78,6 +78,17 @@
     top: 0;
     left: 200px;
 }
+
+.controls{
+    position:fixed;
+    top: 460;
+    height: 140px;
+    left: 200px;
+    width: 800px;
+    border: solid 1px lightblue;
+    padding: 5px;
+}
+
 .sources{
     position:fixed;
     top: 600;
@@ -125,6 +136,13 @@
     border-bottom: solid 2px #511;
   }
 
+  #cake-mixer .bpm_control #bpm_display {
+    width: 45%;
+    text-align: center;
+    color: #822;
+    background-color: #200;
+  }
+
 </style>
 </head>
 
@@ -150,6 +168,20 @@
              </div>
         </div>
        
+
+        <div class="controls">
+
+            <div id="bpmcontrol">
+
+                <div class="bpm_control">
+                    <div class="display" id="bpm_display">128</div>
+                    <button id="bpm_tab"></button>
+                    <input id="bpm_slide" type="range" min="20" max="240" step="1">
+                </div>
+
+            </div>
+
+        </div>
 
         <div id="layers">
 

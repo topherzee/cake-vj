@@ -140,15 +140,15 @@ function DistortionEffect( _renderer, _options ) {
     //WIPE_HORIZONTAL
     if ( currentdistortioneffect == 108 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      if (uv.x > 0.5){
+      if (uv.x > (extra - 0.5)){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }else{
-        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+        gl_FragColor = vec4(0.0, 0.2, 0.0, 0.0); 
       }
 
       return gl_FragColor;
-    }//MIRROR_VERTICAAL
+    }//WIPE_HORIZONTAL
   
     
   }

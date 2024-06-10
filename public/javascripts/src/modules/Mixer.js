@@ -526,8 +526,9 @@ var Mixer = class {
      * @param {boolean} autoFade to do, or do not
     */
     _self.setAutoFade = function( _bool ) {
-      if ( _bool.toLowerCase() == "true" ) _self.autoFade = true
-      if ( _bool.toLowerCase() == "false" ) _self.autoFade = false
+      _self.autoFade = _bool;
+      // if ( _bool.toLowerCase() == "true" ) _self.autoFade = true
+      // if ( _bool.toLowerCase() == "false" ) _self.autoFade = false
     }
 
     /**

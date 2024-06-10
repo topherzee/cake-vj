@@ -32,6 +32,14 @@ function addLayer(destId, i){
     document.getElementById('btn_switch_layer_' + i).onclick = function() {
         newActiveLayer(i);
     }
+    document.getElementById('layer_' + i).onclick = function() {
+        newActiveLayer(i);
+    }
+
+    document.getElementById('layer_' + i + '_effect').oninput = function() {
+        layer_effects[i].extra(this.value)
+        // console.log("layer_effects " + i + " >>", parseFloat(this.value) )
+    }
 }
 
 function addLayers() {
@@ -63,6 +71,7 @@ addLayers();
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer );
 let sources = new Array();
+let layer_effects = new Array();
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
@@ -72,8 +81,8 @@ sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 s
 // var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
 
 sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
-// sources[4]= new AnySource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
-sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
+sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+// sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
 
 
 var FILE_URL_1 = "http://localhost:4000/files/DCVS01"
@@ -82,7 +91,7 @@ var FILE_URL_ROOT = "http://localhost:4000/files"
   
 function handleClipClick(url) {
     console.log("clip click:" + url);
-    url = "/video/" + url;
+    url = "/video/" + url;// + "#t20,25";
 
     //TODO Check if type is changed first.
     var l = activeLayer;
@@ -108,22 +117,23 @@ var playInterval = setInterval( function() {
 
 },1000);
   
-var layer_1_effect = new DistortionEffect(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
-var layer_2_effect = new DistortionEffect(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
+layer_effects[1] = new DistortionEffect(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
+layer_effects[2] = new DistortionEffect(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
 
-var layer_3_effect = new DistortionEffect(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
-var layer_4_effect = new DistortionEffect(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
+layer_effects[3] = new DistortionEffect(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
+layer_effects[4] = new DistortionEffect(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
 
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
 // var layer_3_mixer = new Mixer( renderer, { sources[1]: trans_black, sources[2]: layer_3_effect,  uuid: "Mixer_3"  } )
-var channel_1_a_mixer = new Mixer( renderer, { source1: layer_1_effect, source2: solid_black,  uuid: "Mixer_1_a"  } )
-var channel_1_b_mixer = new Mixer( renderer, { source1: layer_2_effect, source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
-var channel_2_a_mixer = new Mixer( renderer, { source1: layer_3_effect, source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
-var channel_2_b_mixer = new Mixer( renderer, { source1: layer_4_effect, source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
+// channel_1_b_mixer.setAutoFade(true);
 
 var output;
 // if (typeof layer_4_effect !=='undefined'){
@@ -133,7 +143,7 @@ var output;
 // }
 
 // output = new Output( renderer, channel_1_b_mixer)
-// output = new Output( renderer, layer_1_effect)
+// output = new Output( renderer, layer_effects[1])
 output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
 
@@ -161,13 +171,16 @@ const CAKE_MIRROR_VERICAL = 106;
 const CAKE_MIRROR_HORIZONTAL = 107;
 const CAKE_WIPE_HORIZONTAL = 108;
 
-layer_1_effect.effect(CAKE_MIRROR_VERICAL);
-layer_2_effect.effect(CAKE_MIRROR_HORIZONTAL);
+layer_effects[1].effect(CAKE_MIRROR_HORIZONTAL);
+layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
 
-layer_3_effect.effect(CAKE_MIRROR_VERICAL);
-layer_4_effect.effect(CAKE_MIRROR_VERICAL);
+layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
+layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
 
-//  layer_1_effect.extra( Number(document.getElementById('effects_a_control').value) )
+layer_effects[1].extra(0.9);
+layer_effects[2].extra(0.9);
+
+
 const NAM = 3;
 const FAM = 4;
 const LUM1 = 10;
@@ -181,10 +194,10 @@ setTimeout(() => {
     
     document.getElementById('layer_2_fader').value = 0.0
     document.getElementById('layer_1_fader').value = 1.0
-    // sources[1].pause();
-    // sources[2].pause();
-    // sources[3].pause();
-    // sources[4].pause();
+    sources[1].pause();
+    sources[2].pause();
+    sources[3].pause();
+    sources[4].pause();
   }, 1000);
 
 // -----------------------------------------------------------------------------
@@ -252,18 +265,7 @@ document.getElementById('layer_4_fader').oninput = function() {
 }
 
 
-// document.getElementById('layer_1_effect').oninput = function() {
-//     layer_1_effect.extra(this.value)
-//     console.log("layer_1_effect >>", parseFloat(this.value) )
-// }
-// document.getElementById('layer_2_effect').oninput = function() {
-//     layer_2_effect.extra(this.value)
-//     console.log("layer_2_effect >>", parseFloat(this.value) )
-// }
-// // document.getElementById('layer_2_effect').oninput = function() {
-// //     layer_2_effect.extra(this.value)
-// //     console.log("layer_2_effect >>", parseFloat(this.value) )
-// // }
+
 
 // document.getElementById('layer_1_time').oninput = function() {
 //     var sec = this.value * sources[1].duration();
@@ -451,6 +453,21 @@ if (TIME_BY_TOPHER){
 //     rate1 = this.value
 //     console.log("layer_1_speed >>", parseFloat(this.value) )
 // }
+
+
+  // -----------------------------------------------------------------------------
+    // BPM TAP EN SLIDER
+
+    document.getElementById('bpm_tab').onmousedown = function() {
+        bpm_tap.tap()
+        channel_1_b_mixer.bpm(bpm_tap.bpm)
+        document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
+      }
+    
+      document.getElementById('bpm_slide').oninput = function() {
+        channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
+        document.getElementById('bpm_display').textContent = Math.round(document.getElementById('bpm_slide').value)
+      }
 
 
 
