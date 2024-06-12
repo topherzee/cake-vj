@@ -29,9 +29,7 @@ function addLayer(destId, i){
     let dest = document.getElementById(destId);
     dest.appendChild(node);
 
-    document.getElementById('btn_switch_layer_' + i).onclick = function() {
-        newActiveLayer(i);
-    }
+    
     document.getElementById('layer_' + i).onclick = function() {
         newActiveLayer(i);
     }
@@ -40,6 +38,24 @@ function addLayer(destId, i){
         layer_effects[i].extra(this.value)
         // console.log("layer_effects " + i + " >>", parseFloat(this.value) )
     }
+
+    document.getElementById('btn_bpm_layer_' + i).onclick = function() {
+        bpms[i] = !bpms[i];
+
+        let el = document.getElementById('btn_bpm_layer_' + i);
+        if (bpms[i]){
+            el.classList.add("active");
+        }else{
+            el.classList.remove("active");
+        }
+        sources[i].setBpmFollow(bpms[i])
+    }
+
+    // document.getElementById('bpm_tab').onmousedown = function() {
+    //     bpm_tap.tap()
+    //     channel_1_b_mixer.bpm(bpm_tap.bpm)
+    //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
+    //   }
 }
 
 function addLayers() {
@@ -72,6 +88,8 @@ addLayers();
 var bpm_tap = new BPM( renderer );
 let sources = new Array();
 let layer_effects = new Array();
+let bpms = new Array();
+
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});

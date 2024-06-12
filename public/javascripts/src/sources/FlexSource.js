@@ -87,7 +87,12 @@ function FlexSource(renderer, options) {
   }
 
 
-  
+     // hoist an own bpm here
+     var currentBPM = 128
+     var currentMOD = 1
+     var currentBpmFunc = function() { return currentBPM; }
+     _self.bpmFollow = false
+     _self.fading = false
   
   
 
@@ -319,6 +324,16 @@ function FlexSource(renderer, options) {
       }
     }
 
+    if ( _self.bpmFollow ) { // maybe call this bpmFollow?
+      // pod = currentBPM
+      currentBPM = currentBpmFunc()
+      c = ((new Date()).getTime() - starttime) / 1000;
+      let timeRatio = ( Math.sin( c * Math.PI * currentBPM * currentMOD / 60 ) / 2 + 0.5 )
+      // _self.pod(  )
+      videoElement.currentTime = timeRatio;
+
+    }
+
   }
 
   // return the video texture, for direct customUniforms injection (or something)
@@ -423,6 +438,8 @@ function FlexSource(renderer, options) {
     }
   }
 
+
+
   // seconds
   /**
    * @description give the duration of the video in seconds (cannot be changed)
@@ -488,6 +505,23 @@ function FlexSource(renderer, options) {
     }
     
     return videoElement.currentTime
+  }
+
+      // autofade bpm
+      var starttime = (new Date()).getTime()
+      var c = 0
+      var cnt = 0
+  
+      // fade time
+      var fadeAtTime = 0
+      var fadeTime = 0
+      var fadeTo = "b"
+      var fadeDuration = 0
+
+  _self.setBpmFollow = function( _bool ) {
+    _self.bpmFollow = _bool;
+    // if ( _bool.toLowerCase() == "true" ) _self.autoFade = true
+    // if ( _bool.toLowerCase() == "false" ) _self.autoFade = false
   }
 
   // ===========================================================================

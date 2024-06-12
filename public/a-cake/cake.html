@@ -21,7 +21,7 @@
     color:white;
     padding: 5px;
     width: 190px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 .layer{
     border:solid 1px grey;
@@ -30,6 +30,11 @@
 .layer.active{
     border:solid 1px hotpink;
 }
+
+/* button.active{
+    background-color:yellow;
+    color: white;
+} */
 
 .layer_stack{
     width: 128px;
@@ -46,7 +51,7 @@
 
 .layer_controls{
     color:white;
-    width:128px;
+    width:150px;
 }
 
 .layer_fader_input{
@@ -65,6 +70,10 @@
   }
   .layer_effect_input{
     width: 120px;
+  }
+
+ input[type="range"]{
+    margin:0px !important;
   }
   
 
@@ -143,6 +152,18 @@
     background-color: #200;
   }
 
+  #cake-mixer select {
+    font-size: 10px;
+  }
+
+  #cake-mixer {
+    font-size: 10px;
+  }
+
+  #cake-mixer h3{
+    margin:2px
+  }
+
 </style>
 </head>
 
@@ -198,8 +219,31 @@
                                 <input id="layer_4_time" class="layer_time_input" type="range" min="0" max="1" step="0.01">
                                 <input id="layer_4_speed" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
 
-                                <select id="layer_4_blendmode"></select>
+                                <select id="layer_4_blendmode"></select><br>
+
                                 
+                                <select id="layer_4_play_mode">
+                                    <option value="forward">Forward</option>
+                                    <option value="reverse">Reverse</option>
+                                    <option value="bounce">Bounce</option>
+                                    <option value="random">Random</option>
+                                </select><br>
+                                
+                                BPM
+                                <select id="layer_4_bpm_mode">
+                                    <option value="stretch">Stretch</option>
+                                    <option value="cut">Cut</option>
+                                </select>
+                                <select id="layer_4_bpm_factor">
+                                    <option  value="0.24">1/4</option>
+                                    <option  value="0.5">1/2</option>
+                                    <option default value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                </select>
+                                <button id="btn_bpm_layer_4"></button>
+
+
                                 EFFECT
                                 <input id="layer_4_effect" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
                                 </div>
@@ -208,7 +252,7 @@
                                 <!-- effects_a_control -->
                                 <input id="layer_4_fader" class="layer_fader_input" type="range" min="0" max="1" step="0.01">
                         </div>
-                        <button class="" id="btn_switch_layer_4"></button>
+                       
                     </div>
                 </template>
 
