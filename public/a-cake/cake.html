@@ -146,7 +146,8 @@
   }
 
   #cake-mixer .bpm_control #bpm_display {
-    width: 45%;
+    width: 30px;
+    font-size: 14px;
     text-align: center;
     color: #822;
     background-color: #200;
@@ -163,6 +164,19 @@
   #cake-mixer h3{
     margin:2px
   }
+
+#cake-mixer .bpm-set-length{
+    background-color: hotpink;
+}
+.left{
+    display:inline-block;
+}
+#cake-mixer #bpm_reset{
+    background-color:green;
+}
+#cake-mixer #bpm_reset.phase{
+    background-color:lightgreen;
+}
 
 </style>
 </head>
@@ -195,12 +209,14 @@
             <div id="bpmcontrol">
 
                 <div class="bpm_control">
-                    <div class="display" id="bpm_display">128</div>
-                    <button id="bpm_tab"></button>
-                    <input id="bpm_slide" type="range" min="20" max="240" step="1">
+                    <div class="display left" id="bpm_display">128</div>
+                    <button id="bpm_tab" class="left"></button>
+                    <input id="bpm_slide" class="left" type="range" min="20" max="160" step="1">
+                    <button id="bpm_reset" class="left"></button>
                 </div>
 
             </div>
+            <button id="pause_all">Pause</button>
 
         </div>
 
@@ -227,7 +243,11 @@
                                     <option value="reverse">Reverse</option>
                                     <option value="bounce">Bounce</option>
                                     <option value="random">Random</option>
-                                </select><br>
+                                </select>
+                                <button id="layer_4_play"> &gt; </button>
+                                <button id="layer_4_pause"> || </button>
+                                
+                                <br>
                                 
                                 BPM
                                 <select id="layer_4_bpm_mode">

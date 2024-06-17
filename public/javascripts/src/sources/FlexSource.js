@@ -140,6 +140,7 @@ function FlexSource(renderer, options) {
         var width = this.videoWidth,
             height = this.videoHeight;
             console.log("WWWWW video width: ", width, height)
+            console.log("WWWWW video duration: ", videoElement.duration)
       }, false );
 
       // Here we wait for a user to click and take over

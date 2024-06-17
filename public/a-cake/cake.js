@@ -40,15 +40,25 @@ function addLayer(destId, i){
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
-        bpms[i] = !bpms[i];
+        layerTimes[i].bpm_on = ! layerTimes[i].bpm_on;
+
+        console.log("bpm layer " + i + " >>", layerTimes[i].bpm_on )
 
         let el = document.getElementById('btn_bpm_layer_' + i);
-        if (bpms[i]){
+        if (layerTimes[i].bpm_on){
             el.classList.add("active");
         }else{
             el.classList.remove("active");
         }
-        sources[i].setBpmFollow(bpms[i])
+    }
+
+    document.getElementById('layer_' + i + "_play").onclick = function() {
+        console.log("play ", i)
+        layerTimes[i].is_playing = true;
+    }
+    document.getElementById('layer_' + i + "_pause").onclick = function() {
+        console.log("pause ", i)
+        layerTimes[i].is_playing = false;
     }
 
     // document.getElementById('bpm_tab').onmousedown = function() {
@@ -84,11 +94,22 @@ addLayers();
 //  console.log("Unknown Source:", options.src)
 // }
 
+
+function showBpm(f){
+    //console.log("yooooooooooo", i);
+    if (f<0.1){
+        document.getElementById('bpm_reset').classList.add("phase")
+    }else{
+        document.getElementById('bpm_reset').classList.remove("phase")
+    }
+}
+
+
 // lets not forget the bpm
 var bpm_tap = new BPM( renderer );
+bpm_tap.add(showBpm)
 let sources = new Array();
 let layer_effects = new Array();
-let bpms = new Array();
 
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
@@ -120,20 +141,8 @@ function handleClipClick(url) {
     // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
 
     sources[activeLayer].src(url);
+    sources[activeLayer].pause();
 }
-
-//TODO - does not seem like is should be necessary - or setTimeout() instead.
-var playInterval = setInterval( function() {
-    // sources[2].video.pause();
-    // sources[1].pause();
-    // sources[2].pause();
-    // sources[3].pause();
-    // sources[3].pause();
-    // sources[4].pause();
-    // console.log("FDSFDSFDSFDSFDSFDFSFS-------")
-
-
-},1000);
   
 layer_effects[1] = new DistortionEffect(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
 layer_effects[2] = new DistortionEffect(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
@@ -208,14 +217,26 @@ const BOOM = 9
 channel_1_b_mixer.pod(0.0);
 channel_1_a_mixer.pod(1.0);
 
+function pauseAll(){
+    console.log("pauseAll")
+    // sources[1].pause();
+    // sources[2].pause();
+    // sources[3].pause();
+    // sources[4].pause();
+    layerTimes[1].is_playing = false;
+    layerTimes[2].is_playing = false;
+    layerTimes[3].is_playing = false;
+    layerTimes[4].is_playing = false;
+}
+
 setTimeout(() => {
     
     document.getElementById('layer_2_fader').value = 0.0
     document.getElementById('layer_1_fader').value = 1.0
     sources[1].pause();
     sources[2].pause();
-    sources[3].pause();
-    sources[4].pause();
+    // sources[3].pause();
+    // sources[4].pause();
   }, 1000);
 
 // -----------------------------------------------------------------------------
@@ -406,42 +427,59 @@ clip_bank_select_2.oninput = function() {
 
 const FRAME_DELAY = 1 / 60;
 let frameCheck = 0;
-let rate1 = 0.1;
+let rate1 = 0.5;
 let rate2 = 0.1;
 let rate3 = 0.1;
 let rate4 = 0.1;
 
-let time1 = 0.0;
-let time2 = 0.0;
-let time3 = 0.0;
+// let time1 = 0.0;
+// let time2 = 0.0;
+// let time3 = 0.0;
 
-function updateVideo(video, rate, time, layer){
+function bps(bpm){
+    return 1 / (bpm / 60.0);
+}
+function updateVideo(source, rate, layer, layerTime){
+    let video = source.video;
 
-    if (video == null || ! video.hasOwnProperty("duration")){
+    // console.log("updatevideo", layer)
+    if (video == null || source.type2 != "Video" ){//|| ! video.hasOwnProperty("duration")){
         return;
+    }
+    if (layerTime.is_playing==false){
+        return;
+    }
 
+    var time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+    // console.log("time_elapsed", time_elapsed)
+    let duration = video.duration;
+    if (layerTime.bpm_on){
+        duration = bps(bpm_tap.bpm);
+        // console.log("bpm duration", duration)
     }
-    let new_time = time + rate * FRAME_DELAY;
-    if (new_time > video.duration){
-        new_time = 0;
-    }else if (new_time < 0){
-        new_time = video.duration - (rate * FRAME_DELAY);
-        // console.log("layer_2_speed >>", parseFloat(this.value) )
+
+    // console.log("updatevideo 2", layer)
+    //let new_time = layerTime.time + rate * FRAME_DELAY;
+    if (time_elapsed > duration){
+        time_elapsed = 0;
+        layerTime.time_last_beat = Date.now();
+    }else if (time_elapsed < 0){
+        time_elapsed = duration - (rate * FRAME_DELAY);
+        layerTime.time_last_beat = Date.now();
     }
-    video.currentTime = new_time;
-    time = new_time;
-// console.log("updateTime : ", parseFloat(time))
+    // console.log("updateTime : ", parseFloat(new_time))
+
+    video.currentTime = time_elapsed;
 
     var scrubber = document.getElementById('layer_' + layer + '_time');
     if (scrubber){
-        scrubber.value = time / video.duration;
+        scrubber.value = time_elapsed / video.duration;
     }
-    
-    return(time);
 }
 function playVideos () {
     if (frameCheck==0){
-        // time1 = updateVideo(sources[1].video, rate1, time1, "1");
+        updateVideo(sources[1], rate1, "1", layerTimes[1]);
+        // console.log("type", sources[1].type2)
         // time2 = updateVideo(sources[2].video, rate2, time2, "2");
         // time3 = updateVideo(sources[3].video, rate3, time3, "3");
     }
@@ -452,6 +490,37 @@ function playVideos () {
 
   requestAnimationFrame(playVideos);
 };
+const PLAY_MODE_FORWARDS = "forward";
+const PLAY_MODE_REVERSE = "reverse";
+const PLAY_MODE_BOUNCE = "bounce";
+const PLAY_MODE_RANDOM = "random";
+
+const BPM_MODE_STRETCH = "stretch";
+const BPM_MODE_CUT = "cut";
+
+
+let layerTimes = new Array();
+function initLayerTimes(lt){
+    lt =  {
+        is_playing:false,
+        play_mode: PLAY_MODE_FORWARDS,
+        bpm_on: false,
+        bpm_mode: BPM_MODE_STRETCH,
+        bpm_factor: 1,
+        time:0,
+        time_last_beat: Date.now()
+    }
+    return lt;
+}
+for (let i=1; i<5; i++){
+    layerTimes[i] =initLayerTimes(layerTimes[i]);
+}
+
+function resetLayerTimes(){
+    for (let i=1; i<5; i++){
+        layerTimes[i].time_last_beat = Date.now();
+    }
+}
 
 if (TIME_BY_TOPHER){
     playVideos();
@@ -477,17 +546,39 @@ if (TIME_BY_TOPHER){
     // BPM TAP EN SLIDER
 
     document.getElementById('bpm_tab').onmousedown = function() {
-        bpm_tap.tap()
-        channel_1_b_mixer.bpm(bpm_tap.bpm)
-        document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
+        var tapPhase = bpm_tap.tapCake();
+        if (tapPhase == "TAP_PHASE_SET_LENGTH"){
+            document.getElementById('bpm_tab').classList.add("bpm-set-length")
+        }else{
+            document.getElementById('bpm_tab').classList.remove("bpm-set-length")
+        }
+        // resetLayerTimes();
+        //channel_1_b_mixer.bpm(bpm_tap.bpm)
+        document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm);
+        document.getElementById('bpm_slide').value = Math.round(bpm_tap.bpm);
+        
       }
+
+      document.getElementById('bpm_reset').onmousedown = function() {
+        bpm_tap.resetCake();
+        document.getElementById('bpm_reset').classList.add("phase")
+
+
+
+    }
     
       document.getElementById('bpm_slide').oninput = function() {
-        channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
-        document.getElementById('bpm_display').textContent = Math.round(document.getElementById('bpm_slide').value)
+        //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
+        let sliderValue = Math.round(document.getElementById('bpm_slide').value);
+        document.getElementById('bpm_display').textContent = sliderValue;
+
+        bpm_tap.setBpm(sliderValue)
       }
 
-
+      document.getElementById('pause_all').onmousedown = function() {
+        console.log("pause all button clicked")
+        pauseAll();
+      }
 
 }//start
 

@@ -934,13 +934,8 @@ function BPM( renderer, options ) {
 
   // UPDATE
   var starttime = (new Date()).getTime()
-  _self.update = function() {
 
-    if ( _self.bypass ) return
-    // rename useAnalyser?
-    //if ( _self.useAutoBpm ) {
-    //  _self.bpm = _self.tempodata_bpm
-    //}
+  _self.update = function() {
 
     if ( !_self.disabled ) {
       nodes.forEach( function( node ) {
@@ -948,9 +943,10 @@ function BPM( renderer, options ) {
       });
     }
 
-    c = ((new Date()).getTime() - starttime) / 1000;
-    _self.sec = c * Math.PI * (_self.bpm * _self.mod) / 60            // * _self.mod
-    _self.bpm_float = ( Math.sin( _self.sec ) + 1 ) / 2               // Math.sin( 128 / 60 )
+    var timeElapsed = ((new Date()).getTime() - starttime) / 1000;
+    var secondsPerBeat = 1 / _self.bpm * 60;
+    _self.bpm_float = (timeElapsed % secondsPerBeat) / secondsPerBeat;
+    // console.log("bpm float: ", (_self.bpm_float).toFixed(2))
   }
 
   // add nodes, implicit
@@ -996,26 +992,52 @@ function BPM( renderer, options ) {
 
   // ---------------------------------------------------------------------------
   // Tapped beat control
-  var last = Number(new Date());
+  // var last = Number(new Date());
   var bpms = [ 128, 128 ,128 ,128 ,128 ];
-  var time = 0;
+  // var time = 0;
   var avg = 0;
 
-  /**
-   * @description Tapping beat control
-   * @function Addon#BPM#tap
+
+  /** A different tap. Uses no averages.
+   * Tap 1. Set the time.
+   * Tapp 2. Set the duration.
    */
-  _self.tap = function() {
+  const TAP_PHASE_PRIME = "TAP_PHASE_PRIME";
+  const TAP_PHASE_SET_LENGTH = "TAP_PHASE_SET_LENGTH";
+  var tapPhase = TAP_PHASE_PRIME;
+
+  var timeStart = 0;
+
+  _self.tapCake = function() {
     _self.useAutoBPM = false
-    time  = Number(new Date()) - last
-    last = Number(new Date());
-    if ( time < 10000 && time > 10 ) {
-      bpms.splice(0,1)
-      bpms.push( 60000/time )
-      avg = bpms.reduce(function(a, b) { return a + b; }) / bpms.length;
-      _self.bpm = avg
-      _self.bps = avg/60
+
+    if ( tapPhase == TAP_PHASE_PRIME) {
+
+      tapPhase = TAP_PHASE_SET_LENGTH;
+      timeStart  = Number(new Date());
+      console.log("BPM TAP. Start.");
+
+    }else if (tapPhase == TAP_PHASE_SET_LENGTH) {
+      tapPhase = TAP_PHASE_PRIME;
+
+      var timeBetweenClicks = Number(new Date()) - timeStart;
+      _self.bpm = 60000 / timeBetweenClicks;
+      _self.resetCake();
+
+      console.log("BPM TAP. Complete. seconds:", (timeBetweenClicks/1000).toFixed(2));
+      console.log("BPM TAP. Complete. bpm:", (_self.bpm).toFixed(2));
     }
+
+    return tapPhase;
+  }
+
+  //reset the bpm time
+  _self.resetCake = function() {
+    // _self.bpm_float;
+    starttime = (new Date()).getTime()
+    _self.update();
+    console.log("ResetCake bpm", _self.bpm_float)
+    // console.log("ResetCake sec", _self.sec )
   }
 
   /**
@@ -1024,6 +1046,11 @@ function BPM( renderer, options ) {
    */
   _self.getBpm = function() {
     return _self.bpm
+  }
+
+  _self.setBpm = function(newBpm) {
+    _self.bpm = newBpm;
+    console.log("setBpm", newBpm);
   }
 
   console.log("set keypress")
@@ -6281,6 +6308,7 @@ function FlexSource(renderer, options) {
         var width = this.videoWidth,
             height = this.videoHeight;
             console.log("WWWWW video width: ", width, height)
+            console.log("WWWWW video duration: ", videoElement.duration)
       }, false );
 
       // Here we wait for a user to click and take over
