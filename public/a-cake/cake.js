@@ -547,10 +547,13 @@ function setInOnLayer(i){
     if (layerTimes[i].in == -1){
         //set in
         layerTimes[i].in = sources[i].video.currentTime;
-        sources[i].video.currentTime = 0;
+        layerTimes[i].time_last_beat = Date.now();
         document.getElementById('layer_' + i + "_in").classList.add("active");
     }else{
-        sources[i].video.currentTime += layerTimes[i].in;
+        //clear in
+        console.log("time_last_beat", layerTimes[i].time_last_beat)
+        layerTimes[i].time_last_beat = layerTimes[i].time_last_beat - layerTimes[i].in * 1000;
+        console.log("time_last_beat", layerTimes[i].time_last_beat)
         layerTimes[i].in = -1;
         document.getElementById('layer_' + i + "_in").classList.remove("active");
     }
