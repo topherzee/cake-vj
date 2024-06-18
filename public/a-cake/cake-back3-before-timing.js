@@ -451,6 +451,8 @@ function bps(bpm){
 }
 function updateVideo(source, rate, layer, layerTime){
     let video = source.video;
+
+    // console.log("updatevideo", layer)
     if (video == null || source.type2 != "Video" ){//|| ! video.hasOwnProperty("duration")){
         return;
     }
@@ -459,45 +461,27 @@ function updateVideo(source, rate, layer, layerTime){
     }
 
     var time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
-
-    let end = video.duration;
-    // if (layerTime.bpm_on){
-    //     end = bps(bpm_tap.bpm);
-    // }
-    if (layerTime.out != -1){
-        end = layerTime.out;
+    let duration = video.duration;
+    if (layerTime.bpm_on){
+        duration = bps(bpm_tap.bpm);
     }
-    let start = 0;
-    if (layerTime.in != -1){
-        start = layerTime.in;
-    }
-    let duration = end - start;
-
-
     if (time_elapsed > duration){
         time_elapsed = 0;
         layerTime.time_last_beat = Date.now();
-        console.log("loop")
+    }else if (time_elapsed < 0){
+        time_elapsed = duration - (rate * FRAME_DELAY);
+        layerTime.time_last_beat = Date.now();
     }
-    // else if (time_elapsed < 0){
-    //     time_elapsed = end - (rate * FRAME_DELAY);
-    //     layerTime.time_last_beat = Date.now();
-    // }
+    video.currentTime = time_elapsed;
 
-    video.currentTime = start + time_elapsed;
-    
-
-    //full time scrubber - not the current loop or anything
     var scrubber = document.getElementById('layer_' + layer + '_time');
     if (scrubber){
-        scrubber.value = video.currentTime / video.duration;
+        scrubber.value = time_elapsed / video.duration;
     }
 }
-
 function playVideos () {
     if (frameCheck==0){
         updateVideo(sources[1], rate1, "1", layerTimes[1]);
-        updateVideo(sources[2], rate2, "2", layerTimes[2]);
         // console.log("type", sources[1].type2)
         // time2 = updateVideo(sources[2].video, rate2, time2, "2");
         // time3 = updateVideo(sources[3].video, rate3, time3, "3");
@@ -526,7 +510,7 @@ function initLayerTimes(lt){
         bpm_on: false,
         bpm_mode: BPM_MODE_STRETCH,
         bpm_factor: 1,
-
+        time:0,
         in:-1,
         out:-1,
         time_last_beat: Date.now()
@@ -546,27 +530,23 @@ function resetLayerTimes(){
 function setInOnLayer(i){
     if (layerTimes[i].in == -1){
         //set in
-        layerTimes[i].in = sources[i].video.currentTime;
-        sources[i].video.currentTime = 0;
+        layerTimes[i].in = layerTimes[i].time;
         document.getElementById('layer_' + i + "_in").classList.add("active");
     }else{
-        sources[i].video.currentTime += layerTimes[i].in;
         layerTimes[i].in = -1;
         document.getElementById('layer_' + i + "_in").classList.remove("active");
     }
-    console.log("setInOnLayer", layerTimes[i].in)
     
 }
 function setOutOnLayer(i){
     if (layerTimes[i].out == -1){
-        //set out
-        layerTimes[i].out = sources[i].video.currentTime;
+        //set in
+        layerTimes[i].out = layerTimes[i].time;
         document.getElementById('layer_' + i + "_out").classList.add("active");
     }else{
         layerTimes[i].out = -1;
         document.getElementById('layer_' + i + "_out").classList.remove("active");
     }
-    console.log("setOutOnLayer", layerTimes[i].out)
 }
 
 if (TIME_BY_TOPHER){
