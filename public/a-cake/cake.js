@@ -458,12 +458,9 @@ function updateVideo(source, rate, layer, layerTime){
         return;
     }
 
-    var time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
 
     let end = video.duration;
-    // if (layerTime.bpm_on){
-    //     end = bps(bpm_tap.bpm);
-    // }
+
     if (layerTime.out != -1){
         end = layerTime.out;
     }
@@ -472,21 +469,34 @@ function updateVideo(source, rate, layer, layerTime){
         start = layerTime.in;
     }
     let duration = end - start;
+    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+    let time_in_range = start + time_elapsed;
 
+    // console.log("bpm", bpm_tap.render())
 
-    if (time_elapsed > duration){
-        time_elapsed = 0;
-        layerTime.time_last_beat = Date.now();
-        console.log("loop")
+    if (layerTime.bpm_on){
+        time_in_range = start + bpm_tap.render() * duration;
+    }else{
+        
+        if (time_elapsed > duration){
+            time_elapsed = 0;
+            layerTime.time_last_beat = Date.now();
+            console.log("loop")
+        }
+        
     }
-    // else if (time_elapsed < 0){
-    //     time_elapsed = end - (rate * FRAME_DELAY);
-    //     layerTime.time_last_beat = Date.now();
-    // }
 
-    video.currentTime = start + time_elapsed;
+
+    //BPM - Map the beat to whatever in and out and speed stuff going on above.
+    //Based on time_in_range and duration.
+    
+        
+
+        // time_in_range = 
     
 
+    video.currentTime = time_in_range;
+    
     //full time scrubber - not the current loop or anything
     var scrubber = document.getElementById('layer_' + layer + '_time');
     if (scrubber){
