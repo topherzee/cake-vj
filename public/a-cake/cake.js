@@ -71,6 +71,11 @@ function addLayer(destId, i){
         setOutOnLayer(i);
     }
 
+    document.getElementById("layer_" + i + "_play_mode").oninput = function() {
+        console.log("layer_" + i + "_play_mode", this.value);
+        setPlayModeOnLayer(i, this.value)
+    }
+
     // document.getElementById('bpm_tab').onmousedown = function() {
     //     bpm_tap.tap()
     //     channel_1_b_mixer.bpm(bpm_tap.bpm)
@@ -458,9 +463,8 @@ function updateVideo(source, rate, layer, layerTime){
         return;
     }
 
-
+    // DETERMINE DURATION & TIMERATIO
     let end = video.duration;
-
     if (layerTime.out != -1){
         end = layerTime.out;
     }
@@ -469,39 +473,101 @@ function updateVideo(source, rate, layer, layerTime){
         start = layerTime.in;
     }
     let duration = end - start;
+
+
+    
+
     let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
-    let time_in_range = start + time_elapsed;
+   
+    //Include speed? maybe time_elapsed += speed?
 
-    // console.log("bpm", bpm_tap.render())
+    if (layerTime.just_reversed){
+        
+        
+        layerTime.just_reversed = false;
+        let timeRatio = time_elapsed / duration;
+        console.log("duration", duration.toFixed(2))
+        console.log("time_elapsed", time_elapsed.toFixed(2))
+        console.log("just reversed - ratio", timeRatio.toFixed(2))
 
-    if (layerTime.bpm_on){
-        time_in_range = start + bpm_tap.render() * duration;
-    }else{
+        let ratioGoal = (1 - timeRatio)
+        let ratioChunk = (1 - timeRatio) - timeRatio;
+        console.log("ratioGoal", ratioGoal.toFixed(2))
+        console.log("ratioChunk", ratioChunk.toFixed(2))
+        console.log("secondsToMove", (ratioChunk *  duration).toFixed(2))
         
-        if (time_elapsed > duration){
-            time_elapsed = 0;
-            layerTime.time_last_beat = Date.now();
-            console.log("loop")
-        }
+        // debugger;
+        layerTime.time_last_beat -= (ratioChunk *  duration) * 1000;
+
+        //recalc.
         
+        time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+        timeRatio = time_elapsed / duration;
+        console.log("time_elapsed", time_elapsed.toFixed(2))
+        console.log("just reversed - ratio", timeRatio.toFixed(2))
     }
 
 
+    if (time_elapsed > duration){
+        time_elapsed = 0;
+        layerTime.time_last_beat = Date.now();
+        console.log("loop")
+    }
+
+
+    let timeRatio = time_elapsed / duration;
+    if (layerTime.bpm_on){
+        timeRatio = bpm_tap.render();
+    }
+
+    // USE IN FUNCTION
+    let time = 0;
+    if (layerTime.play_mode == PLAY_MODE_FORWARD){
+        time = start + timeRatio * duration;
+    } else if (layerTime.play_mode == PLAY_MODE_REVERSE){
+        time = start + (1.0 -timeRatio) * duration;
+    }
+
+
+
+    // let time_in_range = start + time_elapsed;
+    // if (layerTime.bpm_on){
+    //     time_in_range = start + bpm_tap.render() * duration;
+    // }else{
+    //     if (time_elapsed > duration){
+    //         time_elapsed = 0;
+    //         layerTime.time_last_beat = Date.now();
+    //         console.log("loop")
+    //     }
+    // }
+
     //BPM - Map the beat to whatever in and out and speed stuff going on above.
     //Based on time_in_range and duration.
-    
-        
-
         // time_in_range = 
-    
-
-    video.currentTime = time_in_range;
+    // video.currentTime = time_in_range;
+    video.currentTime = time;
     
     //full time scrubber - not the current loop or anything
     var scrubber = document.getElementById('layer_' + layer + '_time');
     if (scrubber){
         scrubber.value = video.currentTime / video.duration;
     }
+}
+function setPlayModeOnLayer(i, mode){
+
+    if (mode != layerTimes[i].play_mode){
+        layerTimes[i].just_reversed = true;
+    }
+    layerTimes[i].play_mode = mode;
+
+    //eliminate jump when direction changes:
+    // WORKING Headers.
+   
+    // if (mode == PLAY_MODE_REVERSE){
+    //     // layerTimes[i].time_last_beat = Date.now();
+    //     layerTimes[i].just_reversed = true;
+    // }
+    
 }
 
 function playVideos () {
@@ -519,10 +585,10 @@ function playVideos () {
 
   requestAnimationFrame(playVideos);
 };
-const PLAY_MODE_FORWARDS = "forward";
-const PLAY_MODE_REVERSE = "reverse";
-const PLAY_MODE_BOUNCE = "bounce";
-const PLAY_MODE_RANDOM = "random";
+const PLAY_MODE_FORWARD = "FORWARD";
+const PLAY_MODE_REVERSE = "REVERSE";
+const PLAY_MODE_BOUNCE = "BOUNCE";
+const PLAY_MODE_RANDOM = "RANDOM";
 
 const BPM_MODE_STRETCH = "stretch";
 const BPM_MODE_CUT = "cut";
@@ -532,17 +598,20 @@ let layerTimes = new Array();
 function initLayerTimes(lt){
     lt =  {
         is_playing:false,
-        play_mode: PLAY_MODE_FORWARDS,
+        play_mode: PLAY_MODE_FORWARD,
         bpm_on: false,
         bpm_mode: BPM_MODE_STRETCH,
         bpm_factor: 1,
 
         in:-1,
         out:-1,
-        time_last_beat: Date.now()
+        time_last_beat: Date.now(), 
+
+        just_reversed: false,
     }
     return lt;
 }
+//play_mode: PLAY_MODE_FORWARD,
 for (let i=1; i<5; i++){
     layerTimes[i] =initLayerTimes(layerTimes[i]);
 }
@@ -581,6 +650,8 @@ function setOutOnLayer(i){
     }
     console.log("setOutOnLayer", layerTimes[i].out)
 }
+
+
 
 if (TIME_BY_TOPHER){
     playVideos();
