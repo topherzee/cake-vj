@@ -34,9 +34,9 @@ function addLayer(destId, i){
         newActiveLayer(i);
     }
 
-    document.getElementById('layer_' + i + '_effect').oninput = function() {
+    document.getElementById('layer_effect_' + i).oninput = function() {
         layer_effects[i].extra(this.value)
-        // console.log("layer_effects " + i + " >>", parseFloat(this.value) )
+        // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
@@ -52,57 +52,67 @@ function addLayer(destId, i){
         }
     }
 
-    document.getElementById('layer_' + i + "_play").onclick = function() {
+    document.getElementById('layer_play_' + i).onclick = function() {
         console.log("play ", i)
         layerTimes[i].is_playing = true;
     }
-    document.getElementById('layer_' + i + "_pause").onclick = function() {
+    document.getElementById('layer_pause_' + i).onclick = function() {
         console.log("pause ", i)
         layerTimes[i].is_playing = false;
     }
 
-    document.getElementById('layer_' + i + "_in").onclick = function() {
+    document.getElementById('layer_in_' + i ).onclick = function() {
         console.log("in ", i);
         setInOnLayer(i);
     }
 
-    document.getElementById('layer_' + i + "_out").onclick = function() {
+    document.getElementById('layer_out_' + i).onclick = function() {
         console.log("out ", i);
         setOutOnLayer(i);
     }
 
-    document.getElementById("layer_" + i + "_play_mode").oninput = function() {
-        console.log("layer_" + i + "_play_mode", this.value);
+    document.getElementById("layer_play_mode_" + i).oninput = function() {
+        console.log("layer_play_mode_" + i, this.value);
         setPlayModeOnLayer(i, this.value)
     }
 
-    document.getElementById("layer_" + i + "_bpm_mode").oninput = function() {
-        console.log("layer_" + i + "_bpm_mode", this.value);
+    document.getElementById("layer_bpm_mode_" + i).oninput = function() {
+        console.log("layer_bpm_mode" + i, this.value);
         setBpmModeOnLayer(i, this.value)
     }
 
-    document.getElementById("layer_" + i + "_bpm_mode").oninput = function() {
-        console.log("layer_" + i + "_bpm_mode", this.value);
-        setBpmModeOnLayer(i, this.value)
-    }
-
-    document.getElementById("layer_" + i + "_bpm_factor").oninput = function() {
-        console.log("layer_" + i + "_bpm_factor", parseFloat(this.value));
+    document.getElementById("layer_bpm_factor_" + i).oninput = function() {
+        console.log("layer_bpm_factor_" + i, parseFloat(this.value));
         // setBpmModeOnLayer(i, this.value)
         layerTimes[i].bpm_factor = parseFloat(this.value);
     }
 
-    document.getElementById('layer_' + i + '_time').oninput = function() {
+    document.getElementById('layer_time_' + i ).oninput = function() {
         var time = this.value * sources[i].duration();
         sources[i].currentTime(time);
         layerTimes[i].time_last_beat = Date.now() - time * 1000;
     }
-    document.getElementById('layer_' + i + '_time').onmousedown = function() {
+    document.getElementById('layer_time_' + i ).onmousedown = function() {
         layerTimes[i].is_scrubbing = true;
     }
-    document.getElementById('layer_' + i + '_time').onmouseup = function() {
+    document.getElementById('layer_time_' + i ).onmouseup = function() {
         layerTimes[i].is_scrubbing = false;
     }
+
+//todo
+    document.getElementById('layer_speed_' + i).oninput = function() {
+        // rate3 = this.value 
+        // TODO use layerTime.
+        console.log("layer_speed >>",i,  parseFloat(this.value) )
+    }
+
+
+    document.getElementById('layer_blendmode_' + i).oninput = function() {
+        channel_1_b_mixer.blendMode(this.value);
+        console.log('layer_blendmode_' + i, parseFloat(this.value) )
+    }
+
+
 
     // document.getElementById('bpm_tab').onmousedown = function() {
     //     bpm_tap.tap()
@@ -110,6 +120,10 @@ function addLayer(destId, i){
     //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
     //   }
 }
+
+
+
+
 
 function addLayers() {
     console.log("addLayers")
@@ -121,6 +135,21 @@ function addLayers() {
 }
 
 addLayers();
+
+document.getElementById('layer_fader_1').oninput = function() {
+    channel_1_a_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_2').oninput = function() {
+    channel_1_b_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_3').oninput = function() {
+    channel_2_a_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_4').oninput = function() {
+    channel_2_b_mixer.pod(this.value)
+}
+
+
 
 // function AnySource(renderer, options){
 //     console.log("AnySource")
@@ -274,8 +303,8 @@ function pauseAll(){
 
 setTimeout(() => {
     
-    document.getElementById('layer_2_fader').value = 0.0
-    document.getElementById('layer_1_fader').value = 1.0
+    document.getElementById('layer_fader_2').value = 0.0
+    document.getElementById('layer_fader_1').value = 1.0
     sources[1].pause();
     sources[2].pause();
     // sources[3].pause();
@@ -300,7 +329,7 @@ var activeLayer = 1;
 var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
 var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
 
-var blend_select_2 =  document.getElementById('layer_2_blendmode')
+var blend_select_2 =  document.getElementById('layer_blendmode_2') //TODO expand to other ones.
 
 for(var i=0; i<blendModes.length; i++){
     var option = document.createElement("option");
@@ -323,28 +352,6 @@ function newActiveLayer(newLayer){
 }
 
 
-document.getElementById('layer_2_blendmode').oninput = function() {
-    channel_1_b_mixer.blendMode(this.value);
-    console.log("channel_1_b_mixer >>", parseFloat(this.value) )
-}
-
-
-document.getElementById('layer_1_fader').oninput = function() {
-    channel_1_a_mixer.pod(this.value)
-    // console.log("layer_1_fader >>", parseFloat(this.value) )
-}
-document.getElementById('layer_2_fader').oninput = function() {
-    channel_1_b_mixer.pod(this.value)
-    // console.log("layer_2_fader >>", parseFloat(this.value) )
-}
-document.getElementById('layer_3_fader').oninput = function() {
-    channel_2_a_mixer.pod(this.value)
-    // console.log("layer_3_fader >>", parseFloat(this.value) )
-}
-document.getElementById('layer_4_fader').oninput = function() {
-    channel_2_b_mixer.pod(this.value)
-    // console.log("layer_4_fader >>", parseFloat(this.value) )
-}
 
 
 
@@ -597,7 +604,7 @@ function updateVideo(source, rate, layer, layerTime){
     video.currentTime = time;
     
     //full time scrubber - not the current loop or anything
-    var scrubber = document.getElementById('layer_' + layer + '_time');
+    var scrubber = document.getElementById('layer_time_' + layer );
     if (scrubber){
         scrubber.value = video.currentTime / video.duration;
     }
@@ -678,14 +685,14 @@ function setInOnLayer(i){
         //set in
         layerTimes[i].in = sources[i].video.currentTime;
         layerTimes[i].time_last_beat = Date.now();
-        document.getElementById('layer_' + i + "_in").classList.add("active");
+        document.getElementById('layer_in_' + i).classList.add("active");
     }else{
         //clear in
         console.log("time_last_beat", layerTimes[i].time_last_beat)
         layerTimes[i].time_last_beat = layerTimes[i].time_last_beat - layerTimes[i].in * 1000;
         console.log("time_last_beat", layerTimes[i].time_last_beat)
         layerTimes[i].in = -1;
-        document.getElementById('layer_' + i + "_in").classList.remove("active");
+        document.getElementById('layer_in_' + i).classList.remove("active");
     }
     console.log("setInOnLayer", layerTimes[i].in)
     
@@ -694,10 +701,10 @@ function setOutOnLayer(i){
     if (layerTimes[i].out == -1){
         //set out
         layerTimes[i].out = sources[i].video.currentTime;
-        document.getElementById('layer_' + i + "_out").classList.add("active");
+        document.getElementById('layer_out_' + i).classList.add("active");
     }else{
         layerTimes[i].out = -1;
-        document.getElementById('layer_' + i + "_out").classList.remove("active");
+        document.getElementById('layer_out_' + i).classList.remove("active");
     }
     console.log("setOutOnLayer", layerTimes[i].out)
 }
@@ -710,18 +717,8 @@ if (TIME_BY_TOPHER){
     //something
 }
 
-// document.getElementById('layer_3_speed').oninput = function() {
-//     rate3 = this.value
-//     console.log("layer_3_speed >>", parseFloat(this.value) )
-// }
-// document.getElementById('layer_2_speed').oninput = function() {
-//     rate2 = this.value
-//     console.log("layer_2_speed >>", parseFloat(this.value) )
-// }
-// document.getElementById('layer_1_speed').oninput = function() {
-//     rate1 = this.value
-//     console.log("layer_1_speed >>", parseFloat(this.value) )
-// }
+
+
 
 
   // -----------------------------------------------------------------------------
