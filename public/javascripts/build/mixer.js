@@ -934,6 +934,7 @@ function BPM( renderer, options ) {
 
   // UPDATE
   var starttime = (new Date()).getTime()
+  var timeElapsed = 0;
 
   _self.update = function() {
 
@@ -943,7 +944,7 @@ function BPM( renderer, options ) {
       });
     }
 
-    var timeElapsed = ((new Date()).getTime() - starttime) / 1000;
+    timeElapsed = ((new Date()).getTime() - starttime) / 1000;
     var secondsPerBeat = 1 / _self.bpm * 60;
     _self.bpm_float = (timeElapsed % secondsPerBeat) / secondsPerBeat;
     // console.log("bpm float: ", (_self.bpm_float).toFixed(2))
@@ -954,10 +955,26 @@ function BPM( renderer, options ) {
     nodes.push( _func )
   }
 
-  _self.render = function() {
+  _self.render = function(factor) {
     // returns current bpm 'position' as a value between 0 - 1
     return _self.bpm_float
+    
   }
+
+  //Pass in factor to get different speeds.
+  _self.render2 = function(factor) {
+    // returns current bpm 'position' as a value between 0 - 1
+
+    if (factor === undefined){
+      return _self.bpm_float
+    } else{
+      var secondsPerBeat = 1 / _self.bpm * 60 * factor;
+      return (timeElapsed % secondsPerBeat) / secondsPerBeat;
+    }
+    
+  }
+
+  
 
 
   // actual --------------------------------------------------------------------
@@ -6601,7 +6618,7 @@ function FlexSource(renderer, options) {
     if ( _num === undefined ) {
       return videoElement.currentTime;
     } else {
-      console.log("set time", _num)
+      // console.log("set time", _num)
       videoElement.currentTime = _num;
       return _num;
     }

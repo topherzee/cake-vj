@@ -433,7 +433,7 @@ function FlexSource(renderer, options) {
     if ( _num === undefined ) {
       return videoElement.currentTime;
     } else {
-      console.log("set time", _num)
+      // console.log("set time", _num)
       videoElement.currentTime = _num;
       return _num;
     }

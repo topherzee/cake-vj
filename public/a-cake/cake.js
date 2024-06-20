@@ -81,6 +81,29 @@ function addLayer(destId, i){
         setBpmModeOnLayer(i, this.value)
     }
 
+    document.getElementById("layer_" + i + "_bpm_mode").oninput = function() {
+        console.log("layer_" + i + "_bpm_mode", this.value);
+        setBpmModeOnLayer(i, this.value)
+    }
+
+    document.getElementById("layer_" + i + "_bpm_factor").oninput = function() {
+        console.log("layer_" + i + "_bpm_factor", parseFloat(this.value));
+        // setBpmModeOnLayer(i, this.value)
+        layerTimes[i].bpm_factor = parseFloat(this.value);
+    }
+
+    document.getElementById('layer_' + i + '_time').oninput = function() {
+        var time = this.value * sources[i].duration();
+        sources[i].currentTime(time);
+        layerTimes[i].time_last_beat = Date.now() - time * 1000;
+    }
+    document.getElementById('layer_' + i + '_time').onmousedown = function() {
+        layerTimes[i].is_scrubbing = true;
+    }
+    document.getElementById('layer_' + i + '_time').onmouseup = function() {
+        layerTimes[i].is_scrubbing = false;
+    }
+
     // document.getElementById('bpm_tab').onmousedown = function() {
     //     bpm_tap.tap()
     //     channel_1_b_mixer.bpm(bpm_tap.bpm)
@@ -326,21 +349,6 @@ document.getElementById('layer_4_fader').oninput = function() {
 
 
 
-// document.getElementById('layer_1_time').oninput = function() {
-//     var sec = this.value * sources[1].duration();
-//     sources[1].currentTime(sec);
-//     console.log("layer_1_time >>", parseFloat(this.value) , parseFloat(sec) )
-// }
-// document.getElementById('layer_2_time').oninput = function() {
-//     var sec = this.value * sources[1].duration();
-//     sources[2].currentTime(sec);
-//     console.log("layer_2_time >>", parseFloat(this.value) , parseFloat(sec) )
-// }
-// document.getElementById('layer_3_time').oninput = function() {
-//     var sec = this.value * sources[1].duration();
-//     sources[3].currentTime(sec);
-//     console.log("layer_3_time >>", parseFloat(this.value) , parseFloat(sec) )
-// }
 
 
 
@@ -467,6 +475,9 @@ function updateVideo(source, rate, layer, layerTime){
     if (layerTime.is_playing==false){
         return;
     }
+    if (layerTime.is_scrubbing==true){
+        return;
+    }
 
     // DETERMINE DURATION & TIMERATIO
     let end = video.duration;
@@ -520,14 +531,14 @@ function updateVideo(source, rate, layer, layerTime){
     }
     //Check if BPM wants to create a beat.
     if (layerTime.bpm_on && layerTime.bpm_mode == BPM_MODE_CUT){
-        // console.log("check for bpm loop", layerTime.last_bpm_tap_render)
-        if (bpm_tap.render() < layerTime.last_bpm_tap_render){
+        
+        if (bpm_tap.render2(layerTime.bpm_factor) < layerTime.last_bpm_tap_render){
             // it looped.
             console.log("loop BPM")
             loopFlag = true;
         }
     }
-    layerTime.last_bpm_tap_render = bpm_tap.render();
+    layerTime.last_bpm_tap_render = bpm_tap.render2(layerTime.bpm_factor);
 
     if (loopFlag){
         time_elapsed = 0;
@@ -542,7 +553,7 @@ function updateVideo(source, rate, layer, layerTime){
     if (layerTime.bpm_on){
 
         if (layerTime.bpm_mode == BPM_MODE_STRETCH){
-            timeRatio = bpm_tap.render();
+            timeRatio = bpm_tap.render2(layerTime.bpm_factor) ;
         } else if(layerTime.bpm_mode == BPM_MODE_CUT) {
 
         }
@@ -638,7 +649,7 @@ function initLayerTimes(lt){
         play_mode: PLAY_MODE_FORWARD,
         bpm_on: false,
         bpm_mode: BPM_MODE_STRETCH,
-        bpm_factor: 1,
+        bpm_factor: 1.0,
 
         in:-1,
         out:-1,
@@ -646,7 +657,8 @@ function initLayerTimes(lt){
 
         just_reversed: false,
         is_bounce_reverse: false,
-        last_bpm_tap_render: 0
+        last_bpm_tap_render: 0, 
+        is_scrubbing: false,
     }
     return lt;
 }
