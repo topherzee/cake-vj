@@ -76,6 +76,11 @@ function addLayer(destId, i){
         setPlayModeOnLayer(i, this.value)
     }
 
+    document.getElementById("layer_" + i + "_bpm_mode").oninput = function() {
+        console.log("layer_" + i + "_bpm_mode", this.value);
+        setBpmModeOnLayer(i, this.value)
+    }
+
     // document.getElementById('bpm_tab').onmousedown = function() {
     //     bpm_tap.tap()
     //     channel_1_b_mixer.bpm(bpm_tap.bpm)
@@ -486,15 +491,15 @@ function updateVideo(source, rate, layer, layerTime){
         
         layerTime.just_reversed = false;
         let timeRatio = time_elapsed / duration;
-        console.log("duration", duration.toFixed(2))
-        console.log("time_elapsed", time_elapsed.toFixed(2))
-        console.log("just reversed - ratio", timeRatio.toFixed(2))
+        // console.log("duration", duration.toFixed(2))
+        // console.log("time_elapsed", time_elapsed.toFixed(2))
+        // console.log("just reversed - ratio", timeRatio.toFixed(2))
 
         let ratioGoal = (1 - timeRatio)
         let ratioChunk = (1 - timeRatio) - timeRatio;
-        console.log("ratioGoal", ratioGoal.toFixed(2))
-        console.log("ratioChunk", ratioChunk.toFixed(2))
-        console.log("secondsToMove", (ratioChunk *  duration).toFixed(2))
+        // console.log("ratioGoal", ratioGoal.toFixed(2))
+        // console.log("ratioChunk", ratioChunk.toFixed(2))
+        // console.log("secondsToMove", (ratioChunk *  duration).toFixed(2))
         
         // debugger;
         layerTime.time_last_beat -= (ratioChunk *  duration) * 1000;
@@ -503,21 +508,46 @@ function updateVideo(source, rate, layer, layerTime){
         
         time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
         timeRatio = time_elapsed / duration;
-        console.log("time_elapsed", time_elapsed.toFixed(2))
-        console.log("just reversed - ratio", timeRatio.toFixed(2))
+        // console.log("time_elapsed", time_elapsed.toFixed(2))
+        // console.log("just reversed - ratio", timeRatio.toFixed(2))
     }
 
-
+    let loopFlag = false;
     if (time_elapsed > duration){
+        console.log("loop normal")
+        loopFlag = true;
+
+    }
+    //Check if BPM wants to create a beat.
+    if (layerTime.bpm_on && layerTime.bpm_mode == BPM_MODE_CUT){
+        // console.log("check for bpm loop", layerTime.last_bpm_tap_render)
+        if (bpm_tap.render() < layerTime.last_bpm_tap_render){
+            // it looped.
+            console.log("loop BPM")
+            loopFlag = true;
+        }
+    }
+    layerTime.last_bpm_tap_render = bpm_tap.render();
+
+    if (loopFlag){
         time_elapsed = 0;
         layerTime.time_last_beat = Date.now();
-        console.log("loop")
+        layerTime.is_bounce_reverse = !layerTime.is_bounce_reverse;
     }
+    loopFlag = false;
 
 
     let timeRatio = time_elapsed / duration;
+
     if (layerTime.bpm_on){
-        timeRatio = bpm_tap.render();
+
+        if (layerTime.bpm_mode == BPM_MODE_STRETCH){
+            timeRatio = bpm_tap.render();
+        } else if(layerTime.bpm_mode == BPM_MODE_CUT) {
+
+        }
+        
+        //todo for bounce - still need to know when it loops.
     }
 
     // USE IN FUNCTION
@@ -526,6 +556,14 @@ function updateVideo(source, rate, layer, layerTime){
         time = start + timeRatio * duration;
     } else if (layerTime.play_mode == PLAY_MODE_REVERSE){
         time = start + (1.0 -timeRatio) * duration;
+    } else if (layerTime.play_mode == PLAY_MODE_BOUNCE){
+
+       if (layerTime.is_bounce_reverse == false){
+        time = start + timeRatio * duration;
+       }else{
+        time = start + (1.0 -timeRatio) * duration;
+       }
+        
     }
 
 
@@ -559,15 +597,14 @@ function setPlayModeOnLayer(i, mode){
         layerTimes[i].just_reversed = true;
     }
     layerTimes[i].play_mode = mode;
+}
+function setBpmModeOnLayer(i, mode){
 
-    //eliminate jump when direction changes:
-    // WORKING Headers.
-   
-    // if (mode == PLAY_MODE_REVERSE){
-    //     // layerTimes[i].time_last_beat = Date.now();
+    // if (mode != layerTimes[i].play_mode){
     //     layerTimes[i].just_reversed = true;
     // }
-    
+    layerTimes[i].bpm_mode = mode;
+    console.log("setBpmModeOnLayer", i, mode)
 }
 
 function playVideos () {
@@ -590,8 +627,8 @@ const PLAY_MODE_REVERSE = "REVERSE";
 const PLAY_MODE_BOUNCE = "BOUNCE";
 const PLAY_MODE_RANDOM = "RANDOM";
 
-const BPM_MODE_STRETCH = "stretch";
-const BPM_MODE_CUT = "cut";
+const BPM_MODE_STRETCH = "STRETCH";
+const BPM_MODE_CUT = "CUT";
 
 
 let layerTimes = new Array();
@@ -608,6 +645,8 @@ function initLayerTimes(lt){
         time_last_beat: Date.now(), 
 
         just_reversed: false,
+        is_bounce_reverse: false,
+        last_bpm_tap_render: 0
     }
     return lt;
 }
