@@ -29,6 +29,19 @@
     133.6 => ~26kb
  */
 
+
+    
+    import * as THREE from 'three';
+
+    import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+
+    // const composer = new EffectComposer( renderer.glrenderer );
+
     var GlRenderer = function( _options ) {
 
       console.log("START GlRenderer  -------------------")
@@ -124,6 +137,32 @@
         //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
     
+        const target = new THREE.WebGLRenderTarget( {
+					minFilter: THREE.LinearFilter,
+					magFilter: THREE.LinearFilter,
+					format: THREE.RGBAFormat,
+					encoding: THREE.sRGBEncoding
+				} );
+        
+       _self.composer = new EffectComposer( _self.glrenderer );
+
+       const renderPass = new RenderPass( _self.scene, _self.camera );
+       _self.composer.addPass( renderPass );
+
+      // const glitchPass = new GlitchPass();
+      // _self.composer.addPass( glitchPass );
+
+      // const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+			// 	bloomPass.threshold = 0.5;
+			// 	bloomPass.strength = 1.0;
+			// 	bloomPass.radius = 0;
+      // _self.composer.addPass( bloomPass );
+
+    
+      // // const outputPass = new OutputPass();
+      // // _self.composer.addPass( outputPass );
+
+
         // init nodes
         // reset the renderer, for a new lay out
         /**
@@ -134,7 +173,9 @@
     
         // console.log("GLRenderer. Shader: " + _self.fragmentShader);
 
-        // create the shader
+        // create the shaders
+
+        // shaderMaterial is for the main central screen.
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,
            defines: _self.customDefines,
@@ -143,6 +184,8 @@
            side: THREE.DoubleSide,
            transparent: true
         })
+
+        // shaderMaterial2 is for the SIDE screens.
         _self.shaderMaterial2 = new THREE.ShaderMaterial({
           uniforms: _self.customUniforms,
           defines: _self.customDefines,
@@ -159,25 +202,24 @@
        const SEGMENTS = 10;
        
         // apply the shader material to a surface
+        // CENTRAL SCREEN
         _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
         // surface.position.set(60,50,150);
 
+        // RIGHT SCREEN
         _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry2.rotateY(Math.PI / 1);
         _self.flatGeometry2.translate( 80, -45, 1 );
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
-        
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        
         // _self.surface2.rotation.set(Math.PI / 12,0,0)
         // surface.position.set(60,50,150);
     
-
+       // LEFT SCREEN
         _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry3.translate( -80, -45, 1 );
-        
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
@@ -198,9 +240,14 @@
       /** @function GlRenderer.render */
       _self.render = function() {
         requestAnimationFrame( _self.render );
-        _self.glrenderer.render( _self.scene, _self.camera );
+
+        // _self.glrenderer.render( _self.scene, _self.camera );
+        _self.composer.render( _self.scene, _self.camera );
+
+
         _self.onafterrender()
         _self.glrenderer.setSize( _self.width, _self.height );
+        _self.composer.setSize( _self.width, _self.height );
         _self.nodes.forEach( function(n) { n.update() } );
     
         cnt++;
@@ -221,6 +268,7 @@
         _self.camera.aspect = _self.width / _self.height;
         _self.camera.updateProjectionMatrix();
         _self.glrenderer.setSize( _self.width, _self.height );
+        _self.composer.setSize( _self.width, _self.height );
       }
     
       window.addEventListener('resize', function() {
@@ -282,18 +330,18 @@
           }
         `
 
-                // reset the fragment shader
-                _self.fragmentShader2 = `
-                uniform int time;
-                uniform vec2 screenSize;
-          
-                /* custom_uniforms */
-                /* custom_helpers */
-                varying vec2 vUv;
-                void main() {
-                  /* custom_main */
-                }
-              `
+        // reset the fragment shader
+        _self.fragmentShader2 = `
+        uniform int time;
+        uniform vec2 screenSize;
+  
+        /* custom_uniforms */
+        /* custom_helpers */
+        varying vec2 vUv;
+        void main() {
+          /* custom_main */
+        }
+      `
     
         _self.nodes = []
       }

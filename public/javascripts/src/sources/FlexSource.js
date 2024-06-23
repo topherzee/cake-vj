@@ -98,6 +98,7 @@ function FlexSource(renderer, options) {
 
   // create elements (private)
   var canvasElement, videoElement, canvasElementContext, videoTexture; // wrapperElement
+  var gifElement;
   var alpha = 1;
 
   // add to renderer

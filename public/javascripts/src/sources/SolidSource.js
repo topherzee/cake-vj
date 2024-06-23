@@ -54,6 +54,7 @@ function SolidSource(renderer, options) {
     // add uniforms
     renderer.customUniforms[_self.uuid + "_color"] = { type: "v4", value: new THREE.Vector4( color.r, color.g, color.b, color.a ) }
 
+    let _fs;
     if (_self._fragmentChannel == 1){
       _fs = renderer.fragmentShader;
     }else{

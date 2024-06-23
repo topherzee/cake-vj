@@ -3,13 +3,30 @@
 <head>
     <title>CAKE VJ</title>
     <script src="/javascripts/build/vendor.js"></script>
-    <script src="/javascripts/build/mixer.js"></script>
+
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+          }
+        }
+      </script>
+
+      <script type="module" >
+import * as THREE from 'three';
+      </script>
+
+    <script type="module"  src="/javascripts/build/mixer.js">
+        import * as THREE from 'three';
+    </script>
 
     <script src="/live.js"></script> 
 
     <link rel="stylesheet" href="/stylesheets/style.css">
     <link rel="stylesheet" href="cake.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
 
 <style>
 #glcanvas{
@@ -380,8 +397,8 @@
         <div class="dark"></div>
 
     </div>
-    <script src="cake.js"></script>
- 
+    <!-- <script  src="cake.js"></script>
+  -->
 </body>
 
 </html>

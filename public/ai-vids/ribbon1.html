@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Fractal Coil</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // Set up the scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Create the fractal coil
+    const points = [];
+    const coils = 100; // Number of larger coils
+    const subCoils = 100; // Number of smaller coils within each larger coil
+    const radius = 2;
+    const spacing = 0.3;
+
+    for (let i = 0; i < coils * subCoils; i++) {
+        const angle = i * 2 * Math.PI / subCoils;
+        const largerCoilAngle = i * 2 * Math.PI / (coils * subCoils);
+        const x = (radius + spacing * i / subCoils) * Math.cos(angle) * Math.cos(largerCoilAngle);
+        const y = (radius + spacing * i / subCoils) * Math.sin(angle) * Math.cos(largerCoilAngle);
+        const z = (radius + spacing * i / subCoils) * Math.sin(largerCoilAngle);
+        points.push(new THREE.Vector3(x, y, z));
+    }
+
+    const path = new THREE.CatmullRomCurve3(points);
+    const geometry = new THREE.TubeGeometry(path, 1000, 0.02, 8, false);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Camera animation
+    let t = 0;
+    function animate() {
+        requestAnimationFrame(animate);
+
+        t += 0.005;
+        const radius = 5;
+        const camX = radius * Math.sin(t);
+        const camZ = radius * Math.cos(t);
+        const camY = radius * Math.sin(t / 2);
+
+        camera.position.set(camX, camY, camZ);
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+    }
+
+    // Start animation
+    camera.position.set(0, 0, 20);
+    animate();
+</script>
+</body>
+</html>

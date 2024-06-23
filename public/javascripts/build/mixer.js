@@ -1692,6 +1692,816 @@ function Behaviour( _renderer, options ) {
   */
 }
 
+/*
+* Example V4
+*
+* Elaborate mixer that uses several control interfaces
+* and chains, to emulate an Edirol v4, More or less.
+*
+*/
+
+// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+
+// import  GlRenderer  from "../javascripts/src/GlRenderer.js";
+// debugger;
+// var renderer2 = new GlRenderer({element: 'glcanvas', width:800, height:450});
+
+
+// import GlRenderer from GLRenderer
+async function start(){
+
+    console.log("CAKE Start --------------------");
+
+
+var TIME_BY_TOPHER = true;
+
+// debugger;
+// renderer
+var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
+
+// const composer = new EffectComposer( renderer.glrenderer );
+// import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
+  
+
+function addLayer(destId, i){
+    let template = document.getElementById("layer_template");
+
+    let innerHTML = template.innerHTML;
+    innerHTML = innerHTML.replaceAll("_4", "_"+i);
+    const placeholder = document.createElement("div");
+    placeholder.innerHTML = innerHTML;
+    const node = placeholder.firstElementChild;
+
+    let dest = document.getElementById(destId);
+    dest.appendChild(node);
+
+    
+    document.getElementById('layer_' + i).onclick = function() {
+        newActiveLayer(i);
+    }
+
+    document.getElementById('layer_effect_' + i).oninput = function() {
+        layer_effects[i].extra(this.value)
+        // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
+    }
+
+    document.getElementById('btn_bpm_layer_' + i).onclick = function() {
+        layerTimes[i].bpm_on = ! layerTimes[i].bpm_on;
+
+        console.log("bpm layer " + i + " >>", layerTimes[i].bpm_on )
+
+        let el = document.getElementById('btn_bpm_layer_' + i);
+        if (layerTimes[i].bpm_on){
+            el.classList.add("active");
+        }else{
+            el.classList.remove("active");
+        }
+    }
+
+    document.getElementById('layer_play_' + i).onclick = function() {
+        console.log("play ", i)
+        layerTimes[i].is_playing = true;
+    }
+    document.getElementById('layer_pause_' + i).onclick = function() {
+        console.log("pause ", i)
+        layerTimes[i].is_playing = false;
+    }
+
+    document.getElementById('layer_in_' + i ).onclick = function() {
+        console.log("in ", i);
+        setInOnLayer(i);
+    }
+
+    document.getElementById('layer_out_' + i).onclick = function() {
+        console.log("out ", i);
+        setOutOnLayer(i);
+    }
+
+    document.getElementById("layer_play_mode_" + i).oninput = function() {
+        console.log("layer_play_mode_" + i, this.value);
+        setPlayModeOnLayer(i, this.value)
+    }
+
+    document.getElementById("layer_bpm_mode_" + i).oninput = function() {
+        console.log("layer_bpm_mode" + i, this.value);
+        setBpmModeOnLayer(i, this.value)
+    }
+
+    document.getElementById("layer_bpm_factor_" + i).oninput = function() {
+        console.log("layer_bpm_factor_" + i, parseFloat(this.value));
+        // setBpmModeOnLayer(i, this.value)
+        layerTimes[i].bpm_factor = parseFloat(this.value);
+    }
+
+    document.getElementById('layer_time_' + i ).oninput = function() {
+        var time = this.value * sources[i].duration();
+        sources[i].currentTime(time);
+        layerTimes[i].time_last_beat = Date.now() - time * 1000;
+    }
+    document.getElementById('layer_time_' + i ).onmousedown = function() {
+        layerTimes[i].is_scrubbing = true;
+    }
+    document.getElementById('layer_time_' + i ).onmouseup = function() {
+        layerTimes[i].is_scrubbing = false;
+    }
+
+//todo
+    document.getElementById('layer_speed_' + i).oninput = function() {
+        // rate3 = this.value 
+        // TODO use layerTime.
+        console.log("layer_speed >>",i,  parseFloat(this.value) )
+    }
+
+
+    document.getElementById('layer_blendmode_' + i).oninput = function() {
+        channel_1_b_mixer.blendMode(this.value);
+        console.log('layer_blendmode_' + i, parseFloat(this.value) )
+    }
+
+
+
+    // document.getElementById('bpm_tab').onmousedown = function() {
+    //     bpm_tap.tap()
+    //     channel_1_b_mixer.bpm(bpm_tap.bpm)
+    //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
+    //   }
+}
+
+
+
+
+
+function addLayers() {
+    console.log("addLayers")
+    
+    addLayer("channel_2_layers", 4);
+    addLayer("channel_2_layers", 3);
+    addLayer("channel_1_layers", 2);
+    addLayer("channel_1_layers", 1);
+}
+
+addLayers();
+
+document.getElementById('layer_fader_1').oninput = function() {
+    channel_1_a_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_2').oninput = function() {
+    channel_1_b_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_3').oninput = function() {
+    channel_2_a_mixer.pod(this.value)
+}
+document.getElementById('layer_fader_4').oninput = function() {
+    channel_2_b_mixer.pod(this.value)
+}
+
+
+
+// function AnySource(renderer, options){
+//     console.log("AnySource")
+
+// let ext = options.src.split('.').pop();
+// console.log("ext", ext)
+//  if (ext == "mp4"){
+//     return new VideoSource(renderer, options);
+//  }
+//  if (ext == "gif"){
+//     return new GifSource(renderer, options);
+//  }
+
+//  console.log("Unknown Source:", options.src)
+// }
+
+
+function showBpm(f){
+    //console.log("yooooooooooo", i);
+    if (f<0.1){
+        document.getElementById('bpm_reset').classList.add("phase")
+    }else{
+        document.getElementById('bpm_reset').classList.remove("phase")
+    }
+}
+
+
+// lets not forget the bpm
+var bpm_tap = new BPM( renderer );
+bpm_tap.add(showBpm)
+let sources = new Array();
+let layer_effects = new Array();
+
+sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
+//var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
+// var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
+// var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
+
+// var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
+
+sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
+sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+// sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
+
+
+var FILE_URL_1 = "http://localhost:4000/files/DCVS01"
+var FILE_URL_2 = "http://localhost:4000/files/disco"
+var FILE_URL_ROOT = "http://localhost:4000/files"
+  
+function handleClipClick(url) {
+    console.log("clip click:" + url);
+    url = "/video/" + url;// + "#t20,25";
+
+    //TODO Check if type is changed first.
+    var l = activeLayer;
+    var channel = 1;
+    if (activeLayer > 2){
+        channel = 2;
+    }
+    // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
+
+    sources[activeLayer].src(url);
+    sources[activeLayer].pause();
+}
+  
+layer_effects[1] = new DistortionEffect2(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
+layer_effects[2] = new DistortionEffect2(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
+
+layer_effects[3] = new DistortionEffect2(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
+layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
+
+var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
+var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
+
+// var layer_3_mixer = new Mixer( renderer, { sources[1]: trans_black, sources[2]: layer_3_effect,  uuid: "Mixer_3"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+
+// channel_1_b_mixer.setAutoFade(true);
+
+var output;
+// if (typeof layer_4_effect !=='undefined'){
+//     output = new Output( renderer, layer_3_effect, layer_4_effect )
+// }else{
+//     output = new Output( renderer, layer_3_effect )
+// }
+
+// output = new Output( renderer, channel_1_b_mixer)
+// output = new Output( renderer, layer_effects[1])
+output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
+
+
+console.log("CAKE Call renderer.init() --------------------");
+
+// start to render
+renderer.init();
+renderer.render();
+
+//COLOR EFFECT
+const LUMAKEY = 50;
+const TOPHER_COLOR_LUMAKEY = 100;
+const TOPHER_COLOR_CIRCLE = 101;
+const RED = 10;
+
+//DISTORTION EFFECT
+const TOPHER_DIST_MIRROR_CIRCLES = 100;
+const TOPHER_DIST_CIRCLES_3 = 102;
+
+const TOPHER_DIST_CIRCLE = 103;
+const TOPHER_ONLY_SQUASH = 104;
+const TOPHER_ONLY_CIRCLE = 105;
+
+const CAKE_MIRROR_VERICAL = 106;
+const CAKE_MIRROR_HORIZONTAL = 107;
+const CAKE_WIPE_HORIZONTAL = 108;
+
+layer_effects[1].effect(CAKE_MIRROR_HORIZONTAL);
+layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
+
+layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
+layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
+
+layer_effects[1].extra(0.9);
+layer_effects[2].extra(0.9);
+
+
+const NAM = 3;
+const FAM = 4;
+const LUM1 = 10;
+const LUM2 = 11;
+const BOOM = 9
+
+channel_1_b_mixer.pod(0.0);
+channel_1_a_mixer.pod(1.0);
+
+function pauseAll(){
+    console.log("pauseAll")
+    // sources[1].pause();
+    // sources[2].pause();
+    // sources[3].pause();
+    // sources[4].pause();
+    layerTimes[1].is_playing = false;
+    layerTimes[2].is_playing = false;
+    layerTimes[3].is_playing = false;
+    layerTimes[4].is_playing = false;
+}
+
+setTimeout(() => {
+    
+    document.getElementById('layer_fader_2').value = 0.0
+    document.getElementById('layer_fader_1').value = 1.0
+    sources[1].pause();
+    sources[2].pause();
+    // sources[3].pause();
+    // sources[4].pause();
+  }, 1000);
+
+// -----------------------------------------------------------------------------
+
+
+// Some helper vars
+var original_mixmode = 1
+
+
+
+
+// ---------------------------------------------------------------------------
+    // CAKE MIXER
+// ---------------------------------------------------------------------------
+var activeLayer = 1;
+
+// // TOPHER
+var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
+
+var blend_select_2 =  document.getElementById('layer_blendmode_2') //TODO expand to other ones.
+
+for(var i=0; i<blendModes.length; i++){
+    var option = document.createElement("option");
+    option.text = blendModesNames[i];
+    option.value = blendModes[i];
+    blend_select_2.add(option);
+}
+
+function newActiveLayer(newLayer){
+    console.log("new active laayer: ", newLayer)
+    activeLayer = newLayer;
+    let el;
+    for (let i=1;   i<5; i++){
+        el = document.getElementById('layer_' + i);
+        el.classList.remove("active");
+    }
+
+    el = document.getElementById('layer_' + newLayer);
+    el.classList.add("active");
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// Function to fetch image URLs and create image elements
+async function fetchAndDisplayImages(filesUrl, domElementId) {
+    console.log("fetchAndDisplayImages")
+    try {
+        // Replace 'https://example.com/api/images' with the actual URL of the REST endpoint
+        const response = await fetch(filesUrl);
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+
+        // Assuming the API returns an array of image URLs
+        const imageUrls = await response.json();
+
+        // Get the container div
+        const container = document.getElementById(domElementId);
+
+        container.innerHTML = '';
+
+        // Iterate over the image URLs and create image elements
+        imageUrls.forEach(url => {
+            const div = document.createElement('div');
+            div.className = 'clip';
+
+            const text = document.createElement('span');
+            const msg = url.replace("/video/DCVS01/DCVS01 ","");
+            text.textContent = msg;
+ 
+            // const img = document.createElement('img');
+            // img.src = url;
+            // img.alt = 'Image';
+            // div.appendChild(img);
+            div.appendChild(text);
+            // div.onclick = handleClipClick(url);
+            div.onclick = () => handleClipClick(url);
+
+            container.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching images:', error);
+    }
+}
+
+// Call the function to fetch and display images on page load
+fetchAndDisplayImages(FILE_URL_1, 'clip_bank_1');
+fetchAndDisplayImages(FILE_URL_2, 'clip_bank_2');
+
+
+// Function
+async function fetchFileDirs(filesUrl) {
+    console.log("fetchFileDirs")
+    try {
+        const response = await fetch(filesUrl);   
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        // Assuming the API returns an array of image URLs
+        const dirs = await response.json();
+        return dirs;
+    } catch (error) {
+        console.error('Error fetching images:', error);
+    }
+    
+}
+
+const dirs = await fetchFileDirs("http://localhost:4000/dirs/");
+
+var clip_bank_select_1 =  document.getElementById('clip_bank_select_1')
+dirs.forEach(dir => {
+    var option = document.createElement("option");
+    option.text = dir;
+    option.value = dir;
+    clip_bank_select_1.add(option);
+});
+
+var clip_bank_select_2 =  document.getElementById('clip_bank_select_2')
+dirs.forEach(dir => {
+    var option = document.createElement("option");
+    option.text = dir;
+    option.value = dir;
+    clip_bank_select_2.add(option);
+});
+
+
+clip_bank_select_1.oninput = function() {
+    console.log("clip_bank_select_1 >>", this.value);
+    fetchAndDisplayImages(FILE_URL_ROOT + this.value, 'clip_bank_1');
+}
+clip_bank_select_2.oninput = function() {
+    console.log("clip_bank_select_2 >>", this.value);
+    fetchAndDisplayImages(FILE_URL_ROOT + this.value, 'clip_bank_2');
+}
+
+
+
+// ---------------------------------------------------------------------------
+    // TIMING
+// ---------------------------------------------------------------------------
+
+const FRAME_DELAY = 1 / 60;
+let frameCheck = 0;
+let rate1 = 0.5;
+let rate2 = 0.1;
+let rate3 = 0.1;
+let rate4 = 0.1;
+
+// let time1 = 0.0;
+// let time2 = 0.0;
+// let time3 = 0.0;
+
+function bps(bpm){
+    return 1 / (bpm / 60.0);
+}
+function updateVideo(source, rate, layer, layerTime){
+    let video = source.video;
+    if (video == null || source.type2 != "Video" ){//|| ! video.hasOwnProperty("duration")){
+        return;
+    }
+    if (layerTime.is_playing==false){
+        return;
+    }
+    if (layerTime.is_scrubbing==true){
+        return;
+    }
+
+    // DETERMINE DURATION & TIMERATIO
+    let end = video.duration;
+    if (layerTime.out != -1){
+        end = layerTime.out;
+    }
+    let start = 0;
+    if (layerTime.in != -1){
+        start = layerTime.in;
+    }
+    let duration = end - start;
+
+
+    
+
+    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+   
+    //Include speed? maybe time_elapsed += speed?
+
+    if (layerTime.just_reversed){
+        
+        
+        layerTime.just_reversed = false;
+        let timeRatio = time_elapsed / duration;
+        // console.log("duration", duration.toFixed(2))
+        // console.log("time_elapsed", time_elapsed.toFixed(2))
+        // console.log("just reversed - ratio", timeRatio.toFixed(2))
+
+        let ratioGoal = (1 - timeRatio)
+        let ratioChunk = (1 - timeRatio) - timeRatio;
+        // console.log("ratioGoal", ratioGoal.toFixed(2))
+        // console.log("ratioChunk", ratioChunk.toFixed(2))
+        // console.log("secondsToMove", (ratioChunk *  duration).toFixed(2))
+        
+        // debugger;
+        layerTime.time_last_beat -= (ratioChunk *  duration) * 1000;
+
+        //recalc.
+        
+        time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+        timeRatio = time_elapsed / duration;
+        // console.log("time_elapsed", time_elapsed.toFixed(2))
+        // console.log("just reversed - ratio", timeRatio.toFixed(2))
+    }
+
+    let loopFlag = false;
+    if (time_elapsed > duration){
+        console.log("loop normal")
+        loopFlag = true;
+
+    }
+    //Check if BPM wants to create a beat.
+    if (layerTime.bpm_on && layerTime.bpm_mode == BPM_MODE_CUT){
+        
+        if (bpm_tap.render2(layerTime.bpm_factor) < layerTime.last_bpm_tap_render){
+            // it looped.
+            console.log("loop BPM")
+            loopFlag = true;
+        }
+    }
+    layerTime.last_bpm_tap_render = bpm_tap.render2(layerTime.bpm_factor);
+
+    if (loopFlag){
+        time_elapsed = 0;
+        layerTime.time_last_beat = Date.now();
+        layerTime.is_bounce_reverse = !layerTime.is_bounce_reverse;
+    }
+    loopFlag = false;
+
+
+    let timeRatio = time_elapsed / duration;
+
+    if (layerTime.bpm_on){
+
+        if (layerTime.bpm_mode == BPM_MODE_STRETCH){
+            timeRatio = bpm_tap.render2(layerTime.bpm_factor) ;
+        } else if(layerTime.bpm_mode == BPM_MODE_CUT) {
+
+        }
+        
+        //todo for bounce - still need to know when it loops.
+    }
+
+    // USE IN FUNCTION
+    let time = 0;
+    if (layerTime.play_mode == PLAY_MODE_FORWARD){
+        time = start + timeRatio * duration;
+    } else if (layerTime.play_mode == PLAY_MODE_REVERSE){
+        time = start + (1.0 -timeRatio) * duration;
+    } else if (layerTime.play_mode == PLAY_MODE_BOUNCE){
+
+       if (layerTime.is_bounce_reverse == false){
+        time = start + timeRatio * duration;
+       }else{
+        time = start + (1.0 -timeRatio) * duration;
+       }
+        
+    }
+
+
+
+    // let time_in_range = start + time_elapsed;
+    // if (layerTime.bpm_on){
+    //     time_in_range = start + bpm_tap.render() * duration;
+    // }else{
+    //     if (time_elapsed > duration){
+    //         time_elapsed = 0;
+    //         layerTime.time_last_beat = Date.now();
+    //         console.log("loop")
+    //     }
+    // }
+
+    //BPM - Map the beat to whatever in and out and speed stuff going on above.
+    //Based on time_in_range and duration.
+        // time_in_range = 
+    // video.currentTime = time_in_range;
+    video.currentTime = time;
+    
+    //full time scrubber - not the current loop or anything
+    var scrubber = document.getElementById('layer_time_' + layer );
+    if (scrubber){
+        scrubber.value = video.currentTime / video.duration;
+    }
+}
+function setPlayModeOnLayer(i, mode){
+
+    if (mode != layerTimes[i].play_mode){
+        layerTimes[i].just_reversed = true;
+    }
+    layerTimes[i].play_mode = mode;
+}
+function setBpmModeOnLayer(i, mode){
+
+    // if (mode != layerTimes[i].play_mode){
+    //     layerTimes[i].just_reversed = true;
+    // }
+    layerTimes[i].bpm_mode = mode;
+    console.log("setBpmModeOnLayer", i, mode)
+}
+
+function playVideos () {
+    if (frameCheck==0){
+        updateVideo(sources[1], rate1, "1", layerTimes[1]);
+        updateVideo(sources[2], rate2, "2", layerTimes[2]);
+        // console.log("type", sources[1].type2)
+        // time2 = updateVideo(sources[2].video, rate2, time2, "2");
+        // time3 = updateVideo(sources[3].video, rate3, time3, "3");
+    }
+    frameCheck++;
+    if (frameCheck == 3){
+        frameCheck = 0;
+    }
+
+  requestAnimationFrame(playVideos);
+};
+const PLAY_MODE_FORWARD = "FORWARD";
+const PLAY_MODE_REVERSE = "REVERSE";
+const PLAY_MODE_BOUNCE = "BOUNCE";
+const PLAY_MODE_RANDOM = "RANDOM";
+
+const BPM_MODE_STRETCH = "STRETCH";
+const BPM_MODE_CUT = "CUT";
+
+
+let layerTimes = new Array();
+function initLayerTimes(lt){
+    lt =  {
+        is_playing:false,
+        play_mode: PLAY_MODE_FORWARD,
+        bpm_on: false,
+        bpm_mode: BPM_MODE_STRETCH,
+        bpm_factor: 1.0,
+
+        in:-1,
+        out:-1,
+        time_last_beat: Date.now(), 
+
+        just_reversed: false,
+        is_bounce_reverse: false,
+        last_bpm_tap_render: 0, 
+        is_scrubbing: false,
+    }
+    return lt;
+}
+//play_mode: PLAY_MODE_FORWARD,
+for (let i=1; i<5; i++){
+    layerTimes[i] =initLayerTimes(layerTimes[i]);
+}
+
+function resetLayerTimes(){
+    for (let i=1; i<5; i++){
+        layerTimes[i].time_last_beat = Date.now();
+    }
+}
+
+function setInOnLayer(i){
+    if (layerTimes[i].in == -1){
+        //set in
+        layerTimes[i].in = sources[i].video.currentTime;
+        layerTimes[i].time_last_beat = Date.now();
+        document.getElementById('layer_in_' + i).classList.add("active");
+    }else{
+        //clear in
+        console.log("time_last_beat", layerTimes[i].time_last_beat)
+        layerTimes[i].time_last_beat = layerTimes[i].time_last_beat - layerTimes[i].in * 1000;
+        console.log("time_last_beat", layerTimes[i].time_last_beat)
+        layerTimes[i].in = -1;
+        document.getElementById('layer_in_' + i).classList.remove("active");
+    }
+    console.log("setInOnLayer", layerTimes[i].in)
+    
+}
+function setOutOnLayer(i){
+    if (layerTimes[i].out == -1){
+        //set out
+        layerTimes[i].out = sources[i].video.currentTime;
+        document.getElementById('layer_out_' + i).classList.add("active");
+    }else{
+        layerTimes[i].out = -1;
+        document.getElementById('layer_out_' + i).classList.remove("active");
+    }
+    console.log("setOutOnLayer", layerTimes[i].out)
+}
+
+
+
+if (TIME_BY_TOPHER){
+    playVideos();
+}else{
+    //something
+}
+
+
+
+
+
+  // -----------------------------------------------------------------------------
+    // BPM TAP EN SLIDER
+
+    document.getElementById('bpm_tab').onmousedown = function() {
+        var tapPhase = bpm_tap.tapCake();
+        if (tapPhase == "TAP_PHASE_SET_LENGTH"){
+            document.getElementById('bpm_tab').classList.add("bpm-set-length")
+        }else{
+            document.getElementById('bpm_tab').classList.remove("bpm-set-length")
+        }
+        // resetLayerTimes();
+        //channel_1_b_mixer.bpm(bpm_tap.bpm)
+        document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm);
+        document.getElementById('bpm_slide').value = Math.round(bpm_tap.bpm);
+        
+      }
+
+      document.getElementById('bpm_reset').onmousedown = function() {
+        bpm_tap.resetCake();
+        document.getElementById('bpm_reset').classList.add("phase")
+
+
+
+    }
+    
+      document.getElementById('bpm_slide').oninput = function() {
+        //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
+        let sliderValue = Math.round(document.getElementById('bpm_slide').value);
+        document.getElementById('bpm_display').textContent = sliderValue;
+
+        bpm_tap.setBpm(sliderValue)
+      }
+
+      document.getElementById('pause_all').onmousedown = function() {
+        console.log("pause all button clicked")
+        pauseAll();
+      }
+
+}//start
+
+
+// window.addEventListener('load', function () {
+//     alert("It's loaded!")
+//   })
+
+
+
+// console.log("added buttons 1")
+
+
+// document.getElementById('btn_switch_layer_2').onclick = function() {
+//     newActiveLayer(2);
+// }
+// document.getElementById('btn_switch_layer_3').onclick = function() {
+//     console.log("btn_switch_layer_3")
+//     newActiveLayer(3);
+// }
+// document.getElementById('btn_switch_layer_4').onclick = function() {
+//     newActiveLayer(4);
+// }
+// console.log("added buttons 2")
+
+
+
+
+
+
+
+document.body.onload = function(){
+    console.log("--------- cake.js onload ------------");
+    
+    start();
+};
+
  /**
   * @constructor Controller
   * @interface
@@ -3218,8 +4028,8 @@ vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid
   }
 }
 
-DistortionEffect.prototype = new Effect(); // assign prototype to marqer
-DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
+DistortionEffect2.prototype = new Effect(); // assign prototype to marqer
+DistortionEffect2.constructor = DistortionEffect2;  // re-assign constructor
 
 /**
  * @summary
@@ -3239,9 +4049,9 @@ DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
  *   ```
  *
  * @example
- *   let myEffect = new DistortionEffect( renderer, { source: myVideoSource, effect: 1 });
+ *   let myEffect = new DistortionEffect2( renderer, { source: myVideoSource, effect: 1 });
  *
- * @constructor Effect#DistortionEffect
+ * @constructor Effect#DistortionEffect2
  * @implements Effect
  * @param renderer:GlRenderer
  * @param options:Object
@@ -3256,14 +4066,14 @@ DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
 
 // TO THINK ON: Seems we need to connect this to SOURCES somehow
 
-function DistortionEffect( _renderer, _options ) {
+function DistortionEffect2( _renderer, _options ) {
 
   // create and instance
   var _self = this;
 
   // set or get uid
   if ( _options.uuid == undefined ) {
-    _self.uuid = "DistortionEffect_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+    _self.uuid = "DistortionEffect2_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
   } else {
     _self.uuid = _options.uuid
   }
@@ -3303,449 +4113,15 @@ function DistortionEffect( _renderer, _options ) {
     return true;
   }
   
-  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+  vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv ) {
     
     // normal
-    if ( currentdistortioneffect == 1 ) {
-      return texture2D( src, vUv ).rgba;
-    }
-  
-    // TOPHER_DIST_MIRROR_CIRCLES
-    if ( currentdistortioneffect == 100 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      float radius = 0.06;
-      float x = -0.24;
-      float y = +0.0;
-      float scale = 4.0;
-  
-      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
-        //gl_FragColor = texture2D( src, vUv ).rgba;
-  
-        vec2 uvs = vec2(uv);
-        
-        if ( uv.x < 0.0){
-            uvs.x -= x;
-            uvs *= scale;
-        }else{
-            uvs.x += x;
-            uvs *= scale;
-            uvs.x = - uvs.x;
-        }
-  
-        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        } else{
-            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-            gl_FragColor = vec4(pixelColor);
-        }
-  
-      }else{
-        gl_FragColor = vec4(0.0, 0.0, 0.2, 1.0);	
-      }
-      return gl_FragColor;
-    }
-  
-  
-    // TOPHER_DIST_CIRCLE_2 - 2 circles on the side.
-    if ( currentdistortioneffect == 101 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
-      float radius = 0.2;
-      float x = -0.2;
-      float y = +0.0;
-      float scale = 4.0;
-  
-      if(mask_circle(uv, radius, x, y)  || mask_circle(uv, radius, -x, y)) {
-        gl_FragColor = texture2D( src, vUv ).rgba;
-      }else{
-        gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
-      }
-      return gl_FragColor;
-    }
-  
-    // TOPHER_DIST_CIRCLE_3 - 3 circles
-    if ( currentdistortioneffect == 102 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5);
-      float radius = 0.06;
-      float x = -0.24;
-      float y = +0.0;
-  
-      if(mask_circle(uv, radius, x, y)  ||  mask_circle(uv, radius, -x, y) ||  mask_circle(uv, 0.12, 0.0, 0.0)) {
-       
-        gl_FragColor = texture2D( src, vUv ).rgba;
-      }else{
-        gl_FragColor = vec4(0.0, 0.1, 0.0, 1.0);	
-      }
-      return gl_FragColor;
-    }
-  
-  
-    // TOPHER_DIST_CENTER_CIRCLE
-    if ( currentdistortioneffect == 103 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      float radius = 0.12;
-      float x = -0.0;
-      float y = +0.0;
-      float scale = 2.5;
-  
-      if(mask_circle(uv, radius, x, y)) {
-  
-        vec2 uvs = vec2(uv);
-        uvs *= scale;
-        
-        if (uvs.x < -0.5 || uvs.x > 0.5 || uvs.y < -0.5 || uvs.y > 0.5 ){
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        } else{
-            vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-            gl_FragColor = vec4(pixelColor);
-        }
-  
-      }else{
-        gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);	
-        // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);	//transpparent
-        //discard;
-      }
-      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
-      return gl_FragColor;
-    }//103
-  
-    //ONLY SQUASH
-    if ( currentdistortioneffect == 104 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      float radius = 0.3;
-      float x = -0.0;
-      float y = +0.0;
-      float scale = 1.5;
-  
-      vec2 uvs = vec2(uv);
-      // uvs *= scale;
-      uvs.x *= 1.333;
-      
-      vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-      gl_FragColor = vec4(pixelColor);
-  
-  
-  
-      // gl_FragColor = vec4(0.4, 0.0, 0.2, 1.0);
-      return gl_FragColor;
-    }//104
-  
-    //ONLY CIRCLE
-    if ( currentdistortioneffect == 105 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      float radius = 0.28;
-      float scale = 1.0; //Size of video.
-  
-      if(mask_circle(uv, radius, 0.0, 0.0)) {
-        vec2 uvs = vec2(uv);
-        uvs *= scale;
-        vec4 pixelColor = texture2D(src, vec2(uvs.x + 0.5, uvs.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
-      }else{
-        gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);	
-        discard;
-      }
-      return gl_FragColor;
-    }//105
-  
-    //MIRROR
-    if ( currentdistortioneffect == 106 ) {
-  
-      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
-      
-      if (uv.y > 0.0){
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
-       
-      }else{
-        // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
-        // discard;
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
-      }
-
-      if (uv.y > 0.3){
-        discard;
-      }
-        	
-      gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0);
-      
-      return gl_FragColor;
-    }//105
-  
-  
-    // phasing sides (test)
-    if ( currentdistortioneffect == 2 ) {
-      vec2 wuv = vec2(0,0);
-      if ( gl_FragCoord.x > screenSize.x * 0.5 ) wuv = vUv * vec2( 1., cos( time * .01 ) * 1. );
-      if ( gl_FragCoord.x < screenSize.x * 0.5 ) wuv = vUv * vec2( 1., sin( time * .01 ) * 1. );
-      wuv = wuv + vec2( .0, .0 );
-      return texture2D( src, wuv ).rgba;
-    }
-  
-    // multi
-    if ( currentdistortioneffect == 3 ) {
-      vec2 wuv = vec2(0,0);
-      wuv = vUv * vec2( extra*6., extra*6. ) - vec2( extra * 3., extra * 3. );
-      // wuv = vUv + vec2( extra, extra );
-      return texture2D( src, wuv ).rgba;
-    }
-  
-    // pip
-    if ( currentdistortioneffect == 4 ) {
-      vec2 wuv = vec2(0,0);
-      wuv = vUv * vec2( 2, 2 ) + vec2( 0., 0. );
-      float sil = 1.;
-  
-      // top-left
-      if ( gl_FragCoord.x < ( screenSize.x * 0.07 ) || ( gl_FragCoord.x > screenSize.x * 0.37 ) ) sil = 0.;
-      if ( gl_FragCoord.y < ( screenSize.y * 0.60 ) || ( gl_FragCoord.y > screenSize.y * 0.97 ) ) sil = 0.;
-      return texture2D( src, wuv ).rgba * vec4( sil, sil, sil, sil );
-    }
-  }
-  
-  
-  
-  
-    // -------------
-  
-    // wipes (move these to mixer?)
-    //if ( gl_FragCoord.x > 200.0 ) {
-    //  return vec4(0.0,0.0,0.0,0.0);
-    //}else {
-    //  return src;
-    //}
-  
-  /* custom_helpers */
-  
-  
-  `
-
-
-  _self.init = function() {
-    // add uniforms to renderer
-    _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'] = { type: "i", value: 1 }
-    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
-
-    if (_self._fragmentChannel == 1){
-
-      // add uniforms to fragmentshader
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-      if ( renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
-        _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
-      };
-
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-      
-
-    }else{
-      // add uniforms to fragmentshader
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-      if ( renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
-        _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
-
-      };
-
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-
-
-    }
-
-
-
-} // init
-
-  var i = 0.;
-  _self.update = function() {
-    i += 0.001
-    // renderer.customUniforms[_self.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .5, 1 - Math.random() * .5 ) }
-
-    /*
-    if (currentEffect == 1) {
-      source.setUVMapMod(0., 0.)
-      source.setUVMap(0., 0.)
-    }
-
-    // multi
-    if (currentEffect == 2) {
-      source.setUVMapMod(0.25, 0.25)
-      source.setUVMap(2., 2.)
-    }
-
-    // pip
-    if (currentEffect == 3 ) {
-      source.setUVMapMod(0.2,0.2)
-      source.setUVMap(0.5,0.4)
-    }
-    */
-
-    if (currentEffect == 4) {
-    }
-    //--------------------------------------------------------------------------------------------------------
-    // testSource1.setUVMapMod(0.25, 0.25)
-    // testSource1.setUVMapMod(0.25, 0.25)
-
-    // testSource1.setUVMap(1, 1)
-    // testSource1.setUVMap(1, 1)
-
-    // pip
-    /*
-    testSource1.setUVMapMod(0, 0)
-    var c = 0
-    setInterval( function() {
-      c+= 0.02
-      //testSource1.setUVMap( Math.sin(c)+2, Math.sin(c)+1 )
-      testSource1.setUVMapMod( Math.sin(c)-1, -Math.cos(c)-1 )
-    }, 50)
-    */
-    //--------------------------------------------------------------------------------------------------------
-
-
-    // ONLY WORKS ON VIDEO SOURCE, IF IT WORKS
-    //renderer.customUniforms[source.uuid+'_uvmap_mod'] = { type: "v2", value: new THREE.Vector2( i, Math.cos(i) ) }
-    //renderer.customUniforms[source.uuid+'_uvmap'] = { type: "v2", value: new THREE.Vector2( 1 - Math.random() * .82, 1 - Math.random() * .82 ) }
-  }
-
-  /**
-   * @description currentDistortionffect number
-   * @function Effect#DistortionEffect#effect
-   * @param {Number} effectnumber CurrentDistortionEffect number 1
-   */
-
-  _self.effect = function( _num ){
-    if ( _num != undefined ) {
-      currentEffect = _num
-      if (renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
-      // update uniform ?
-    }
-
-    return currentEffect
-  }
-  /**
-   * @description the extra, for several effects, usually between 0 and 1, but go grazy
-   * @function Effect#DistortionEffect#extra
-   * @param {float} floatValue between 0 and 1
-   */
-  _self.extra = function( _num ){
-
-    if ( _num != undefined ) {
-      currentExtra = _num
-      if (renderer.customUniforms[_self.uuid+'_extra']) renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
-      // update uniform ?
-    }
-    return _num
-  }
-}
-
-DistortionEffect.prototype = new Effect(); // assign prototype to marqer
-DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
-
-/**
- * @summary
- *   The Distortion effect has a series of simple distortion effects, ie. it manipulates, broadly, the UV mapping and pixel placements
- *   Effects Example on codepen:
- *   <a href="https://codepen.io/xangadix/pen/eXLGwJ" target="_blank">codepen</a>
- *
- * @description
- *   Distortion  effect allows for a series of color Distortion, mostly
- *   mimicing classic mixers like MX50 and V4
- *   ```
- *    1. normal
- *    2. phasing sides
- *    3. multi
- *    4. PiP (Picture in picture)
- *
- *   ```
- *
- * @example
- *   let myEffect = new DistortionEffect( renderer, { source: myVideoSource, effect: 1 });
- *
- * @constructor Effect#DistortionEffect
- * @implements Effect
- * @param renderer:GlRenderer
- * @param options:Object
- * @author Sense Studios
- */
-
-// fragment
-// vec3 b_w = ( source.x + source.y + source.z) / 3
-// vec3 amount = source.xyz + ( b_w.xyx * _alpha )
-// col = vec3(col.r+col.g+col.b)/3.0;
-// col = vec4( vec3(col.r+col.g+col.b)/3.0, _alpha );
-
-// TO THINK ON: Seems we need to connect this to SOURCES somehow
-
-function DistortionEffect( _renderer, _options ) {
-
-  // create and instance
-  var _self = this;
-
-  // set or get uid
-  if ( _options.uuid == undefined ) {
-    _self.uuid = "DistortionEffect_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
-  } else {
-    _self.uuid = _options.uuid
-  }
-
-  if ( _options.fragmentChannel == undefined ) {
-    _self._fragmentChannel = 1;
-    } else {
-    _self._fragmentChannel = _options.fragmentChannel;
-  }
-
-  // add to renderer
-  _renderer.add(_self)
-  _self.type = "Effect"
-
-  var source = _options.source
-  // var currentEffect = _options.effect
-  // var currentEffect = 12
-
-  var currentEffect = _options.effect
-  var currentEffect = 1
-  var currentExtra = 0.8
-
-  var shaderScript = `
-
-  bool mask_circle(vec2 uv, float radius, float x, float y){
-      
-    // uv.x *= 1.6; 
-     uv.y /= (16.0 / 9.0);
-    float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
-    if(len < radius){
-      return true;
-    }
-    return false;
-  }
-  
-  bool tophTest(float a){
-    return true;
-  }
-  
-  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
-    
-    // normal
-    if ( currentdistortioneffect == 1 ) {
+    if ( currentDistortionEffect2 == 1 ) {
       return texture2D( src, vUv ).rgba;
     }
   
     //ONLY CIRCLE
-    if ( currentdistortioneffect == 105 ) {
+    if ( currentDistortionEffect2 == 105 ) {
   
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       float radius = 0.28;
@@ -3764,7 +4140,7 @@ function DistortionEffect( _renderer, _options ) {
     }//105
   
     //MIRROR_VERTICAL
-    if ( currentdistortioneffect == 106 ) {
+    if ( currentDistortionEffect2 == 106 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.y >= 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -3778,7 +4154,7 @@ function DistortionEffect( _renderer, _options ) {
     }//MIRROR_VERTICAAL
   
     //MIRROR_HORIZONTAL
-    if ( currentdistortioneffect == 107 ) {
+    if ( currentDistortionEffect2 == 107 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.x > 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -3792,7 +4168,7 @@ function DistortionEffect( _renderer, _options ) {
     }//MIRROR_VERTICAAL
 
     //WIPE_HORIZONTAL
-    if ( currentdistortioneffect == 108 ) {
+    if ( currentDistortionEffect2 == 108 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.x > (extra - 0.5)){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -3822,39 +4198,39 @@ function DistortionEffect( _renderer, _options ) {
 
   _self.init = function() {
     // add uniforms to renderer
-    _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'] = { type: "i", value: 1 }
+    _renderer.customUniforms[_self.uuid+'_currentDistortionEffect2'] = { type: "i", value: 1 }
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
 
     if (_self._fragmentChannel == 1){
 
       // add uniforms to fragmentshader
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( _renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
+      if ( _renderer.fragmentShader.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect2 REPLACE"); 
         _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
       };
 
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
       
 
     }else{
       // add uniforms to fragmentshader
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( _renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
+      if ( _renderer.fragmentShader2.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect2 REPLACE"); 
         _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
 
       };
 
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
 
 
     }
@@ -3916,14 +4292,14 @@ function DistortionEffect( _renderer, _options ) {
 
   /**
    * @description currentDistortionffect number
-   * @function Effect#DistortionEffect#effect
-   * @param {Number} effectnumber CurrentDistortionEffect number 1
+   * @function Effect#DistortionEffect2#effect
+   * @param {Number} effectnumber CurrentDistortionEffect2 number 1
    */
 
   _self.effect = function( _num ){
     if ( _num != undefined ) {
       currentEffect = _num
-      if (_renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
+      if (_renderer.customUniforms[_self.uuid+'_currentDistortionEffect2']) _renderer.customUniforms[_self.uuid+'_currentDistortionEffect2'].value = _num
       // update uniform ?
     }
 
@@ -3931,7 +4307,7 @@ function DistortionEffect( _renderer, _options ) {
   }
   /**
    * @description the extra, for several effects, usually between 0 and 1, but go grazy
-   * @function Effect#DistortionEffect#extra
+   * @function Effect#DistortionEffect2#extra
    * @param {float} floatValue between 0 and 1
    */
   _self.extra = function( _num ){
@@ -4200,239 +4576,6 @@ _self.update = function() {
   }
 }
 
-/**
- * @summery
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @description
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @constructor GlRenderer
- * @example
- *    <!-- a Canvas element with id: glcanvas is required! -->
- *    <canvas id="glcanvas"></canvas>
- *
- *
- *    <script>
- *      let renderer = new GlRenderer();
- *
- *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
- *      let output = new Output( renderer, red )
- *
- *      renderer.init();
- *      renderer.render();
- *    </script>
- */
-
-/*
-    We might try and change THREEJS and move to regl;
-    https://github.com/regl-project, http://regl.party/examples => video
-    133.6 => ~26kb
- */
-
-var GlRenderer = function (_options) {
-  var _self = this;
-
-  /** Set uop options */
-  _self.options = { element: "glcanvas" };
-  if (_options != undefined) {
-    _self.options = _options;
-  }
-
-  // set up threejs scene
-  //_self.element = _self.options.element
-  _self.element = document.getElementById(_self.options.element);
-
-  _self.onafterrender = function () {};
-
-  // default
-  // window.innerWidth, window.innerHeight
-  _self.width = window.innerWidth; //_self.element.offsetWidth
-  _self.height = window.innerHeight; //_self.element.offsetHeight
-
-  _self.scene = new THREE.Scene();
-  _self.camera = new THREE.PerspectiveCamera(
-    75,
-    _self.width / _self.height,
-    0.1,
-    1000
-  );
-  _self.camera.position.z = 20;
-
-  // container for all elements that inherit init() and update()
-  _self.nodes = []; // sources modules and effects
-
-  // containers for custom customUniforms and customDefines
-  _self.customUniforms = {};
-  _self.customDefines = {};
-
-  // base config, screensize and time
-  var cnt = 0;
-  _self.customUniforms["time"] = { type: "f", value: cnt };
-  _self.customUniforms["screenSize"] = {
-    type: "v2",
-    value: new THREE.Vector2(_self.width, _self.height),
-  };
-
-  /**
-   * The vertex shader
-   * @member GlRenderer#vertexShader
-   */
-  _self.vertexShader = `
-    varying vec2 vUv;\
-    void main() {\
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
-      vUv = uv;\
-    }
-  `;
-
-  /**
-   * The fragment shader
-   * @member GlRenderer#fragmentShader
-   */
-  // base fragment shader
-  _self.fragmentShader = `
-    uniform float time;
-    uniform vec2 screenSize;
-
-    /* custom_uniforms */\
-    /* custom_helpers */\
-    varying vec2 vUv;\
-    void main() {\
-      /* custom_main */\
-    }
-  `;
-
-  // ---------------------------------------------------------------------------
-  /** @function GlRenderer.init */
-  _self.init = function () {
-    console.log("init renderer");
-    _self.glrenderer = new THREE.WebGLRenderer({
-      canvas: glcanvas,
-      alpha: false,
-    });
-
-    // init nodes
-    // reset the renderer, for a new lay out
-    /**
-     * All the nodes currently added to this renderer
-     * @member GlRenderer#nodes
-     */
-    _self.nodes.forEach(function (n) {
-      n.init();
-    });
-
-    // create the shader
-    _self.shaderMaterial = new THREE.ShaderMaterial({
-      uniforms: _self.customUniforms,
-      defines: _self.customDefines,
-      vertexShader: _self.vertexShader,
-      fragmentShader: _self.fragmentShader,
-      side: THREE.DoubleSide,
-      transparent: true,
-    });
-
-    // apply the shader material to a surface
-    _self.flatGeometry = new THREE.PlaneGeometry(67, 38);
-    _self.flatGeometry.translate(0, 0, 0);
-    _self.surface = new THREE.Mesh(_self.flatGeometry, _self.shaderMaterial);
-    // surface.position.set(60,50,150);
-
-    /**
-     * A reference to the threejs scene
-     * @member GlRenderer#scene
-     */
-    _self.scene.add(_self.surface);
-  };
-
-  // ---------------------------------------------------------------------------
-
-  /** @function GlRenderer.render */
-  _self.render = function () {
-    requestAnimationFrame(_self.render);
-    _self.glrenderer.render(_self.scene, _self.camera);
-    _self.onafterrender();
-    _self.glrenderer.setSize(_self.width, _self.height);
-    _self.nodes.forEach(function (n) {
-      n.update();
-    });
-
-    cnt++;
-    _self.customUniforms["time"].value = cnt;
-  };
-
-  // update size!
-  _self.resize = function () {
-    _self.customUniforms["screenSize"] = {
-      type: "v2",
-      value: new THREE.Vector2(_self.width, _self.height),
-    };
-
-    // resize viewport (write exception for width >>> height, now gives black bars )
-    _self.camera.aspect = _self.width / _self.height;
-    _self.camera.updateProjectionMatrix();
-    _self.glrenderer.setSize(_self.width, _self.height);
-  };
-
-  window.addEventListener("resize", function () {
-    _self.resize();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-
-  // adds nodes to the renderer
-  // function is implicit, and is colled by the modules
-  _self.add = function (module) {
-    _self.nodes.push(module);
-  };
-
-  // reset the renderer, for a new lay out
-  /**
-   * Disposes the renderer
-   * @function GlRenderer#dispose
-   */
-  _self.dispose = function () {
-    _self.shaderMaterial;
-    _self.flatGeometry;
-    _self.scene.remove(_self.surface);
-    _self.glrenderer.resetGLState();
-    _self.customUniforms = {};
-    _self.customDefines = {};
-
-    cnt = 0;
-    _self.customUniforms["time"] = { type: "f", value: cnt };
-    _self.customUniforms["screenSize"] = {
-      type: "v2",
-      value: new THREE.Vector2(_self.width, _self.height),
-    };
-
-    // reset the vertexshader
-    _self.vertexShader = `
-      varying vec2 vUv;
-      void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        vUv = uv;
-      }
-    `;
-
-    // reset the fragment shader
-    _self.fragmentShader = `
-      uniform int time;
-      uniform vec2 screenSize;
-
-      /* custom_uniforms */
-      /* custom_helpers */
-      varying vec2 vUv;
-      void main() {
-        /* custom_main */
-      }
-    `;
-
-    _self.nodes = [];
-  };
-};
-
 
 /**
  * @summery
@@ -4464,237 +4607,18 @@ var GlRenderer = function (_options) {
     133.6 => ~26kb
  */
 
-    var GlRenderer = function( _options ) {
 
-      console.log("START GlRenderer  -------------------")
+    
+    import * as THREE from 'three';
 
-      var _self = this
-    
-      /** Set uop options */
-      _self.options = { element: 'glcanvas' }
-      if ( _options != undefined ) {
-        _self.options = _options
-      }
-    
-      // set up threejs scene
-      if ( _self.options.canvas ) {
-        _self.element = _self.options.canvas
-      } else {
-        _self.element = document.getElementById(_self.options.element)
-      }
-    
-      _self.onafterrender = function() {}
-      
-      // default
-      // window.innerWidth, window.innerHeight
-      if ( _self.options.width && _self.options.height  ) {
-        _self.width = _self.options.width
-        _self.height = _self.options.height
-      }else{
-        _self.width = window.innerWidth //_self.element.offsetWidth
-        _self.height = window.innerHeight //_self.element.offsetHeight
-      }
-    
-      _self.scene = new THREE.Scene();
-      _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
-      _self.camera.position.z = 20
-    
-      // container for all elements that inherit init() and update()
-      _self.nodes = [] // sources modules and effects
-    
-      // containers for custom customUniforms and customDefines
-      _self.customUniforms = {}
-      _self.customDefines = {}
-    
-      // base config, screensize and time
-      var cnt = 0.;
-      _self.customUniforms['time'] = { type: "f", value: cnt }
-      _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-    
-      /**
-       * The vertex shader
-       * @member GlRenderer#vertexShader
-       */
-      _self.vertexShader = `
-        varying vec2 vUv;\
-        void main() {\
-          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\
-          vUv = uv;\
-        }
-      `
-    
-       /**
-        * The fragment shader
-        * @member GlRenderer#fragmentShader
-        */
-         // base fragment shader
-      _self.fragmentShader = `
-        uniform float time;
-        uniform vec2 screenSize;
-    
-        /* custom_uniforms */\
-        /* custom_helpers */\
-        varying vec2 vUv;\
-        void main() {\
-          /* custom_main */\
-        }
-      `
-    
-      // ---------------------------------------------------------------------------
-      /** @function GlRenderer.init */
-      _self.init = function(  ) {
-        console.log("INIT Renderer -------------------")
-        //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
-        _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
-    
-        // init nodes
-        // reset the renderer, for a new lay out
-        /**
-         * All the nodes currently added to this renderer
-         * @member GlRenderer#nodes
-         */
-        _self.nodes.forEach(function(n){ n.init() });
-    
-        // console.log("GLRenderer. Shader: " + _self.fragmentShader);
-        // create the shader
-        _self.shaderMaterial = new THREE.ShaderMaterial({
-           uniforms: _self.customUniforms,
-           defines: _self.customDefines,
-           vertexShader: _self.vertexShader,
-           fragmentShader: _self.fragmentShader,
-           side: THREE.DoubleSide,
-           transparent: true
-        })
-    
-        // apply the shader material to a surface
-        _self.flatGeometry = new THREE.PlaneGeometry( 67, 38 );
-        _self.flatGeometry.translate( 0, 0, 0 );
-        _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-        // surface.position.set(60,50,150);
-    
-        /**
-         * A reference to the threejs scene
-         * @member GlRenderer#scene
-         */
-        _self.scene.add( _self.surface );
-      }
-    
-      // ---------------------------------------------------------------------------
-    
-      /** @function GlRenderer.render */
-      _self.render = function() {
-        requestAnimationFrame( _self.render );
-        _self.glrenderer.render( _self.scene, _self.camera );
-        _self.onafterrender()
-        _self.glrenderer.setSize( _self.width, _self.height );
-        _self.nodes.forEach( function(n) { n.update() } );
-    
-        cnt++;
-        _self.customUniforms['time'].value = cnt;
-      }
-    
-      // update size!
-      _self.resize = function() {
-    
-        if ( _self.options.autosize ) {
-          _self.height = window.innerHeight
-          _self.width = window.innerWidth
-        }
-        
-        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-        // console.log("resize", _self.width, _self.height)
-        // resize viewport (write exception for width >>> height, now gives black bars )
-        _self.camera.aspect = _self.width / _self.height;
-        _self.camera.updateProjectionMatrix();
-        _self.glrenderer.setSize( _self.width, _self.height );
-      }
-    
-      window.addEventListener('resize', function() {
-        _self.resize()
-      })
-    
-      // ---------------------------------------------------------------------------
-      // Helpers
-    
-      // adds nodes to the renderer
-      // function is implicit, and is colled by the modules
-      _self.add = function( module ) {
-        _self.nodes.push( module )
-      }
-    
-      // reset the renderer, for a new lay out
-      /**
-       * Disposes the renderer
-       * @function GlRenderer#dispose
-       */
-      _self.dispose = function() {
-        _self.shaderMaterial
-        _self.flatGeometry
-        _self.scene.remove(_self.surface)
-        _self.glrenderer.resetGLState()
-        _self.customUniforms = {}
-        _self.customDefines = {}
-    
-        cnt = 0.;
-        _self.customUniforms['time'] = { type: "f", value: cnt }
-        _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
-    
-        // reset the vertexshader
-        _self.vertexShader = `
-          varying vec2 vUv;
-          void main() {
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-            vUv = uv;
-          }
-        `
-    
-        // reset the fragment shader
-        _self.fragmentShader = `
-          uniform int time;
-          uniform vec2 screenSize;
-    
-          /* custom_uniforms */
-          /* custom_helpers */
-          varying vec2 vUv;
-          void main() {
-            /* custom_main */
-          }
-        `
-    
-        _self.nodes = []
-      }
-    }
-    
+    import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-/**
- * @summery
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @description
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @constructor GlRenderer
- * @example
- *    <!-- a Canvas element with id: glcanvas is required! -->
- *    <canvas id="glcanvas"></canvas>
- *
- *
- *    <script>
- *      let renderer = new GlRenderer();
- *
- *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
- *      let output = new Output( renderer, red )
- *
- *      renderer.init();
- *      renderer.render();
- *    </script>
- */
 
- /*
-    We might try and change THREEJS and move to regl;
-    https://github.com/regl-project, http://regl.party/examples => video
-    133.6 => ~26kb
- */
+    // const composer = new EffectComposer( renderer.glrenderer );
 
     var GlRenderer = function( _options ) {
 
@@ -4791,6 +4715,32 @@ var GlRenderer = function (_options) {
         //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
     
+        const target = new THREE.WebGLRenderTarget( {
+					minFilter: THREE.LinearFilter,
+					magFilter: THREE.LinearFilter,
+					format: THREE.RGBAFormat,
+					encoding: THREE.sRGBEncoding
+				} );
+        
+       _self.composer = new EffectComposer( _self.glrenderer );
+
+       const renderPass = new RenderPass( _self.scene, _self.camera );
+       _self.composer.addPass( renderPass );
+
+      // const glitchPass = new GlitchPass();
+      // _self.composer.addPass( glitchPass );
+
+      // const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+			// 	bloomPass.threshold = 0.5;
+			// 	bloomPass.strength = 1.0;
+			// 	bloomPass.radius = 0;
+      // _self.composer.addPass( bloomPass );
+
+    
+      // // const outputPass = new OutputPass();
+      // // _self.composer.addPass( outputPass );
+
+
         // init nodes
         // reset the renderer, for a new lay out
         /**
@@ -4801,7 +4751,9 @@ var GlRenderer = function (_options) {
     
         // console.log("GLRenderer. Shader: " + _self.fragmentShader);
 
-        // create the shader
+        // create the shaders
+
+        // shaderMaterial is for the main central screen.
         _self.shaderMaterial = new THREE.ShaderMaterial({
            uniforms: _self.customUniforms,
            defines: _self.customDefines,
@@ -4810,6 +4762,8 @@ var GlRenderer = function (_options) {
            side: THREE.DoubleSide,
            transparent: true
         })
+
+        // shaderMaterial2 is for the SIDE screens.
         _self.shaderMaterial2 = new THREE.ShaderMaterial({
           uniforms: _self.customUniforms,
           defines: _self.customDefines,
@@ -4826,25 +4780,24 @@ var GlRenderer = function (_options) {
        const SEGMENTS = 10;
        
         // apply the shader material to a surface
+        // CENTRAL SCREEN
         _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
         // surface.position.set(60,50,150);
 
+        // RIGHT SCREEN
         _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry2.rotateY(Math.PI / 1);
         _self.flatGeometry2.translate( 80, -45, 1 );
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
-        
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        
         // _self.surface2.rotation.set(Math.PI / 12,0,0)
         // surface.position.set(60,50,150);
     
-
+       // LEFT SCREEN
         _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry3.translate( -80, -45, 1 );
-        
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
@@ -4865,9 +4818,14 @@ var GlRenderer = function (_options) {
       /** @function GlRenderer.render */
       _self.render = function() {
         requestAnimationFrame( _self.render );
-        _self.glrenderer.render( _self.scene, _self.camera );
+
+        // _self.glrenderer.render( _self.scene, _self.camera );
+        _self.composer.render( _self.scene, _self.camera );
+
+
         _self.onafterrender()
         _self.glrenderer.setSize( _self.width, _self.height );
+        _self.composer.setSize( _self.width, _self.height );
         _self.nodes.forEach( function(n) { n.update() } );
     
         cnt++;
@@ -4888,6 +4846,7 @@ var GlRenderer = function (_options) {
         _self.camera.aspect = _self.width / _self.height;
         _self.camera.updateProjectionMatrix();
         _self.glrenderer.setSize( _self.width, _self.height );
+        _self.composer.setSize( _self.width, _self.height );
       }
     
       window.addEventListener('resize', function() {
@@ -4949,18 +4908,18 @@ var GlRenderer = function (_options) {
           }
         `
 
-                // reset the fragment shader
-                _self.fragmentShader2 = `
-                uniform int time;
-                uniform vec2 screenSize;
-          
-                /* custom_uniforms */
-                /* custom_helpers */
-                varying vec2 vUv;
-                void main() {
-                  /* custom_main */
-                }
-              `
+        // reset the fragment shader
+        _self.fragmentShader2 = `
+        uniform int time;
+        uniform vec2 screenSize;
+  
+        /* custom_uniforms */
+        /* custom_helpers */
+        varying vec2 vUv;
+        void main() {
+          /* custom_main */
+        }
+      `
     
         _self.nodes = []
       }
@@ -6283,6 +6242,7 @@ function FlexSource(renderer, options) {
 
   // create elements (private)
   var canvasElement, videoElement, canvasElementContext, videoTexture; // wrapperElement
+  var gifElement;
   var alpha = 1;
 
   // add to renderer
@@ -7495,6 +7455,7 @@ function SolidSource(renderer, options) {
     // add uniforms
     renderer.customUniforms[_self.uuid + "_color"] = { type: "v4", value: new THREE.Vector4( color.r, color.g, color.b, color.a ) }
 
+    let _fs;
     if (_self._fragmentChannel == 1){
       _fs = renderer.fragmentShader;
     }else{

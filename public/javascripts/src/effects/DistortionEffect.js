@@ -1,5 +1,5 @@
-DistortionEffect.prototype = new Effect(); // assign prototype to marqer
-DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
+DistortionEffect2.prototype = new Effect(); // assign prototype to marqer
+DistortionEffect2.constructor = DistortionEffect2;  // re-assign constructor
 
 /**
  * @summary
@@ -19,9 +19,9 @@ DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
  *   ```
  *
  * @example
- *   let myEffect = new DistortionEffect( renderer, { source: myVideoSource, effect: 1 });
+ *   let myEffect = new DistortionEffect2( renderer, { source: myVideoSource, effect: 1 });
  *
- * @constructor Effect#DistortionEffect
+ * @constructor Effect#DistortionEffect2
  * @implements Effect
  * @param renderer:GlRenderer
  * @param options:Object
@@ -36,14 +36,14 @@ DistortionEffect.constructor = DistortionEffect;  // re-assign constructor
 
 // TO THINK ON: Seems we need to connect this to SOURCES somehow
 
-function DistortionEffect( _renderer, _options ) {
+function DistortionEffect2( _renderer, _options ) {
 
   // create and instance
   var _self = this;
 
   // set or get uid
   if ( _options.uuid == undefined ) {
-    _self.uuid = "DistortionEffect_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
+    _self.uuid = "DistortionEffect2_" + (((1+Math.random())*0x100000000)|0).toString(16).substring(1);
   } else {
     _self.uuid = _options.uuid
   }
@@ -83,15 +83,15 @@ function DistortionEffect( _renderer, _options ) {
     return true;
   }
   
-  vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv ) {
+  vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv ) {
     
     // normal
-    if ( currentdistortioneffect == 1 ) {
+    if ( currentDistortionEffect2 == 1 ) {
       return texture2D( src, vUv ).rgba;
     }
   
     //ONLY CIRCLE
-    if ( currentdistortioneffect == 105 ) {
+    if ( currentDistortionEffect2 == 105 ) {
   
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       float radius = 0.28;
@@ -110,7 +110,7 @@ function DistortionEffect( _renderer, _options ) {
     }//105
   
     //MIRROR_VERTICAL
-    if ( currentdistortioneffect == 106 ) {
+    if ( currentDistortionEffect2 == 106 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.y >= 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -124,7 +124,7 @@ function DistortionEffect( _renderer, _options ) {
     }//MIRROR_VERTICAAL
   
     //MIRROR_HORIZONTAL
-    if ( currentdistortioneffect == 107 ) {
+    if ( currentDistortionEffect2 == 107 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.x > 0.0){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -138,7 +138,7 @@ function DistortionEffect( _renderer, _options ) {
     }//MIRROR_VERTICAAL
 
     //WIPE_HORIZONTAL
-    if ( currentdistortioneffect == 108 ) {
+    if ( currentDistortionEffect2 == 108 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.x > (extra - 0.5)){
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
@@ -168,39 +168,39 @@ function DistortionEffect( _renderer, _options ) {
 
   _self.init = function() {
     // add uniforms to renderer
-    _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'] = { type: "i", value: 1 }
+    _renderer.customUniforms[_self.uuid+'_currentDistortionEffect2'] = { type: "i", value: 1 }
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
 
     if (_self._fragmentChannel == 1){
 
       // add uniforms to fragmentshader
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( _renderer.fragmentShader.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
+      if ( _renderer.fragmentShader.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect2 REPLACE"); 
         _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
       };
 
       _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
       
 
     }else{
       // add uniforms to fragmentshader
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentdistortioneffect;\n/* custom_uniforms */')
+      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
 
-      if ( _renderer.fragmentShader2.indexOf('vec4 distortioneffect ( sampler2D src, int currentdistortioneffect, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect REPLACE"); 
+      if ( _renderer.fragmentShader2.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect2 REPLACE"); 
         _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
 
       };
 
       _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = distortioneffect( '+source.uuid+', ' + _self.uuid+'_currentdistortioneffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
+      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
 
 
     }
@@ -262,14 +262,14 @@ function DistortionEffect( _renderer, _options ) {
 
   /**
    * @description currentDistortionffect number
-   * @function Effect#DistortionEffect#effect
-   * @param {Number} effectnumber CurrentDistortionEffect number 1
+   * @function Effect#DistortionEffect2#effect
+   * @param {Number} effectnumber CurrentDistortionEffect2 number 1
    */
 
   _self.effect = function( _num ){
     if ( _num != undefined ) {
       currentEffect = _num
-      if (_renderer.customUniforms[_self.uuid+'_currentdistortioneffect']) _renderer.customUniforms[_self.uuid+'_currentdistortioneffect'].value = _num
+      if (_renderer.customUniforms[_self.uuid+'_currentDistortionEffect2']) _renderer.customUniforms[_self.uuid+'_currentDistortionEffect2'].value = _num
       // update uniform ?
     }
 
@@ -277,7 +277,7 @@ function DistortionEffect( _renderer, _options ) {
   }
   /**
    * @description the extra, for several effects, usually between 0 and 1, but go grazy
-   * @function Effect#DistortionEffect#extra
+   * @function Effect#DistortionEffect2#extra
    * @param {float} floatValue between 0 and 1
    */
   _self.extra = function( _num ){

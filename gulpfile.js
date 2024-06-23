@@ -25,6 +25,13 @@ gulp.task("vendor-js", function () {
     .pipe(gulp.dest("public/javascripts/build/"));
 });
 
+gulp.task("vendor-js-2", function () {
+  return gulp
+    .src(vendor)
+    .pipe(concat("vendor.js"))
+    .pipe(gulp.dest("public/javascripts/build/"));
+});
+
 function mixerJSInner() {
   return gulp
     .src(mixer_min)

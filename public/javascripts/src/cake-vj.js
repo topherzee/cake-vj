@@ -6,16 +6,28 @@
 *
 */
 
+// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
- async function start(){
+// import  GlRenderer  from "../javascripts/src/GlRenderer.js";
+// debugger;
+// var renderer2 = new GlRenderer({element: 'glcanvas', width:800, height:450});
+
+
+// import GlRenderer from GLRenderer
+async function start(){
 
     console.log("CAKE Start --------------------");
 
 
 var TIME_BY_TOPHER = true;
 
+// debugger;
 // renderer
 var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
+
+// const composer = new EffectComposer( renderer.glrenderer );
+// import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
+  
 
 function addLayer(destId, i){
     let template = document.getElementById("layer_template");
@@ -216,11 +228,11 @@ function handleClipClick(url) {
     sources[activeLayer].pause();
 }
   
-layer_effects[1] = new DistortionEffect(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
-layer_effects[2] = new DistortionEffect(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
+layer_effects[1] = new DistortionEffect2(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
+layer_effects[2] = new DistortionEffect2(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
 
-layer_effects[3] = new DistortionEffect(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
-layer_effects[4] = new DistortionEffect(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
+layer_effects[3] = new DistortionEffect2(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
+layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
 
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
@@ -341,6 +353,7 @@ for(var i=0; i<blendModes.length; i++){
 function newActiveLayer(newLayer){
     console.log("new active laayer: ", newLayer)
     activeLayer = newLayer;
+    let el;
     for (let i=1;   i<5; i++){
         el = document.getElementById('layer_' + i);
         el.classList.remove("active");
@@ -782,6 +795,8 @@ if (TIME_BY_TOPHER){
 //     newActiveLayer(4);
 // }
 // console.log("added buttons 2")
+
+
 
 
 
