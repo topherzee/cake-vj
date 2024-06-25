@@ -149,7 +149,8 @@ function FlexSource(renderer, options) {
         if ( videoElement.readyState == 4 ) {
           var r = Math.random() * videoElement.duration
           //videoElement.currentTime = r
-          videoElement.play();
+          // videoElement.play(); We want it paused because cake controls the playback.
+
           _self.firstplay = true
           console.log(_self.uuid, "First Play; ", r)
           clearInterval(playInterval)
@@ -159,7 +160,7 @@ function FlexSource(renderer, options) {
 
       function firstTouch() {
         //return
-        // videoElement.play();
+        // videoElement.play(); We want it paused because cake controls the playback.
         _self.firstplay = true
         document.body.removeEventListener('click', firstTouch)
         document.body.removeEventListener('touchstart', firstTouch)
@@ -380,7 +381,7 @@ function FlexSource(renderer, options) {
 
     if (_self.type2 == "Video" ){
       videoElement.src = _file
-      videoElement.play();
+      // videoElement.play(); We want it paused because cake controls the playback.
     }
     if (_self.type2 == "Image" ){
       console.log("load new src: ", _file)

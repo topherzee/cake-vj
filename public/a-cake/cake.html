@@ -41,11 +41,11 @@ import * as THREE from 'three';
     margin-bottom: 10px;
 }
 .layer{
-    border:solid 1px grey;
+    border:solid 2px grey;
 }
 
 .layer.active{
-    border:solid 1px hotpink;
+    border:solid 2px hotpink;
 }
 
 /* button.active{
@@ -226,8 +226,8 @@ import * as THREE from 'three';
             <div id="bpmcontrol">
 
                 <div class="bpm_control">
-                    <div class="display left" id="bpm_display">128</div>
-                    <button id="bpm_tab" class="left"></button>
+                    <div id="bpm_display" class="display left" >128</div>
+                    <button id="bpm_tap_btn" class="left"></button>
                     <input id="bpm_slide" class="left" type="range" min="20" max="160" step="1">
                     <button id="bpm_reset" class="left"></button>
                 </div>
@@ -333,7 +333,7 @@ import * as THREE from 'three';
 
         <div class="bpm_control">
             <div class="display" id="bpm_display">128</div>
-            <button id="bpm_tab"></button>
+            <button id="bpm_tap_btn"></button>
             <input id="bpm_slide" type="range" min="20" max="240" step="1">
         </div>
 

@@ -1706,6 +1706,8 @@ function Behaviour( _renderer, options ) {
 // debugger;
 // var renderer2 = new GlRenderer({element: 'glcanvas', width:800, height:450});
 
+// var beatLadder = ["0.25", "0.5", "1.0", "2.0", "4.0"]
+// var beatLadderIndex = 2;
 
 // import GlRenderer from GLRenderer
 async function start(){
@@ -1746,16 +1748,7 @@ function addLayer(destId, i){
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
-        layerTimes[i].bpm_on = ! layerTimes[i].bpm_on;
-
-        console.log("bpm layer " + i + " >>", layerTimes[i].bpm_on )
-
-        let el = document.getElementById('btn_bpm_layer_' + i);
-        if (layerTimes[i].bpm_on){
-            el.classList.add("active");
-        }else{
-            el.classList.remove("active");
-        }
+        toggleLayerBpmLock(i);
     }
 
     document.getElementById('layer_play_' + i).onclick = function() {
@@ -1820,7 +1813,7 @@ function addLayer(destId, i){
 
 
 
-    // document.getElementById('bpm_tab').onmousedown = function() {
+    // document.getElementById('bpm_tap_btn').onmousedown = function() {
     //     bpm_tap.tap()
     //     channel_1_b_mixer.bpm(bpm_tap.bpm)
     //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
@@ -1828,7 +1821,18 @@ function addLayer(destId, i){
 }
 
 
+function toggleLayerBpmLock(i){
+    layerTimes[i].bpm_on = ! layerTimes[i].bpm_on;
 
+    console.log("bpm layer " + i + " >>", layerTimes[i].bpm_on )
+
+    let el = document.getElementById('btn_bpm_layer_' + i);
+    if (layerTimes[i].bpm_on){
+        el.classList.add("active");
+    }else{
+        el.classList.remove("active");
+    }
+}
 
 
 function addLayers() {
@@ -1841,6 +1845,128 @@ function addLayers() {
 }
 
 addLayers();
+//key, keyCode, 
+window.addEventListener("keydown", (e) => {
+    console.log("e.code",e.code);
+    
+    // console.log("event.code",event.code);
+    
+    if (e.code == "Digit1"){
+        newActiveLayer(1);
+    }
+    if (e.code == "Digit2"){
+        newActiveLayer(2);
+    }
+    if (e.code == "Digit3"){
+        newActiveLayer(3);
+    }
+    if (e.code == "Digit4"){
+        newActiveLayer(4);
+    }
+
+    //TODO - also update the controls.
+    if (e.code == "ArrowLeft"){
+        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_REVERSE)
+    }
+    if (e.code == "ArrowRight"){
+        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_FORWARD)
+    }
+    if (e.code == "ArrowDown"){
+        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_BOUNCE)
+    }
+    if (e.code == "ArrowUp"){
+        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_RANDOM)
+    }
+
+    if (e.code == "Space"){
+        layerTimes[activeLayer].is_playing = !layerTimes[activeLayer].is_playing;
+    }
+
+    if (e.code == "KeyI"){
+        setInOnLayer(activeLayer);
+    }
+
+    if (e.code == "KeyO"){
+        setOutOnLayer(activeLayer);
+    }
+
+    // GLOBAL BPM
+    if (e.code == "KeyA"){
+        bpmTap();
+    }
+    if (e.code == "KeyD"){
+        bpmReset();
+    }
+    if (e.code == "KeyW"){
+        incrementBpm(1);
+    }
+    if (e.code == "KeyS"){
+        incrementBpm(-1);
+    }
+
+    // LAYER BPM
+    if (e.code == "KeyK"){
+        toggleLayerBpmLock(activeLayer)
+    }
+    if (e.code == "KeyJ"){
+        changeBeatFactor(activeLayer, -1)
+    }
+    if (e.code == "KeyL"){
+        changeBeatFactor(activeLayer, +1)
+    }
+    if (e.code == "KeyU"){
+        //toggle mode.
+        let newMode = BPM_MODE_STRETCH;
+        if (layerTimes[activeLayer].bpm_mode == BPM_MODE_STRETCH){
+            newMode = BPM_MODE_CUT;
+        }
+        let el = document.getElementById("layer_bpm_mode_" + activeLayer);
+        el.value = newMode;
+        layerTimes[activeLayer].bpm_mode = newMode
+    }
+
+    // document.getElementById("layer_bpm_mode_" + i).oninput = function() {
+    //     console.log("layer_bpm_mode" + i, this.value);
+    //     setBpmModeOnLayer(i, this.value)
+    // }
+
+    e.preventDefault();
+
+});
+
+function changeBeatFactor(i, step){
+    const select = document.getElementById("layer_bpm_factor_" + i);
+    changeOption(select, step) 
+    let value = parseFloat(select.value);
+    console.log("changeBeatFactor", value)
+    layerTimes[i].bpm_factor = value;
+}
+11
+function changeOption(select, step) {
+    const i = select.selectedIndex + step;
+    if (i>-1 && i < 5){
+        select.selectedIndex = i;
+    }
+}
+
+function incrementBpm(step){
+    let newBpm = bpm_tap.getBpm() + step;
+    bpm_tap.setBpm(newBpm);
+
+    let el = document.getElementById('bpm_slide');
+    el.value = bpm_tap.getBpm();
+
+    document.getElementById('bpm_display').textContent = Math.round(bpm_tap.getBpm());
+
+}
+
+function setControlPlayModeOnLayer(i, mode){
+   
+    let el = document.getElementById("layer_play_mode_" + i);
+    el.value = mode;
+    setPlayModeOnLayer(i, mode)
+    
+}
 
 document.getElementById('layer_fader_1').oninput = function() {
     channel_1_a_mixer.pod(this.value)
@@ -1917,6 +2043,10 @@ function handleClipClick(url) {
         channel = 2;
     }
     // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
+
+    //Prevent crash due to requesting non existant currentTime.
+    layerTimes[activeLayer].time_last_beat = Date.now();
+    sources[activeLayer].video.currentTime = 0;
 
     sources[activeLayer].src(url);
     sources[activeLayer].pause();
@@ -2308,7 +2438,13 @@ function updateVideo(source, rate, layer, layerTime){
     //Based on time_in_range and duration.
         // time_in_range = 
     // video.currentTime = time_in_range;
-    video.currentTime = time;
+
+    if (isFinite(time)){
+        video.currentTime = time;
+    }else{
+        console.log("warn updateVideo infinite time")
+    }
+    
     
     //full time scrubber - not the current loop or anything
     var scrubber = document.getElementById('layer_time_' + layer );
@@ -2336,9 +2472,9 @@ function playVideos () {
     if (frameCheck==0){
         updateVideo(sources[1], rate1, "1", layerTimes[1]);
         updateVideo(sources[2], rate2, "2", layerTimes[2]);
-        // console.log("type", sources[1].type2)
-        // time2 = updateVideo(sources[2].video, rate2, time2, "2");
-        // time3 = updateVideo(sources[3].video, rate3, time3, "3");
+
+        updateVideo(sources[3], rate3, "3", layerTimes[3]);
+        updateVideo(sources[4], rate4, "4", layerTimes[4]);
     }
     frameCheck++;
     if (frameCheck == 3){
@@ -2430,41 +2566,43 @@ if (TIME_BY_TOPHER){
 
   // -----------------------------------------------------------------------------
     // BPM TAP EN SLIDER
-
-    document.getElementById('bpm_tab').onmousedown = function() {
-        var tapPhase = bpm_tap.tapCake();
-        if (tapPhase == "TAP_PHASE_SET_LENGTH"){
-            document.getElementById('bpm_tab').classList.add("bpm-set-length")
-        }else{
-            document.getElementById('bpm_tab').classList.remove("bpm-set-length")
-        }
-        // resetLayerTimes();
-        //channel_1_b_mixer.bpm(bpm_tap.bpm)
-        document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm);
-        document.getElementById('bpm_slide').value = Math.round(bpm_tap.bpm);
-        
-      }
-
-      document.getElementById('bpm_reset').onmousedown = function() {
-        bpm_tap.resetCake();
-        document.getElementById('bpm_reset').classList.add("phase")
-
-
-
+function bpmTap(){
+    var tapPhase = bpm_tap.tapCake();
+    if (tapPhase == "TAP_PHASE_SET_LENGTH"){
+        document.getElementById('bpm_tap_btn').classList.add("bpm-set-length")
+    }else{
+        document.getElementById('bpm_tap_btn').classList.remove("bpm-set-length")
     }
-    
-      document.getElementById('bpm_slide').oninput = function() {
-        //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
-        let sliderValue = Math.round(document.getElementById('bpm_slide').value);
-        document.getElementById('bpm_display').textContent = sliderValue;
+    // resetLayerTimes();
+    //channel_1_b_mixer.bpm(bpm_tap.bpm)
+    document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm);
+    document.getElementById('bpm_slide').value = Math.round(bpm_tap.bpm);
+}
+function bpmReset(){
+    bpm_tap.resetCake();
+    document.getElementById('bpm_reset').classList.add("phase");
+}
 
-        bpm_tap.setBpm(sliderValue)
-      }
+document.getElementById('bpm_reset').onmousedown = function() {
+    bpmReset();
+}   
 
-      document.getElementById('pause_all').onmousedown = function() {
-        console.log("pause all button clicked")
-        pauseAll();
-      }
+document.getElementById('bpm_tap_btn').onmousedown = function() {
+    bpmTap();
+}
+
+document.getElementById('bpm_slide').oninput = function() {
+    //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
+    let sliderValue = Math.round(document.getElementById('bpm_slide').value);
+    document.getElementById('bpm_display').textContent = sliderValue;
+
+    bpm_tap.setBpm(sliderValue)
+}
+
+document.getElementById('pause_all').onmousedown = function() {
+    console.log("pause all button clicked")
+    pauseAll();
+}
 
 }//start
 
@@ -6293,7 +6431,8 @@ function FlexSource(renderer, options) {
         if ( videoElement.readyState == 4 ) {
           var r = Math.random() * videoElement.duration
           //videoElement.currentTime = r
-          videoElement.play();
+          // videoElement.play(); We want it paused because cake controls the playback.
+
           _self.firstplay = true
           console.log(_self.uuid, "First Play; ", r)
           clearInterval(playInterval)
@@ -6303,7 +6442,7 @@ function FlexSource(renderer, options) {
 
       function firstTouch() {
         //return
-        // videoElement.play();
+        // videoElement.play(); We want it paused because cake controls the playback.
         _self.firstplay = true
         document.body.removeEventListener('click', firstTouch)
         document.body.removeEventListener('touchstart', firstTouch)
@@ -6524,7 +6663,7 @@ function FlexSource(renderer, options) {
 
     if (_self.type2 == "Video" ){
       videoElement.src = _file
-      videoElement.play();
+      // videoElement.play(); We want it paused because cake controls the playback.
     }
     if (_self.type2 == "Image" ){
       console.log("load new src: ", _file)
