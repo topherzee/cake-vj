@@ -146,7 +146,9 @@ function GifSource( renderer, options ) {
 
     // Handle aspect ratio of source. Convert to 16x9.
     let texture_size = 1024;
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0;
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
+    
     let image_ratio= 4.0/ 3.0;
     if (_self.imageWidth){
       image_ratio= _self.imageWidth/ _self.imageHeight;

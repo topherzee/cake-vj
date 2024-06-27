@@ -283,7 +283,8 @@ function FlexSource(renderer, options) {
   _self.update = function() {
 
     // Handle aspect ratio of source. Convert to 16x9.
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0; THIS WOULD BE GOOD FOR NORMAL 16x9
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
     let image_ratio= 4.0/ 3.0;
     
     if (_self.type2 == "Video" ){

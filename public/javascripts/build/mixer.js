@@ -2020,9 +2020,7 @@ sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 s
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
-
 // var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
-
 sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
 sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
 // sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
@@ -2047,7 +2045,6 @@ function handleClipClick(url) {
     //Prevent crash due to requesting non existant currentTime.
     layerTimes[activeLayer].time_last_beat = Date.now();
     sources[activeLayer].video.currentTime = 0;
-
     sources[activeLayer].src(url);
     sources[activeLayer].pause();
 }
@@ -2061,25 +2058,16 @@ layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragme
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
-// var layer_3_mixer = new Mixer( renderer, { sources[1]: trans_black, sources[2]: layer_3_effect,  uuid: "Mixer_3"  } )
 var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
 var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
 var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
 var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
-// channel_1_b_mixer.setAutoFade(true);
+var output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
-var output;
-// if (typeof layer_4_effect !=='undefined'){
-//     output = new Output( renderer, layer_3_effect, layer_4_effect )
-// }else{
-//     output = new Output( renderer, layer_3_effect )
-// }
 
-// output = new Output( renderer, channel_1_b_mixer)
-// output = new Output( renderer, layer_effects[1])
-output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
+// var output = new Output( renderer, sources[2], sources[4] )
 
 
 console.log("CAKE Call renderer.init() --------------------");
@@ -2106,14 +2094,14 @@ const CAKE_MIRROR_VERICAL = 106;
 const CAKE_MIRROR_HORIZONTAL = 107;
 const CAKE_WIPE_HORIZONTAL = 108;
 
-layer_effects[1].effect(CAKE_MIRROR_HORIZONTAL);
-layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
+// layer_effects[1].effect(CAKE_MIRROR_HORIZONTAL);
+// layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
 
-layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
-layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
+// layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
+// layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
 
-layer_effects[1].extra(0.9);
-layer_effects[2].extra(0.9);
+// layer_effects[1].extra(0.9);
+// layer_effects[2].extra(0.9);
 
 
 const NAM = 3;
@@ -2122,8 +2110,8 @@ const LUM1 = 10;
 const LUM2 = 11;
 const BOOM = 9
 
-channel_1_b_mixer.pod(0.0);
-channel_1_a_mixer.pod(1.0);
+if (typeof channel_1_b_mixer !== 'undefined') channel_1_b_mixer.pod(0.0);
+if (typeof channel_1_a_mixer !== 'undefined') channel_1_a_mixer.pod(1.0);
 
 function pauseAll(){
     console.log("pauseAll")
@@ -2480,6 +2468,13 @@ function playVideos () {
     if (frameCheck == 3){
         frameCheck = 0;
     }
+
+    let r = bpm_tap.render2(1)//layerTime.bpm_factor
+    // renderer.flatGeometry.rotateZ(r * Math.PI / 2 / 10);
+    //TODO - playing here.
+    renderer.flatGeometry.rotateZ(Math.PI / 1600);
+    renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
+    renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
 
   requestAnimationFrame(playVideos);
 };
@@ -4917,29 +4912,36 @@ _self.update = function() {
        const SIDE_SCALE = 0.3;
        const SEGMENTS = 10;
        
+       
         // apply the shader material to a surface
         // CENTRAL SCREEN
-        _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+        // _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+        _self.flatGeometry = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
+        // _self.flatGeometry.rotateZ(Math.PI / 8);
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-        // surface.position.set(60,50,150);
+        // _self.surface.position.set(60,50,150);
+        // _self.surface.rotation.set(Math.PI / 12,0,0)
 
         // RIGHT SCREEN
-        _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        // _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry2 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.flatGeometry2.rotateY(Math.PI / 1);
-        _self.flatGeometry2.translate( 80, -45, 1 );
+        // _self.flatGeometry2.translate( 80, -45, 1 );
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+        _self.surface2.position.set( 25, -13, 1 );
         // _self.surface2.rotation.set(Math.PI / 12,0,0)
         // surface.position.set(60,50,150);
     
        // LEFT SCREEN
-        _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
-        _self.flatGeometry3.translate( -80, -45, 1 );
+        // _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry3 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
+        // _self.flatGeometry3.translate( -80, -45, 1 );
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        
+        _self.surface3.position.set( -25, -13, 1 );
     
 
         /**
@@ -4968,6 +4970,9 @@ _self.update = function() {
     
         cnt++;
         _self.customUniforms['time'].value = cnt;
+
+        // _self.flatGeometry.rotateZ(Math.PI / 8);
+        // _self.flatGeometry.rotateZ(cnt / 10000);
       }
     
       // update size!
@@ -6565,7 +6570,8 @@ function FlexSource(renderer, options) {
   _self.update = function() {
 
     // Handle aspect ratio of source. Convert to 16x9.
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0; THIS WOULD BE GOOD FOR NORMAL 16x9
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
     let image_ratio= 4.0/ 3.0;
     
     if (_self.type2 == "Video" ){
@@ -6964,7 +6970,9 @@ function GifSource( renderer, options ) {
 
     // Handle aspect ratio of source. Convert to 16x9.
     let texture_size = 1024;
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0;
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
+    
     let image_ratio= 4.0/ 3.0;
     if (_self.imageWidth){
       image_ratio= _self.imageWidth/ _self.imageHeight;
@@ -7167,7 +7175,9 @@ function ImageSource( renderer, options ) {
 
     // Handle aspect ratio of source. Convert to 16x9.
     let texture_size = 1024;
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0;
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
+    
     let image_ratio= 4.0/ 3.0;
     if (_self.imageWidth){
       image_ratio= _self.imageWidth/ _self.imageHeight;
@@ -8115,7 +8125,9 @@ function VideoSource(renderer, options) {
   _self.update = function() {
 
     // Handle aspect ratio of source. Convert to 16x9.
-    let raw_ratio = 16.0 / 9.0;
+    // let raw_ratio = 16.0 / 9.0;
+    let raw_ratio = 9.0 / 9.0; // THIS IS PERFECT FOR PROJECTING ON CIRCLES which haave equal height and width.
+    
     let image_ratio= 4.0/ 3.0;
     if (videoElement.videoWidth){
       image_ratio= videoElement.videoWidth/ videoElement.videoHeight;

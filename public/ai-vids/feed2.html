@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Video Feedback Effect</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script> -->
+
+<script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+
+
+
+<script type="module">
+   import * as THREE from 'three'
+
+// import fb_fragment from './fb_fragment.js';
+
+const fb_fragment = /* glsl */ `
+uniform vec2 u_resolution;
+uniform sampler2D u_in_buffer;
+uniform sampler2D u_init_buffer;
+uniform float u_time;
+
+void main() {
+  // vec2 uv = gl_FragCoord.xy / u_resolution;
+
+    vec2 st = gl_FragCoord.xy / u_resolution;
+    vec2 uv = st;
+    uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+
+    vec4 sum = texture2D(u_in_buffer, uv);
+    vec4 src = texture2D(u_init_buffer, st);
+    sum.rgb = mix(sum.rbg, src.rgb, 0.2);
+    gl_FragColor = sum;
+}
+`;
+
+
+const clock = new THREE.Clock();
+const scene = new THREE.Scene();
+const in_scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2);
+
+const renderer = new THREE.WebGLRenderer();
+let material_in;//: THREE.ShaderMaterial;
+let material_out;//: THREE.MeshBasicMaterial;
+
+let textureA = new THREE.WebGLRenderTarget(
+  window.innerWidth, window.innerHeight,
+  { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+
+let textureB = new THREE.WebGLRenderTarget(
+  window.innerWidth, window.innerHeight,
+  { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+
+const initial_texture = new THREE.TextureLoader().load('./circles.jpg');
+
+function sceneSetup() {
+  // initial texture
+  const plane_in = new THREE.PlaneGeometry(2, 2);
+  const uniforms_input = {
+    u_in_buffer: { value: textureA.texture },
+    u_init_buffer: { value: initial_texture },
+    u_resolution:
+      { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    u_time: { value: 0. },
+  };
+
+  material_in = new THREE.ShaderMaterial(
+    { uniforms: uniforms_input, fragmentShader: fb_fragment });
+    
+  const mesh_init = new THREE.Mesh(plane_in, material_in);
+  in_scene.add(mesh_init);
+
+  const plane_out = new THREE.PlaneGeometry(2, 2);
+  material_out = new THREE.MeshBasicMaterial({ map: initial_texture });
+  const mesh_out = new THREE.Mesh(plane_out, material_out);
+  scene.add(mesh_out);
+
+  // Set up renderer
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  // start clock
+  clock.start();
+}
+
+function render() {
+  requestAnimationFrame(render);
+
+  // Update time
+  material_in.uniforms.u_time.value = clock.getElapsedTime();
+
+  // render the first scene to textureB
+  renderer.setRenderTarget(textureB);
+  renderer.render(in_scene, camera);
+
+  // swap the textures for feedback
+  var t = textureA;
+  textureA = textureB;
+  textureB = t;
+  // update the output scene with the recently rendered texture
+  material_out.map = textureB.texture;
+  // pass the output texture back to the input of the feedback shader
+  material_in.uniforms.u_in_buffer.value = textureA.texture;
+
+  // returns the render to using the canvas
+  renderer.setRenderTarget(null);
+  // render output scene
+  renderer.render(scene, camera);
+}
+
+// call functions
+sceneSetup();
+render();
+</script>
+</body>
+</html>

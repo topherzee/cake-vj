@@ -201,29 +201,36 @@
        const SIDE_SCALE = 0.3;
        const SEGMENTS = 10;
        
+       
         // apply the shader material to a surface
         // CENTRAL SCREEN
-        _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+        // _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+        _self.flatGeometry = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
+        // _self.flatGeometry.rotateZ(Math.PI / 8);
         _self.flatGeometry.translate( 0, 0, 0 );
         _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-        // surface.position.set(60,50,150);
+        // _self.surface.position.set(60,50,150);
+        // _self.surface.rotation.set(Math.PI / 12,0,0)
 
         // RIGHT SCREEN
-        _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        // _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry2 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.flatGeometry2.rotateY(Math.PI / 1);
-        _self.flatGeometry2.translate( 80, -45, 1 );
+        // _self.flatGeometry2.translate( 80, -45, 1 );
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
+        _self.surface2.position.set( 25, -13, 1 );
         // _self.surface2.rotation.set(Math.PI / 12,0,0)
         // surface.position.set(60,50,150);
     
        // LEFT SCREEN
-        _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
-        _self.flatGeometry3.translate( -80, -45, 1 );
+        // _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
+        _self.flatGeometry3 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
+        // _self.flatGeometry3.translate( -80, -45, 1 );
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        
+        _self.surface3.position.set( -25, -13, 1 );
     
 
         /**
@@ -252,6 +259,9 @@
     
         cnt++;
         _self.customUniforms['time'].value = cnt;
+
+        // _self.flatGeometry.rotateZ(Math.PI / 8);
+        // _self.flatGeometry.rotateZ(cnt / 10000);
       }
     
       // update size!
