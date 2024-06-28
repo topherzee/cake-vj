@@ -1,4 +1,35 @@
 
+/**
+ * @summery
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @description
+ *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
+ *
+ * @constructor GlRenderer
+ * @example
+ *    <!-- a Canvas element with id: glcanvas is required! -->
+ *    <canvas id="glcanvas"></canvas>
+ *
+ *
+ *    <script>
+ *      let renderer = new GlRenderer();
+ *
+ *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
+ *      let output = new Output( renderer, red )
+ *
+ *      renderer.init();
+ *      renderer.render();
+ *    </script>
+ */
+
+ /*
+    We might try and change THREEJS and move to regl;
+    https://github.com/regl-project, http://regl.party/examples => video
+    133.6 => ~26kb
+ */
+
+
     
     import * as THREE from 'three';
 
@@ -15,15 +46,15 @@
       window.innerWidth, window.innerHeight,
       { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
     
-    let textureB = new THREE.WebGLRenderTarget(
-      window.innerWidth, window.innerHeight,
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-      
-    let textureC = new THREE.WebGLRenderTarget(
-      window.innerWidth, window.innerHeight,
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-      
-      const initial_texture = new THREE.TextureLoader().load('./circles.jpg');
+      let textureB = new THREE.WebGLRenderTarget(
+        window.innerWidth, window.innerHeight,
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        
+        let textureC = new THREE.WebGLRenderTarget(
+          window.innerWidth, window.innerHeight,
+          { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+          
+          const initial_texture = new THREE.TextureLoader().load('./circles.jpg');
 
     const fb_fragment = /* glsl */ `
 uniform vec2 u_resolution;
@@ -148,8 +179,15 @@ let material_out;//: THREE.MeshBasicMaterial;
       /** @function GlRenderer.init */
       _self.init = function(  ) {
         console.log("INIT Renderer -------------------")
-  
+        //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
+    
+        const target = new THREE.WebGLRenderTarget( {
+					minFilter: THREE.LinearFilter,
+					magFilter: THREE.LinearFilter,
+					format: THREE.RGBAFormat,
+					encoding: THREE.sRGBEncoding
+				} );
 
         // init nodes
         // reset the renderer, for a new lay out
@@ -200,7 +238,7 @@ let material_out;//: THREE.MeshBasicMaterial;
         _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial);
         _self.in_scene_c.add(_self.surface);
 
-        const plane_out = new THREE.PlaneGeometry(2, 2);
+        // const plane_out = new THREE.PlaneGeometry(2, 2);
         material_out = new THREE.MeshBasicMaterial({ map: initial_texture });
         const mesh_out = new THREE.Mesh(_self.flatGeometry, material_out);
         _self.scene.add(mesh_out);
@@ -235,7 +273,7 @@ const uniforms_input = {
   u_in_buffer: { value: textureA.texture },
   u_init_buffer: { value: initial_texture },
   u_resolution:
-    { value: new THREE.Vector2(window.innerWidth , window.innerHeight) },
+    { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
   u_time: { value: 0. },
 };
 

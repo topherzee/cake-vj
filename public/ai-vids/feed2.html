@@ -108,7 +108,7 @@ function render() {
   // Update time
   material_in.uniforms.u_time.value = clock.getElapsedTime();
 
-  // render the first scene to textureB
+  // render the first scene to textureB - this is the feedback blend.
   renderer.setRenderTarget(textureB);
   renderer.render(in_scene, camera);
 

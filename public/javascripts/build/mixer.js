@@ -2472,9 +2472,10 @@ function playVideos () {
     let r = bpm_tap.render2(1)//layerTime.bpm_factor
     // renderer.flatGeometry.rotateZ(r * Math.PI / 2 / 10);
     //TODO - playing here.
-    renderer.flatGeometry.rotateZ(Math.PI / 1600);
-    renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
-    renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
+
+    // renderer.flatGeometry.rotateZ(Math.PI / 1600);
+    // renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
+    // renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
 
   requestAnimationFrame(playVideos);
 };
@@ -4710,37 +4711,6 @@ _self.update = function() {
 }
 
 
-/**
- * @summery
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @description
- *  Wraps around a Three.js GLRenderer and sets up the scene and shaders.
- *
- * @constructor GlRenderer
- * @example
- *    <!-- a Canvas element with id: glcanvas is required! -->
- *    <canvas id="glcanvas"></canvas>
- *
- *
- *    <script>
- *      let renderer = new GlRenderer();
- *
- *      var red = new SolidSource( renderer, { color: { r: 1.0, g: 0.0, b: 0.0 } } );
- *      let output = new Output( renderer, red )
- *
- *      renderer.init();
- *      renderer.render();
- *    </script>
- */
-
- /*
-    We might try and change THREEJS and move to regl;
-    https://github.com/regl-project, http://regl.party/examples => video
-    133.6 => ~26kb
- */
-
-
     
     import * as THREE from 'three';
 
@@ -4750,6 +4720,45 @@ _self.update = function() {
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
     import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
+
+    const clock = new THREE.Clock();
+
+    let textureA = new THREE.WebGLRenderTarget(
+      window.innerWidth, window.innerHeight,
+      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+    
+    let textureB = new THREE.WebGLRenderTarget(
+      window.innerWidth, window.innerHeight,
+      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      
+    let textureC = new THREE.WebGLRenderTarget(
+      window.innerWidth, window.innerHeight,
+      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      
+      const initial_texture = new THREE.TextureLoader().load('./circles.jpg');
+
+    const fb_fragment = /* glsl */ `
+uniform vec2 u_resolution;
+uniform sampler2D u_in_buffer;
+uniform sampler2D u_init_buffer;
+uniform float u_time;
+
+void main() {
+  // vec2 uv = gl_FragCoord.xy / u_resolution;
+
+    vec2 st = gl_FragCoord.xy / u_resolution;
+    vec2 uv = st;
+    uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+
+    vec4 sum = texture2D(u_in_buffer, uv);
+    vec4 src = texture2D(u_init_buffer, st);
+    sum.rgb = mix(sum.rbg, src.rgb, 0.2);
+    gl_FragColor = sum;
+}
+`;
+
+let material_in;//: THREE.ShaderMaterial;
+let material_out;//: THREE.MeshBasicMaterial;
 
     // const composer = new EffectComposer( renderer.glrenderer );
 
@@ -4785,6 +4794,8 @@ _self.update = function() {
       }
     
       _self.scene = new THREE.Scene();
+      _self.in_scene = new THREE.Scene();
+      _self.in_scene_c = new THREE.Scene();
       _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
       _self.camera.position.z = 27; // 20
     
@@ -4800,6 +4811,10 @@ _self.update = function() {
       _self.customUniforms['time'] = { type: "f", value: cnt }
       _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
     
+
+
+
+
       /**
        * The vertex shader
        * @member GlRenderer#vertexShader
@@ -4845,34 +4860,8 @@ _self.update = function() {
       /** @function GlRenderer.init */
       _self.init = function(  ) {
         console.log("INIT Renderer -------------------")
-        //_self.glrenderer = new THREE.WebGLRenderer( { canvas: glcanvas, alpha: false } );
+  
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
-    
-        const target = new THREE.WebGLRenderTarget( {
-					minFilter: THREE.LinearFilter,
-					magFilter: THREE.LinearFilter,
-					format: THREE.RGBAFormat,
-					encoding: THREE.sRGBEncoding
-				} );
-        
-       _self.composer = new EffectComposer( _self.glrenderer );
-
-       const renderPass = new RenderPass( _self.scene, _self.camera );
-       _self.composer.addPass( renderPass );
-
-      // const glitchPass = new GlitchPass();
-      // _self.composer.addPass( glitchPass );
-
-      // const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
-			// 	bloomPass.threshold = 0.5;
-			// 	bloomPass.strength = 1.0;
-			// 	bloomPass.radius = 0;
-      // _self.composer.addPass( bloomPass );
-
-    
-      // // const outputPass = new OutputPass();
-      // // _self.composer.addPass( outputPass );
-
 
         // init nodes
         // reset the renderer, for a new lay out
@@ -4912,47 +4901,85 @@ _self.update = function() {
        const SIDE_SCALE = 0.3;
        const SEGMENTS = 10;
        
-       
+    
         // apply the shader material to a surface
         // CENTRAL SCREEN
-        // _self.flatGeometry = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT ,SEGMENTS, SEGMENTS);
+      
         _self.flatGeometry = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
-        // _self.flatGeometry.rotateZ(Math.PI / 8);
         _self.flatGeometry.translate( 0, 0, 0 );
-        _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-        // _self.surface.position.set(60,50,150);
-        // _self.surface.rotation.set(Math.PI / 12,0,0)
+        // _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
+        // _self.surface = new THREE.Mesh( _self.flatGeometry, material_out );
+        _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial);
+        _self.in_scene_c.add(_self.surface);
+
+        const plane_out = new THREE.PlaneGeometry(2, 2);
+        material_out = new THREE.MeshBasicMaterial({ map: initial_texture });
+        const mesh_out = new THREE.Mesh(_self.flatGeometry, material_out);
+        _self.scene.add(mesh_out);
+      
+       
+
 
         // RIGHT SCREEN
-        // _self.flatGeometry2 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry2 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.flatGeometry2.rotateY(Math.PI / 1);
-        // _self.flatGeometry2.translate( 80, -45, 1 );
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
         _self.surface2.position.set( 25, -13, 1 );
-        // _self.surface2.rotation.set(Math.PI / 12,0,0)
-        // surface.position.set(60,50,150);
     
        // LEFT SCREEN
-        // _self.flatGeometry3 = new THREE.PlaneGeometry( PLANE_WIDTH, PLANE_HEIGHT  ,SEGMENTS, SEGMENTS );
         _self.flatGeometry3 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
-        // _self.flatGeometry3.translate( -80, -45, 1 );
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
-        // surface.position.set(60,50,150);
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
         _self.surface3.position.set( -25, -13, 1 );
     
+
+// FEEDBACK ATTEMPT
+
+
+
+
+
+// initial texture
+// const plane_in = new THREE.PlaneGeometry(2, 2);
+const plane_in = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
+const uniforms_input = {
+  u_in_buffer: { value: textureA.texture },
+  u_init_buffer: { value: initial_texture },
+  u_resolution:
+    { value: new THREE.Vector2(window.innerWidth , window.innerHeight) },
+  u_time: { value: 0. },
+};
+
+
+material_in = new THREE.ShaderMaterial(
+  { uniforms: uniforms_input, fragmentShader: fb_fragment });
+  
+const mesh_init = new THREE.Mesh(plane_in, material_in);
+_self.in_scene.add(mesh_init);
+
+
+
 
         /**
          * A reference to the threejs scene
          * @member GlRenderer#scene
          */
-        _self.scene.add( _self.surface );
-        _self.scene.add( _self.surface2 );
-        _self.scene.add( _self.surface3 );
+        // _self.scene.add( _self.surface );
+        // _self.scene.add( _self.surface2 );
+        // _self.scene.add( _self.surface3 );
       }
     
+
+
+
+
+
+
+
+
+
+
       // ---------------------------------------------------------------------------
     
       /** @function GlRenderer.render */
@@ -4960,16 +4987,46 @@ _self.update = function() {
         requestAnimationFrame( _self.render );
 
         // _self.glrenderer.render( _self.scene, _self.camera );
-        _self.composer.render( _self.scene, _self.camera );
+        // _self.composer.render( _self.scene, _self.camera );
+
+// Update time
+material_in.uniforms.u_time.value = clock.getElapsedTime();
+
+// render the first scene to textureB - this is the feedback blend.
+_self.glrenderer.setRenderTarget(textureB);
+_self.glrenderer.render(_self.in_scene, _self.camera);
+
+// swap the textures for feedback
+var t = textureA;
+textureA = textureB;
+textureB = t;
+// update the output scene with the recently rendered texture
+material_out.map = textureB.texture;
+// _self.surface.map = textureB.texture;
+
+_self.glrenderer.setRenderTarget(textureC);
+_self.glrenderer.render(_self.in_scene_c, _self.camera);
+
+// pass the output texture back to the input of the feedback shader
+material_in.uniforms.u_in_buffer.value = textureA.texture;
+material_in.uniforms.u_init_buffer.value = textureC.texture;
 
 
-        _self.onafterrender()
-        _self.glrenderer.setSize( _self.width, _self.height );
-        _self.composer.setSize( _self.width, _self.height );
-        _self.nodes.forEach( function(n) { n.update() } );
-    
-        cnt++;
-        _self.customUniforms['time'].value = cnt;
+
+  // returns the render to using the canvas
+  _self.glrenderer.setRenderTarget(null);
+  // render output scene
+  _self.glrenderer.render(_self.scene, _self.camera);
+
+
+
+  _self.onafterrender()
+  _self.glrenderer.setSize( _self.width, _self.height );
+  _self.glrenderer.setSize( _self.width, _self.height );
+  _self.nodes.forEach( function(n) { n.update() } );
+
+  cnt++;
+  _self.customUniforms['time'].value = cnt;
 
         // _self.flatGeometry.rotateZ(Math.PI / 8);
         // _self.flatGeometry.rotateZ(cnt / 10000);
@@ -4989,7 +5046,7 @@ _self.update = function() {
         _self.camera.aspect = _self.width / _self.height;
         _self.camera.updateProjectionMatrix();
         _self.glrenderer.setSize( _self.width, _self.height );
-        _self.composer.setSize( _self.width, _self.height );
+        // _self.composer.setSize( _self.width, _self.height );
       }
     
       window.addEventListener('resize', function() {

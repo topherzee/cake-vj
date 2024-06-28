@@ -778,9 +778,10 @@ function playVideos () {
     let r = bpm_tap.render2(1)//layerTime.bpm_factor
     // renderer.flatGeometry.rotateZ(r * Math.PI / 2 / 10);
     //TODO - playing here.
-    renderer.flatGeometry.rotateZ(Math.PI / 1600);
-    renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
-    renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
+
+    // renderer.flatGeometry.rotateZ(Math.PI / 1600);
+    // renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
+    // renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
 
   requestAnimationFrame(playVideos);
 };
