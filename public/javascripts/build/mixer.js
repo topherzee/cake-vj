@@ -4733,7 +4733,7 @@ void main() {
 
     vec4 sum = texture2D(u_in_buffer, uv);
     vec4 src = texture2D(u_init_buffer, st);
-    sum.rgb = mix(sum.rbg, src.rgb, 0.2);
+    sum.rgb = mix(sum.rbg, src.rgb, 0.5);
     gl_FragColor = sum;
 }
 `;
@@ -4776,15 +4776,15 @@ let material_out;//: THREE.MeshBasicMaterial;
 
  
       _self.textureA = new THREE.WebGLRenderTarget(
-        _self.width, _self.height,
+        _self.width, _self.width,
         { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
       
       _self.textureB = new THREE.WebGLRenderTarget(
-        _self.width, _self.height,
+        _self.width, _self.width,
         { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
         
       _self.textureC = new THREE.WebGLRenderTarget(
-        _self.width, _self.height,
+        _self.width, _self.width,
         { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
       
         
@@ -4794,6 +4794,9 @@ let material_out;//: THREE.MeshBasicMaterial;
       _self.in_scene_c = new THREE.Scene();
       _self.camera = new THREE.PerspectiveCamera( 75, _self.width / _self.height, 0.1, 1000 );
       _self.camera.position.z = 27; // 20
+    
+      _self.cameraSquare = new THREE.PerspectiveCamera( 75, _self.width / _self.width, 0.1, 1000 );
+      _self.cameraSquare.position.z = 27; // 20
     
       // container for all elements that inherit init() and update()
       _self.nodes = [] // sources modules and effects
@@ -4903,11 +4906,12 @@ let material_out;//: THREE.MeshBasicMaterial;
       
         _self.flatGeometry = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
         // _self.flatGeometry.translate( 0, 0, 0 );
-        // _self.flatGeometry = new THREE.PlaneGeometry(PLANE_HEIGHT * 1.5,PLANE_HEIGHT);
+        // _self.flatGeometry = new THREE.PlaneGeometry(PLANE_HEIGHT ,PLANE_HEIGHT);
         _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial);
         _self.in_scene_c.add(_self.surface);
 
-        const plane_out = new THREE.PlaneGeometry(PLANE_HEIGHT/8,PLANE_HEIGHT);
+
+        const plane_out = new THREE.PlaneGeometry(PLANE_HEIGHT,PLANE_HEIGHT);
         // const plane_out = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
         material_out = new THREE.MeshBasicMaterial({ map: initial_texture });
         const mesh_out = new THREE.Mesh(_self.flatGeometry, material_out);
@@ -4937,8 +4941,8 @@ let material_out;//: THREE.MeshBasicMaterial;
 
 
 // initial texture
-// const plane_in = new THREE.PlaneGeometry(PLANE_HEIGHT * 2,PLANE_HEIGHT);
-const plane_in = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
+const plane_in = new THREE.PlaneGeometry(PLANE_HEIGHT,PLANE_HEIGHT);
+// const plane_in = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
 const uniforms_input = {
   u_in_buffer: { value: _self.textureA.texture },
   u_init_buffer: { value: initial_texture },
@@ -4990,7 +4994,7 @@ material_in.uniforms.u_time.value = clock.getElapsedTime();
 
 // render the first scene to textureB - this is the feedback blend.
 _self.glrenderer.setRenderTarget(_self.textureB);
-_self.glrenderer.render(_self.in_scene, _self.camera);
+_self.glrenderer.render(_self.in_scene, _self.cameraSquare);
 
 // swap the textures for feedback
 var t = _self.textureA;
@@ -5001,12 +5005,12 @@ material_out.map = _self.textureB.texture;
 // _self.surface.map = textureB.texture;
 
 _self.glrenderer.setRenderTarget(_self.textureC);
-_self.glrenderer.render(_self.in_scene_c, _self.camera);
+_self.glrenderer.render(_self.in_scene_c, _self.cameraSquare);
 
 // pass the output texture back to the input of the feedback shader
 material_in.uniforms.u_in_buffer.value = _self.textureA.texture;
 material_in.uniforms.u_init_buffer.value = _self.textureC.texture;
-material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.height) ;
+material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.width) ;
 
 
   // returns the render to using the canvas
@@ -5028,6 +5032,15 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
         // _self.flatGeometry.rotateZ(cnt / 10000);
       }
     
+
+
+
+
+
+
+
+
+
       // update size!
       _self.resize = function() {
     
