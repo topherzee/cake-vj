@@ -4714,27 +4714,8 @@ _self.update = function() {
     
     import * as THREE from 'three';
 
-    import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
-    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-
-
     const clock = new THREE.Clock();
 
-    let textureA = new THREE.WebGLRenderTarget(
-      window.innerWidth, window.innerHeight,
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-    
-    let textureB = new THREE.WebGLRenderTarget(
-      window.innerWidth, window.innerHeight,
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-      
-    let textureC = new THREE.WebGLRenderTarget(
-      window.innerWidth, window.innerHeight,
-      { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-      
       const initial_texture = new THREE.TextureLoader().load('./circles.jpg');
 
     const fb_fragment = /* glsl */ `
@@ -4792,6 +4773,21 @@ let material_out;//: THREE.MeshBasicMaterial;
         _self.width = window.innerWidth //_self.element.offsetWidth
         _self.height = window.innerHeight //_self.element.offsetHeight
       }
+
+ 
+      _self.textureA = new THREE.WebGLRenderTarget(
+        _self.width, _self.height,
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      
+      _self.textureB = new THREE.WebGLRenderTarget(
+        _self.width, _self.height,
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        
+      _self.textureC = new THREE.WebGLRenderTarget(
+        _self.width, _self.height,
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      
+        
     
       _self.scene = new THREE.Scene();
       _self.in_scene = new THREE.Scene();
@@ -4906,13 +4902,13 @@ let material_out;//: THREE.MeshBasicMaterial;
         // CENTRAL SCREEN
       
         _self.flatGeometry = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
-        _self.flatGeometry.translate( 0, 0, 0 );
-        // _self.surface = new THREE.Mesh( _self.flatGeometry, _self.shaderMaterial );
-        // _self.surface = new THREE.Mesh( _self.flatGeometry, material_out );
+        // _self.flatGeometry.translate( 0, 0, 0 );
+        // _self.flatGeometry = new THREE.PlaneGeometry(PLANE_HEIGHT * 1.5,PLANE_HEIGHT);
         _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial);
         _self.in_scene_c.add(_self.surface);
 
-        const plane_out = new THREE.PlaneGeometry(2, 2);
+        const plane_out = new THREE.PlaneGeometry(PLANE_HEIGHT/8,PLANE_HEIGHT);
+        // const plane_out = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
         material_out = new THREE.MeshBasicMaterial({ map: initial_texture });
         const mesh_out = new THREE.Mesh(_self.flatGeometry, material_out);
         _self.scene.add(mesh_out);
@@ -4941,13 +4937,13 @@ let material_out;//: THREE.MeshBasicMaterial;
 
 
 // initial texture
-// const plane_in = new THREE.PlaneGeometry(2, 2);
+// const plane_in = new THREE.PlaneGeometry(PLANE_HEIGHT * 2,PLANE_HEIGHT);
 const plane_in = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,50);
 const uniforms_input = {
-  u_in_buffer: { value: textureA.texture },
+  u_in_buffer: { value: _self.textureA.texture },
   u_init_buffer: { value: initial_texture },
   u_resolution:
-    { value: new THREE.Vector2(window.innerWidth , window.innerHeight) },
+    { value: new THREE.Vector2(_self.width , _self.height) },
   u_time: { value: 0. },
 };
 
@@ -4966,8 +4962,8 @@ _self.in_scene.add(mesh_init);
          * @member GlRenderer#scene
          */
         // _self.scene.add( _self.surface );
-        // _self.scene.add( _self.surface2 );
-        // _self.scene.add( _self.surface3 );
+        _self.scene.add( _self.surface2 );
+        _self.scene.add( _self.surface3 );
       }
     
 
@@ -4993,24 +4989,24 @@ _self.in_scene.add(mesh_init);
 material_in.uniforms.u_time.value = clock.getElapsedTime();
 
 // render the first scene to textureB - this is the feedback blend.
-_self.glrenderer.setRenderTarget(textureB);
+_self.glrenderer.setRenderTarget(_self.textureB);
 _self.glrenderer.render(_self.in_scene, _self.camera);
 
 // swap the textures for feedback
-var t = textureA;
-textureA = textureB;
-textureB = t;
+var t = _self.textureA;
+_self.textureA = _self.textureB;
+_self.textureB = t;
 // update the output scene with the recently rendered texture
-material_out.map = textureB.texture;
+material_out.map = _self.textureB.texture;
 // _self.surface.map = textureB.texture;
 
-_self.glrenderer.setRenderTarget(textureC);
+_self.glrenderer.setRenderTarget(_self.textureC);
 _self.glrenderer.render(_self.in_scene_c, _self.camera);
 
 // pass the output texture back to the input of the feedback shader
-material_in.uniforms.u_in_buffer.value = textureA.texture;
-material_in.uniforms.u_init_buffer.value = textureC.texture;
-
+material_in.uniforms.u_in_buffer.value = _self.textureA.texture;
+material_in.uniforms.u_init_buffer.value = _self.textureC.texture;
+material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.height) ;
 
 
   // returns the render to using the canvas
@@ -5022,7 +5018,7 @@ material_in.uniforms.u_init_buffer.value = textureC.texture;
 
   _self.onafterrender()
   _self.glrenderer.setSize( _self.width, _self.height );
-  _self.glrenderer.setSize( _self.width, _self.height );
+
   _self.nodes.forEach( function(n) { n.update() } );
 
   cnt++;
@@ -5035,10 +5031,10 @@ material_in.uniforms.u_init_buffer.value = textureC.texture;
       // update size!
       _self.resize = function() {
     
-        if ( _self.options.autosize ) {
-          _self.height = window.innerHeight
-          _self.width = window.innerWidth
-        }
+        // if ( _self.options.autosize ) {
+        //   _self.height = window.innerHeight
+        //   _self.width = window.innerWidth
+        // }
         
         _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
         // console.log("resize", _self.width, _self.height)
