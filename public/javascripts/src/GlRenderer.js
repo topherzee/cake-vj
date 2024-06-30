@@ -11,6 +11,7 @@ uniform vec2 u_resolution;
 uniform sampler2D u_in_buffer;
 uniform sampler2D u_init_buffer;
 uniform float u_time;
+uniform float u_extra;
 
 void main() {
   // vec2 uv = gl_FragCoord.xy / u_resolution;
@@ -21,7 +22,7 @@ void main() {
 
     vec4 sum = texture2D(u_in_buffer, uv);
     vec4 src = texture2D(u_init_buffer, st);
-    sum.rgb = mix(sum.rbg, src.rgb, 0.5);
+    sum.rgb = mix(sum.rbg, src.rgb, (1.0 - u_extra));
     gl_FragColor = sum;
 }
 `;
@@ -51,6 +52,10 @@ let material_out;//: THREE.MeshBasicMaterial;
       }
     
       _self.onafterrender = function() {}
+
+      _self.setFeedbackEffect = function(value) {
+        _self.u_extra = value;
+      }
       
       // default
       // window.innerWidth, window.innerHeight
@@ -65,17 +70,17 @@ let material_out;//: THREE.MeshBasicMaterial;
  
       _self.textureA = new THREE.WebGLRenderTarget(
         _self.width, _self.width,
-        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.LinearSRGBColorSpace  });
       
       _self.textureB = new THREE.WebGLRenderTarget(
         _self.width, _self.width,
-        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.LinearSRGBColorSpace  });
         
       _self.textureC = new THREE.WebGLRenderTarget(
         _self.width, _self.width,
-        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.LinearSRGBColorSpace  });
       
-        
+      _self.u_extra = 0.5;
     
       _self.scene = new THREE.Scene();
       _self.in_scene = new THREE.Scene();
@@ -149,6 +154,8 @@ let material_out;//: THREE.MeshBasicMaterial;
         console.log("INIT Renderer -------------------")
   
         _self.glrenderer = new THREE.WebGLRenderer( { canvas: _self.element, alpha: false, preserveDrawingBuffer: true } );
+        _self.glrenderer.outputEncoding = THREE.sRGBEncoding;
+        _self.glrenderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
         // init nodes
         // reset the renderer, for a new lay out
@@ -237,6 +244,7 @@ const uniforms_input = {
   u_resolution:
     { value: new THREE.Vector2(_self.width , _self.height) },
   u_time: { value: 0. },
+  u_extra: { value: 0.5 },
 };
 
 
@@ -280,6 +288,9 @@ _self.in_scene.add(mesh_init);
 // Update time
 material_in.uniforms.u_time.value = clock.getElapsedTime();
 
+// Effet amount
+material_in.uniforms.u_extra.value = _self.u_extra;
+
 // render the first scene to textureB - this is the feedback blend.
 _self.glrenderer.setRenderTarget(_self.textureB);
 _self.glrenderer.render(_self.in_scene, _self.cameraSquare);
@@ -292,6 +303,8 @@ _self.textureB = t;
 material_out.map = _self.textureB.texture;
 // _self.surface.map = textureB.texture;
 
+material_out.map.encoding = THREE.sRGBEncoding;
+
 _self.glrenderer.setRenderTarget(_self.textureC);
 _self.glrenderer.render(_self.in_scene_c, _self.cameraSquare);
 
@@ -303,8 +316,11 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
 
   // returns the render to using the canvas
   _self.glrenderer.setRenderTarget(null);
+
   // render output scene
   _self.glrenderer.render(_self.scene, _self.camera);
+
+  // _self.glrenderer.render(_self.in_scene_c, _self.camera);
 
 
 

@@ -906,6 +906,15 @@ document.getElementById('pause_all').onmousedown = function() {
     pauseAll();
 }
 
+
+// GLOBAAL EFECTS
+document.getElementById('effect_slide_feedback').oninput = function() {
+    //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
+    let sliderValue = document.getElementById('effect_slide_feedback').value;
+    console.log("feedback value", sliderValue)
+    renderer.setFeedbackEffect(sliderValue);
+}
+
 }//start
 
 

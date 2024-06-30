@@ -49,6 +49,7 @@ void main() {
     vec4 src = texture2D(u_init_buffer, st);
     sum.rgb = mix(sum.rbg, src.rgb, 0.2);
     gl_FragColor = sum;
+    gl_FragColor = src;
 }
 `;
 
