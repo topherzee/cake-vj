@@ -13,16 +13,51 @@ uniform sampler2D u_init_buffer;
 uniform float u_time;
 uniform float u_extra;
 
+#define UV_ORIGIN 0.5
+#define ZOOM 1.00
+#define SPEED 1.01
+const float PI = 3.14;
+
+// Take this and multiply your UV by the resulting mat2 to get the rotation
+mat2 rotationMatrix(float angle)
+{
+	angle *= PI / 180.0;
+    float sine = sin(angle), cosine = cos(angle);
+    return mat2( cosine, -sine, 
+                 sine,    cosine );
+}
+
 void main() {
   // vec2 uv = gl_FragCoord.xy / u_resolution;
 
     vec2 st = gl_FragCoord.xy / u_resolution;
     vec2 uv = st;
-    uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+
+    // Float around
+    // uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+
+    // Zoom
+    float zoom = .02;
+    uv *= vec2(1. - (uv.x - 0.5) *zoom, 1. - (uv.y - 0.5)* zoom);
+
+    // Rotate
+
+    // vec2 pivot = vec2(0.5, 0.5);
+    // uv -= pivot;
+    // uv *= rotationMatrix( 0.2) * ZOOM;
+    //  uv += pivot;
+
 
     vec4 sum = texture2D(u_in_buffer, uv);
     vec4 src = texture2D(u_init_buffer, st);
+
+    //Invert?
+    // sum = vec4( 1.-sum.r, 1.-sum.g, 1.-sum.b, sum.a );
+// src = vec4( 1.-src.r, 1.-src.g, 1.-src.b, src.a );
+
     sum.rgb = mix(sum.rbg, src.rgb, (1.0 - u_extra));
+
+  
     gl_FragColor = sum;
 }
 `;
@@ -55,6 +90,32 @@ let material_out;//: THREE.MeshBasicMaterial;
 
       _self.setFeedbackEffect = function(value) {
         _self.u_extra = value;
+      }
+
+      _self.setRotationVel1 = function(value) {
+        _self.rotation_vel_1 = value;
+        // console.log("test", _self.rotation_vel_1)
+      }
+      _self.setRotationVel2 = function(value) {
+        _self.rotation_vel_2 = value;
+      }
+      _self.setRotationAccel1 = function(value) {
+        _self.rotation_accel_1 = value;
+      }
+
+      _self.resetRotationVel1 = function() {
+        _self.rotation_vel_1 = 0.0;
+        _self.surface.rotation.z = 0;
+      }
+      _self.resetRotationVel2 = function() {
+        _self.rotation_vel_2 = 0.0;
+        _self.surface2.rotation.z = 0;
+        _self.surface3.rotation.z = 0;
+      }
+      _self.resetRotationAccel1 = function() {
+        _self.rotation_accel_1 = 0.0;
+        _self.rotation_vel_1 = 0.0;
+        _self.surface.rotation.z = 0;
       }
       
       // default
@@ -103,7 +164,10 @@ let material_out;//: THREE.MeshBasicMaterial;
       _self.customUniforms['time'] = { type: "f", value: cnt }
       _self.customUniforms['screenSize'] = { type: "v2", value: new THREE.Vector2( _self.width,  _self.height ) }
     
-
+      _self.rotation_vel_1 = 0.0;
+      _self.rotation_vel_2 = 0.0;
+      _self.rotation_accel_1 = 0.0;
+  
 
 
 
@@ -332,9 +396,18 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
   cnt++;
   _self.customUniforms['time'].value = cnt;
 
-        // _self.flatGeometry.rotateZ(Math.PI / 8);
-        // _self.flatGeometry.rotateZ(cnt / 10000);
-      }
+
+     _self.surface.rotation.z += _self.rotation_vel_1 * Math.PI / 50;
+
+    _self.surface2.rotation.z += _self.rotation_vel_2 * Math.PI / 50;
+    _self.surface3.rotation.z -= _self.rotation_vel_2 * Math.PI / 50;
+
+    _self.rotation_vel_1 += parseFloat(_self.rotation_accel_1) * Math.PI / 50.0 ;
+   
+
+
+
+      }//render
     
 
 

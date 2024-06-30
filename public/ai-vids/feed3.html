@@ -26,7 +26,7 @@
   </script>
 
 
-
+  <script src="/live.js"></script> 
 <script type="module">
    import * as THREE from 'three'
 
@@ -38,16 +38,51 @@ uniform sampler2D u_in_buffer;
 uniform sampler2D u_init_buffer;
 uniform float u_time;
 
+#define UV_ORIGIN 0.5
+#define ZOOM 1.00
+#define SPEED 1.01
+const float PI = 3.14;
+
+// Take this and multiply your UV by the resulting mat2 to get the rotation
+mat2 rotationMatrix(float angle)
+{
+	angle *= PI / 180.0;
+    float sine = sin(angle), cosine = cos(angle);
+    return mat2( cosine, -sine, 
+                 sine,    cosine );
+}
+
+
 void main() {
   // vec2 uv = gl_FragCoord.xy / u_resolution;
 
     vec2 st = gl_FragCoord.xy / u_resolution;
     vec2 uv = st;
-    uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+    
+    // Float around
+    // uv *= vec2(1. + 0.02 * sin(u_time / 10.), 1. - 0.02 * cos(u_time/2.));
+
+    // Zoom
+    float zoom = .02;
+    // uv *= vec2(1. - (uv.x - 0.5) *zoom, 1. - (uv.y - 0.5)* zoom);
+
+    // Rotate
+
+    vec2 pivot = vec2(0.5, 0.5);
+    uv -= pivot;
+    uv *= rotationMatrix( 0.1) * ZOOM;
+     uv += pivot;
 
     vec4 sum = texture2D(u_in_buffer, uv);
     vec4 src = texture2D(u_init_buffer, st);
-    sum.rgb = mix(sum.rbg, src.rgb, 0.2);
+
+  //  src = vec4( 1.-src.r, 1.-src.g, 1.-src.b, src.a );
+  //  sum = vec4( 1.-sum.r, 1.-sum.g, 1.-sum.b, sum.a );
+
+
+    sum.rgb = mix(sum.rbg, src.rgb, 0.01);
+
+
     gl_FragColor = sum;
 }
 `;
@@ -109,7 +144,7 @@ function sceneSetup() {
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
  cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+// scene.add(cube);
 cube.rotation.x += 0.11;
     cube.rotation.y += 0.11;
 

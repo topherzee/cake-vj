@@ -776,12 +776,7 @@ function playVideos () {
     }
 
     let r = bpm_tap.render2(1)//layerTime.bpm_factor
-    // renderer.flatGeometry.rotateZ(r * Math.PI / 2 / 10);
-    //TODO - playing here.
 
-    // renderer.flatGeometry.rotateZ(Math.PI / 1600);
-    // renderer.flatGeometry2.rotateZ(Math.PI / 200 * (0.5 - r));
-    // renderer.flatGeometry3.rotateZ(Math.PI / 200 * (0.5 - r));
 
   requestAnimationFrame(playVideos);
 };
@@ -909,11 +904,38 @@ document.getElementById('pause_all').onmousedown = function() {
 
 // GLOBAAL EFECTS
 document.getElementById('effect_slide_feedback').oninput = function() {
-    //channel_1_b_mixer.bpm(document.getElementById('bpm_slide').value)
-    let sliderValue = document.getElementById('effect_slide_feedback').value;
-    console.log("feedback value", sliderValue)
+    let sliderValue = this.value;
     renderer.setFeedbackEffect(sliderValue);
 }
+
+document.getElementById('effect_slide_rotate_vel_1').oninput = function() {
+    let sliderValue = this.value;
+    renderer.setRotationVel1(parseFloat(sliderValue));
+}
+document.getElementById('effect_slide_rotate_accel_1').oninput = function() {
+    let sliderValue = this.value;
+    renderer.setRotationAccel1(parseFloat(sliderValue));
+}
+document.getElementById('effect_slide_rotate_vel_2').oninput = function() {
+    let sliderValue = this.value;
+    renderer.setRotationVel2(parseFloat(sliderValue));
+}
+
+document.getElementById('rotate_vel_reset_1').onmousedown = function() {
+    renderer.resetRotationVel1();
+    document.getElementById('effect_slide_rotate_vel_1').value = 0;
+} 
+document.getElementById('rotate_accel_reset_1').onmousedown = function() {
+    renderer.resetRotationAccel1();
+    document.getElementById('effect_slide_rotate_vel_1').value = 0;
+    document.getElementById('effect_slide_rotate_accel_1').value = 0;
+} 
+document.getElementById('rotate_vel_reset_2').onmousedown = function() {
+    renderer.resetRotationVel2();
+    document.getElementById('effect_slide_rotate_vel_2').value = 0;
+} 
+
+
 
 }//start
 
