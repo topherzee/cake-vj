@@ -1070,14 +1070,14 @@ function BPM( renderer, options ) {
     console.log("setBpm", newBpm);
   }
 
-  console.log("set keypress")
-  window.addEventListener('keypress', function(ev) {
-    console.log(">>> ", ev.which)
-    if ( ev.which == 116 || ev.which == 32    ) {
-      _self.tap()
-      console.log(_self.bpm)
-    }
-  })
+  // console.log("set keypress")
+  // window.addEventListener('keypress', function(ev) {
+  //   console.log(">>> ", ev.which)
+  //   if ( ev.which == 116 || ev.which == 32    ) {
+  //     _self.tap()
+  //     console.log(_self.bpm)
+  //   }
+  // })
 
 } // end BPM
 
@@ -1798,6 +1798,52 @@ function addLayer(destId, i){
         layerTimes[i].is_scrubbing = false;
     }
 
+    // Jogging can only start with click in a monitor.
+    document.getElementById('monitor_' + i ).onmousedown = function(e) {
+        jogging_layer = i;
+        newActiveLayer(i);
+        is_jogging = true;
+        jog_start_x = e.clientX;
+
+        layerTimes[activeLayer].is_jogging = true;
+        layerTimes[activeLayer].is_scrubbing = true;
+        
+    }
+
+    // document.getElementById("cake-mixer" ).onmousedown = function(e) {
+    //     jog_start_x = e.clientX;
+    //     // is_jogging = true;
+    // }
+
+    // Jogging works even when you mouse out of start monitor- so you ccan do long drags.
+    document.getElementById("cake-mixer").onmouseup = function(e) {
+        is_scrubbing = false;
+        is_jogging = false;
+        jogging_layer = -1;
+        jog_start_x = -1;
+        layerTimes[activeLayer].is_scrubbing = false;
+        layerTimes[activeLayer].is_jogging = false;
+        
+    }
+    document.getElementById("cake-mixer").onmousemove = function(e) {
+        if (typeof is_jogging != 'undefined' && is_jogging && jogging_layer > 0){
+            const jog_x = e.clientX - jog_start_x;
+            console.log("jog global", jog_x)
+            console.log("currenttime", sources[activeLayer].video.currentTime)
+            console.log("e.movementX", e.movementX)
+
+            const video = sources[activeLayer].video;
+            var newTime = (video.currentTime + e.movementX / 30) % video.duration;
+            video.currentTime = newTime;
+
+            //update the time slider control.
+            document.getElementById('layer_time_' + activeLayer ).value = newTime / video.duration;
+
+        //     var time = this.value * sources[i].duration();
+        // sources[i].currentTime(sources[i].currentTime);
+        }
+    }
+
 //todo
     document.getElementById('layer_speed_' + i).oninput = function() {
         // rate3 = this.value 
@@ -1849,6 +1895,12 @@ addLayers();
 window.addEventListener("keydown", (e) => {
     console.log("e.code",e.code);
     
+    console.log("target:", e.target.nodeName);
+
+    if (e.target.nodeName.toLowerCase() == 'input') {
+        return;
+    }
+
     // console.log("event.code",event.code);
     
     if (e.code == "Digit1"){
@@ -1930,7 +1982,7 @@ window.addEventListener("keydown", (e) => {
     //     setBpmModeOnLayer(i, this.value)
     // }
 
-    e.preventDefault();
+    // e.preventDefault();
 
 });
 
@@ -1941,7 +1993,7 @@ function changeBeatFactor(i, step){
     console.log("changeBeatFactor", value)
     layerTimes[i].bpm_factor = value;
 }
-11
+
 function changeOption(select, step) {
     const i = select.selectedIndex + step;
     if (i>-1 && i < 5){
@@ -2174,6 +2226,24 @@ function newActiveLayer(newLayer){
     el = document.getElementById('layer_' + newLayer);
     el.classList.add("active");
 
+}
+
+let isWords = true;
+function toggleWords(){
+    isWords = !isWords;
+    let elMain = document.getElementById("word_main");
+    let elLeft = document.getElementById("word_left");
+    let elRight = document.getElementById("word_right");
+
+    if (isWords){ 
+        elMain.classList.add("show");
+        elLeft.classList.add("show");
+        elRight.classList.add("show");
+    }else{
+        elMain.classList.remove("show");
+        elLeft.classList.remove("show");
+        elRight.classList.remove("show");
+    }
 }
 
 
@@ -2483,6 +2553,12 @@ const BPM_MODE_STRETCH = "STRETCH";
 const BPM_MODE_CUT = "CUT";
 
 
+
+let is_jogging = false;
+let jog_start_x = -1;
+let is_scrubbing = false;
+let jogging_layer = -1;
+
 let layerTimes = new Array();
 function initLayerTimes(lt){
     lt =  {
@@ -2500,6 +2576,8 @@ function initLayerTimes(lt){
         is_bounce_reverse: false,
         last_bpm_tap_render: 0, 
         is_scrubbing: false,
+        is_jogging: false,
+        jog_start_x: -1,
     }
     return lt;
 }
@@ -2629,7 +2707,22 @@ document.getElementById('rotate_vel_reset_2').onmousedown = function() {
     document.getElementById('effect_slide_rotate_vel_2').value = 0;
 } 
 
+document.getElementById('word_input_main').oninput = function(event) {
+    console.log("word", this.value)
+    document.getElementById('word_main').textContent = this.value;
+}
+document.getElementById('word_input_left').oninput = function(event) {
+    console.log("word", this.value)
+    document.getElementById('word_left').textContent = this.value;
+}
+document.getElementById('word_input_right').oninput = function(event) {
+    console.log("word", this.value)
+    document.getElementById('word_right').textContent = this.value;
+}
 
+document.getElementById('words_on').onmousedown = function() {
+    toggleWords();
+}
 
 }//start
 

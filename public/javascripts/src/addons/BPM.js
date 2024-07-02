@@ -268,13 +268,13 @@ function BPM( renderer, options ) {
     console.log("setBpm", newBpm);
   }
 
-  console.log("set keypress")
-  window.addEventListener('keypress', function(ev) {
-    console.log(">>> ", ev.which)
-    if ( ev.which == 116 || ev.which == 32    ) {
-      _self.tap()
-      console.log(_self.bpm)
-    }
-  })
+  // console.log("set keypress")
+  // window.addEventListener('keypress', function(ev) {
+  //   console.log(">>> ", ev.which)
+  //   if ( ev.which == 116 || ev.which == 32    ) {
+  //     _self.tap()
+  //     console.log(_self.bpm)
+  //   }
+  // })
 
 } // end BPM
