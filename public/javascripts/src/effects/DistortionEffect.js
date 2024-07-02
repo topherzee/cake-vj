@@ -112,30 +112,56 @@ function DistortionEffect2( _renderer, _options ) {
     //MIRROR_VERTICAL
     if ( currentDistortionEffect2 == 106 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      vec4 pixelColor;
       if (uv.y >= 0.0){
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
+       pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
       }else{
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
+        pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
       }
       // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+      gl_FragColor = vec4(pixelColor);
       return gl_FragColor;
     }//MIRROR_VERTICAAL
   
     //MIRROR_HORIZONTAL
     if ( currentDistortionEffect2 == 107 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      vec4 pixelColor;
       if (uv.x > 0.0){
-        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
+        pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
       }else{
-        vec4 pixelColor = texture2D(src, vec2(-uv.x + 0.5, uv.y + 0.5)); 
-        gl_FragColor = vec4(pixelColor);
+        pixelColor = texture2D(src, vec2(-uv.x + 0.5, uv.y + 0.5)); 
       }
       // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+      gl_FragColor = vec4(pixelColor);
       return gl_FragColor;
     }//MIRROR_VERTICAAL
+
+      //MIRROR_BOTH
+    if ( currentDistortionEffect2 == 109 ) {
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      vec4 pixelColor;
+
+      if (uv.x > 0.0){
+        if (uv.y >= 0.0){
+          pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        }else{
+          pixelColor = texture2D(src, vec2(uv.x + 0.5, -uv.y + 0.5)); 
+        }      
+      }else{
+        if (uv.y >= 0.0){
+          pixelColor = texture2D(src, vec2(-uv.x + 0.5, uv.y + 0.5));          
+        }else{
+          pixelColor = texture2D(src, vec2(-uv.x + 0.5, -uv.y + 0.5));        
+        }
+      }
+      gl_FragColor = vec4(pixelColor);
+
+        // gl_FragColor = vec4(0.0, 0.2, 0.0, 1.0); 
+
+      return gl_FragColor;
+    }//MIRROR_BOTH
+
 
     //WIPE_HORIZONTAL
     if ( currentDistortionEffect2 == 108 ) {

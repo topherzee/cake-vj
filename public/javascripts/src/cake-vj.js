@@ -170,6 +170,34 @@ function addLayer(destId, i){
     //     channel_1_b_mixer.bpm(bpm_tap.bpm)
     //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
     //   }
+
+    //populate the dropodown
+    var effect_d_select =  document.getElementById("layer_effect_d_" + i)
+
+    for(var j=0; j<dEffects.length; j++){
+        var option = document.createElement("option");
+        option.text = dEffects[j].n;
+        option.value = dEffects[j].v;
+        effect_d_select.add(option);
+    }
+
+    effect_d_select.oninput = function() {
+        console.log("layer_effect_d_" + activeLayer, parseFloat(this.value));
+        setDistortionEffect(i, this.value)
+        // setBpmModeOnLayer(i, this.value)
+        //layerTimes[i].bpm_factor = parseFloat(this.value);
+    }
+}
+
+function setDistortionEffect(i, effect){
+    layer_effects[i].effect(effect);
+// layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
+
+// layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
+// layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
+
+// layer_effects[1].extra(0.9);
+// layer_effects[2].extra(0.9);
 }
 
 
@@ -186,6 +214,42 @@ function toggleLayerBpmLock(i){
     }
 }
 
+
+//COLOR EFFECT
+const LUMAKEY = 50;
+const TOPHER_COLOR_LUMAKEY = 100;
+const TOPHER_COLOR_CIRCLE = 101;
+const RED = 10;
+
+
+
+//DISTORTION EFFECT
+const TOPHER_DIST_MIRROR_CIRCLES = 100;
+const TOPHER_DIST_CIRCLES_3 = 102;
+
+const TOPHER_DIST_CIRCLE = 103;
+const TOPHER_ONLY_SQUASH = 104;
+const TOPHER_ONLY_CIRCLE = 105;
+
+const CAKE_MIRROR_VERTICAL = 106;
+const CAKE_MIRROR_HORIZONTAL = 107;
+const CAKE_WIPE_HORIZONTAL = 108;
+const CAKE_MIRROR_BOTH = 109;
+
+
+const NAM = 3;
+const FAM = 4;
+const LUM1 = 10;
+const LUM2 = 11;
+const BOOM = 9
+
+
+var dEffects = [
+    {n:"No Effect", v:1},
+    {n:"Mirror Horizontal", v:CAKE_MIRROR_HORIZONTAL},
+    {n:"Mirror Vertical", v:CAKE_MIRROR_VERTICAL},
+    {n:"Mirror Both", v:CAKE_MIRROR_BOTH},
+];
 
 function addLayers() {
     console.log("addLayers")
@@ -434,39 +498,7 @@ console.log("CAKE Call renderer.init() --------------------");
 renderer.init();
 renderer.render();
 
-//COLOR EFFECT
-const LUMAKEY = 50;
-const TOPHER_COLOR_LUMAKEY = 100;
-const TOPHER_COLOR_CIRCLE = 101;
-const RED = 10;
 
-//DISTORTION EFFECT
-const TOPHER_DIST_MIRROR_CIRCLES = 100;
-const TOPHER_DIST_CIRCLES_3 = 102;
-
-const TOPHER_DIST_CIRCLE = 103;
-const TOPHER_ONLY_SQUASH = 104;
-const TOPHER_ONLY_CIRCLE = 105;
-
-const CAKE_MIRROR_VERICAL = 106;
-const CAKE_MIRROR_HORIZONTAL = 107;
-const CAKE_WIPE_HORIZONTAL = 108;
-
-// layer_effects[1].effect(CAKE_MIRROR_HORIZONTAL);
-// layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
-
-// layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
-// layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
-
-// layer_effects[1].extra(0.9);
-// layer_effects[2].extra(0.9);
-
-
-const NAM = 3;
-const FAM = 4;
-const LUM1 = 10;
-const LUM2 = 11;
-const BOOM = 9
 
 if (typeof channel_1_b_mixer !== 'undefined') channel_1_b_mixer.pod(0.0);
 if (typeof channel_1_a_mixer !== 'undefined') channel_1_a_mixer.pod(1.0);
@@ -507,6 +539,9 @@ var original_mixmode = 1
 // ---------------------------------------------------------------------------
 var activeLayer = 1;
 
+
+
+
 // // TOPHER
 var blendModes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
 var blendModesNames = ["add", "substract", "multiply", "darken", "color burn", "linear burn", "lighten", "screen", "color dodge", "linear dodge", "overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "difference", "exclusion"]
@@ -534,7 +569,7 @@ function newActiveLayer(newLayer){
 
 }
 
-let isWords = true;
+let isWords = false;
 function toggleWords(){
     isWords = !isWords;
     let elMain = document.getElementById("word_main");
