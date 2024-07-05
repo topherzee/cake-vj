@@ -1742,9 +1742,13 @@ function addLayer(destId, i){
         newActiveLayer(i);
     }
 
-    document.getElementById('layer_effect_' + i).oninput = function() {
+    document.getElementById('layer_effect_d_p1_' + i).oninput = function() {
         layer_effects[i].extra(this.value)
         // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
+    }
+    document.getElementById('layer_effect_c_p1_' + i).oninput = function() {
+        layer_effects_color[i].extra(this.value)
+        console.log("color layer_effect " + i + " >>", parseFloat(this.value) )
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
@@ -1865,7 +1869,8 @@ function addLayer(destId, i){
     //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
     //   }
 
-    //populate the dropodown
+    // D-EFFECT
+
     var effect_d_select =  document.getElementById("layer_effect_d_" + i)
 
     for(var j=0; j<dEffects.length; j++){
@@ -1881,17 +1886,30 @@ function addLayer(destId, i){
         // setBpmModeOnLayer(i, this.value)
         //layerTimes[i].bpm_factor = parseFloat(this.value);
     }
+
+    var effect_c_select =  document.getElementById("layer_effect_c_" + i)
+
+    for(var j=0; j<colorEffects.length; j++){
+        var option = document.createElement("option");
+        option.text = colorEffects[j].n;
+        option.value = colorEffects[j].v;
+        effect_c_select.add(option);
+    }
+
+    effect_c_select.oninput = function() {
+        console.log("layer_effect_c_" + activeLayer, parseFloat(this.value));
+        setColorEffect(i, this.value)
+        // setBpmModeOnLayer(i, this.value)
+        //layerTimes[i].bpm_factor = parseFloat(this.value);
+    }
 }
 
 function setDistortionEffect(i, effect){
     layer_effects[i].effect(effect);
-// layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
+}
 
-// layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
-// layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
-
-// layer_effects[1].extra(0.9);
-// layer_effects[2].extra(0.9);
+function setColorEffect(i, effect){
+    layer_effects_color[i].effect(effect);
 }
 
 
@@ -1911,8 +1929,7 @@ function toggleLayerBpmLock(i){
 
 //COLOR EFFECT
 const LUMAKEY = 50;
-const TOPHER_COLOR_LUMAKEY = 100;
-const TOPHER_COLOR_CIRCLE = 101;
+
 const RED = 10;
 
 
@@ -1925,10 +1942,12 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
+const CAKE_OFF = 1;
 const CAKE_MIRROR_VERTICAL = 106;
 const CAKE_MIRROR_HORIZONTAL = 107;
 const CAKE_WIPE_HORIZONTAL = 108;
 const CAKE_MIRROR_BOTH = 109;
+const CAKE_KALEIDO = 110;
 
 
 const NAM = 3;
@@ -1939,10 +1958,62 @@ const BOOM = 9
 
 
 var dEffects = [
-    {n:"No Effect", v:1},
-    {n:"Mirror Horizontal", v:CAKE_MIRROR_HORIZONTAL},
-    {n:"Mirror Vertical", v:CAKE_MIRROR_VERTICAL},
-    {n:"Mirror Both", v:CAKE_MIRROR_BOTH},
+    {n:"No Effect", v:CAKE_OFF},
+    {n:"Mirror Horizontal", v: CAKE_MIRROR_HORIZONTAL},
+    {n:"Mirror Vertical", v: CAKE_MIRROR_VERTICAL},
+    {n:"Wipe Horiz", v: CAKE_WIPE_HORIZONTAL},
+    {n:"Mirror Both", v: CAKE_MIRROR_BOTH},
+    {n:"Kaleido", v: CAKE_KALEIDO},
+];
+
+
+const CAKE_LUMA_TOPHER = 100;
+const CAKE_LUMA_TOPHER_2 = 102;
+const CAKE_LUMA = 50;
+const COLOR_NEGATIVE_3 = 2;
+const COLOR_BLACK_WHITE= 10;
+const COLOR_RED= 11;
+const COLOR_BLUE= 13;
+const COLOR_GREEN = 12;
+const COLOR_YELLOW = 14;
+const COLOR_TEAL = 15;
+const COLOR_PURPLE = 16;
+const COLOR_SEPIA = 17;
+
+const COLOR_SWAP_1 = 20;
+
+const COLOR_PAINT = 52;
+const COLOR_COLORIZE = 53;
+const COLOR_BRIGHTNESS = 60;
+const COLOR_CONTRAST = 61;
+const COLOR_SATURATION = 62;
+const COLOR_HUE= 63;
+const COLOR_BLACK_EDGE= 64;
+
+var colorEffects = [
+    {n:"No Effect", v:CAKE_OFF},
+
+    {n:"Toph Luma Black", v: CAKE_LUMA_TOPHER},
+    {n:"Toph Luma White", v: CAKE_LUMA_TOPHER_2},
+    {n:"Negative 3", v: COLOR_NEGATIVE_3},
+    {n:"B&W", v: COLOR_BLACK_WHITE},
+    {n:"Red", v: COLOR_RED},
+    {n:"Blue", v: COLOR_BLUE},
+    {n:"Green", v: COLOR_GREEN},
+    {n:"Yellow", v: COLOR_YELLOW},
+    {n:"Teal", v: COLOR_TEAL},
+    {n:"Magenta", v: COLOR_PURPLE},
+    {n:"Sepia", v: COLOR_SEPIA},
+    {n:"Swap 1", v: COLOR_SWAP_1},
+
+    {n:"Paint", v: COLOR_PAINT},
+    {n:"Colorize", v: COLOR_COLORIZE},
+    {n:"Brightness", v: COLOR_BRIGHTNESS},
+    {n:"Contrast", v: COLOR_CONTRAST},
+    {n:"Satur8", v: COLOR_SATURATION},
+    {n:"Hue", v: COLOR_HUE},
+    {n:"Black Edge", v: COLOR_BLACK_EDGE},
+
 ];
 
 function addLayers() {
@@ -2131,6 +2202,8 @@ bpm_tap.add(showBpm)
 let sources = new Array();
 let layer_effects = new Array();
 
+let layer_effects_color = new Array();
+
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
@@ -2167,18 +2240,22 @@ function handleClipClick(url) {
   
 layer_effects[1] = new DistortionEffect2(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
 layer_effects[2] = new DistortionEffect2(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
-
 layer_effects[3] = new DistortionEffect2(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
 layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
+
+layer_effects_color[1] = new ColorEffect(renderer, { source: layer_effects[1],  fragmentChannel:1,  uuid:"Color_1"} );
+layer_effects_color[2] = new ColorEffect(renderer, { source: layer_effects[2],  fragmentChannel:1,  uuid:"Color_2"} );
+layer_effects_color[3] = new ColorEffect(renderer, { source: layer_effects[3],  fragmentChannel:2,  uuid:"Color_3"} );
+layer_effects_color[4] = new ColorEffect(renderer, { source: layer_effects[4],  fragmentChannel:2,  uuid:"Color_4"} );
 
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
-var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
-var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects_color[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects_color[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
-var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
-var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects_color[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects_color[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
 var output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
@@ -3878,7 +3955,7 @@ ColorEffect.constructor = ColorEffect;  // re-assign constructor
 
  *
  * @example
- *   let myEffect = new ColorEffect( renderer, { source: myVideoSource, effect: 1 });
+ *   let myEffect = new ColorEffect( _renderer, { source: myVideoSource, effect: 1 });
  *
  * @constructor Effect#ColorEffect
  * @implements Effect
@@ -3898,7 +3975,13 @@ function ColorEffect( _renderer, _options ) {
     _self.uuid = _options.uuid
   }
 
-  // add to renderer
+  if ( _options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = _options.fragmentChannel;
+  }
+
+  // add to _renderer
   _renderer.add(_self)
 
   _self.type = "Effect"
@@ -3910,21 +3993,7 @@ function ColorEffect( _renderer, _options ) {
   var currentExtra = 0.8
   if ( _options.extra != undefined ) currentExtra = _options.currentExtra
 
-  _self.init = function() {
-    console.log("ColorEffect init"); 
-    // add uniforms to renderer
-    _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
-    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }
-
-    // add uniforms to fragmentshader
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentcoloreffect;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-    if ( renderer.fragmentShader.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
-console.log("ColorEffect REPLACE");   
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
-`
+  var shaderScriptColor = `
 /*
 float rand ( float seed ) {
   return fract(sin(dot(vec2(seed) ,vec2(12.9898,78.233))) * 43758.5453);
@@ -3951,28 +4020,38 @@ vec4 interlace(vec2 co, vec4 col) {
 }
 */
 
-bool mask_circle(vec2 uv, float radius, float x, float y){
+// bool mask_circle(vec2 uv, float radius, float x, float y){
     
-  uv.x *= 1.6; 
-  // uv.y *= 0.75;
-  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
-  if(len < radius){
-    return true;
-  }
-  return false;
-}
+//   uv.x *= 1.6; 
+//   // uv.y *= 0.75;
+//   float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+//   if(len < radius){
+//     return true;
+//   }
+//   return false;
+// }
 
 vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
   if ( currentcoloreffect == 1 ) return vec4( src.rgba );                                                                                              // normal
 
 
-  //toph lum
+  //toph lum - BLACK GOES TRANSPARENT
   if ( currentcoloreffect == 100 ) {
-    float brightness = (src.r + src.g + src.b) / 3.0 / 3.0;
+    float brightness = (src.r + src.g + src.b) / 3.0;
 
     float alpha = .0;
     if (extra < brightness){
       alpha = 1.0;
+    }
+    return vec4( src.r, src.g, src.b, alpha );
+  }
+
+  if ( currentcoloreffect == 102 ) {
+    float brightness = (src.r + src.g + src.b) / 3.0 ;
+
+    float alpha = 1.0;
+    if (extra < brightness){
+      alpha = 0.0;
     }
     return vec4( src.r, src.g, src.b, alpha );
   }
@@ -4001,9 +4080,6 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
     }else{
     	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
     }
-
-
-
     return gl_FragColor;
   }
 
@@ -4237,13 +4313,42 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
 }
 
 /* custom_helpers */
-`
-    );
+`;
+  _self.init = function() {
+    console.log("ColorEffect init"); 
+    // add uniforms to _renderer
+    _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
+    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }
+
+    var _fs;
+    if (_self._fragmentChannel == 1){
+      _fs = _renderer.fragmentShader;
+    }else{
+      _fs = _renderer.fragmentShader2;
+    }
+
+    // add uniforms to fragmentshader
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentcoloreffect;\n/* custom_uniforms */')
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+
+    if ( _fs.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
+      console.log("ColorEffect REPLACE");   
+
+      _fs = _fs.replace('/* custom_helpers */', 
+        shaderScriptColor);
   }
 
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
+  _fs = _fs.replace('/* custom_main */', '\
 vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid+'_currentcoloreffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-  } // init
+  
+  if (_self._fragmentChannel == 1){
+    _renderer.fragmentShader = _fs;
+  }else{
+    _renderer.fragmentShader2 = _fs;
+  }
+
+} // init
 
   _self.update = function() {}
 
@@ -4296,7 +4401,7 @@ vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid
     if ( _num != undefined ) {
       currentEffect = _num
       console.log("effect set to: ", currentEffect)
-      renderer.customUniforms[_self.uuid+'_currentcoloreffect'].value = currentEffect
+      _renderer.customUniforms[_self.uuid+'_currentcoloreffect'].value = currentEffect
       // update uniform ?
     }
 
@@ -4312,7 +4417,7 @@ vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid
   _self.extra = function( _num ){
     if ( _num != undefined ) {
       currentExtra = _num
-      renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
+      _renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
       // update uniform ?
     }
 
@@ -4493,8 +4598,36 @@ function DistortionEffect2( _renderer, _options ) {
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }else{
-        gl_FragColor = vec4(0.0, 0.2, 0.0, 0.0); 
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
       }
+
+      return gl_FragColor;
+    }//WIPE_HORIZONTAL
+  
+
+        //KALEIDO - https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/KaleidoShader.js
+    if ( currentDistortionEffect2 == 110 ) {
+
+
+      float sides = floor(20.0 * extra);
+      float angle = 1.0;
+      vec2 p = vUv - 0.5;
+			float r = length(p);
+			float a = atan(p.y, p.x) + angle;
+			float tau = 2. * 3.1416 ;
+			a = mod(a, tau/sides);
+			a = abs(a - tau/sides/2.) ;
+			p = r * vec2(cos(a), sin(a));
+			vec4 color = texture2D(src, p + 0.5);
+			gl_FragColor = color;
+
+      // vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      // if (uv.x > (extra - 0.5)){
+      //   vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+      //   gl_FragColor = vec4(pixelColor);
+      // }else{
+      //   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
+      // }
 
       return gl_FragColor;
     }//WIPE_HORIZONTAL

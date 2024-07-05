@@ -56,7 +56,7 @@ ColorEffect.constructor = ColorEffect;  // re-assign constructor
 
  *
  * @example
- *   let myEffect = new ColorEffect( renderer, { source: myVideoSource, effect: 1 });
+ *   let myEffect = new ColorEffect( _renderer, { source: myVideoSource, effect: 1 });
  *
  * @constructor Effect#ColorEffect
  * @implements Effect
@@ -76,7 +76,13 @@ function ColorEffect( _renderer, _options ) {
     _self.uuid = _options.uuid
   }
 
-  // add to renderer
+  if ( _options.fragmentChannel == undefined ) {
+    _self._fragmentChannel = 1;
+    } else {
+    _self._fragmentChannel = _options.fragmentChannel;
+  }
+
+  // add to _renderer
   _renderer.add(_self)
 
   _self.type = "Effect"
@@ -88,21 +94,7 @@ function ColorEffect( _renderer, _options ) {
   var currentExtra = 0.8
   if ( _options.extra != undefined ) currentExtra = _options.currentExtra
 
-  _self.init = function() {
-    console.log("ColorEffect init"); 
-    // add uniforms to renderer
-    _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
-    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }
-
-    // add uniforms to fragmentshader
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentcoloreffect;\n/* custom_uniforms */')
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-    if ( renderer.fragmentShader.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
-console.log("ColorEffect REPLACE");   
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',
-`
+  var shaderScriptColor = `
 /*
 float rand ( float seed ) {
   return fract(sin(dot(vec2(seed) ,vec2(12.9898,78.233))) * 43758.5453);
@@ -129,28 +121,38 @@ vec4 interlace(vec2 co, vec4 col) {
 }
 */
 
-bool mask_circle(vec2 uv, float radius, float x, float y){
+// bool mask_circle(vec2 uv, float radius, float x, float y){
     
-  uv.x *= 1.6; 
-  // uv.y *= 0.75;
-  float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
-  if(len < radius){
-    return true;
-  }
-  return false;
-}
+//   uv.x *= 1.6; 
+//   // uv.y *= 0.75;
+//   float len = sqrt(pow((uv.x - x),2.0) + pow(uv.y - y,2.0));
+//   if(len < radius){
+//     return true;
+//   }
+//   return false;
+// }
 
 vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
   if ( currentcoloreffect == 1 ) return vec4( src.rgba );                                                                                              // normal
 
 
-  //toph lum
+  //toph lum - BLACK GOES TRANSPARENT
   if ( currentcoloreffect == 100 ) {
-    float brightness = (src.r + src.g + src.b) / 3.0 / 3.0;
+    float brightness = (src.r + src.g + src.b) / 3.0;
 
     float alpha = .0;
     if (extra < brightness){
       alpha = 1.0;
+    }
+    return vec4( src.r, src.g, src.b, alpha );
+  }
+
+  if ( currentcoloreffect == 102 ) {
+    float brightness = (src.r + src.g + src.b) / 3.0 ;
+
+    float alpha = 1.0;
+    if (extra < brightness){
+      alpha = 0.0;
     }
     return vec4( src.r, src.g, src.b, alpha );
   }
@@ -179,9 +181,6 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
     }else{
     	gl_FragColor = vec4(0.0, 0.0, 0.3, 1.0);	
     }
-
-
-
     return gl_FragColor;
   }
 
@@ -415,13 +414,42 @@ vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv ) {
 }
 
 /* custom_helpers */
-`
-    );
+`;
+  _self.init = function() {
+    console.log("ColorEffect init"); 
+    // add uniforms to _renderer
+    _renderer.customUniforms[_self.uuid+'_currentcoloreffect'] = { type: "i", value: currentEffect}
+    _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: currentExtra }
+
+    var _fs;
+    if (_self._fragmentChannel == 1){
+      _fs = _renderer.fragmentShader;
+    }else{
+      _fs = _renderer.fragmentShader2;
+    }
+
+    // add uniforms to fragmentshader
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentcoloreffect;\n/* custom_uniforms */')
+    _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+
+    if ( _fs.indexOf('vec4 coloreffect ( vec4 src, int currentcoloreffect, float extra, vec2 vUv )') == -1 ) {
+      console.log("ColorEffect REPLACE");   
+
+      _fs = _fs.replace('/* custom_helpers */', 
+        shaderScriptColor);
   }
 
-    _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
+  _fs = _fs.replace('/* custom_main */', '\
 vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid+'_currentcoloreffect' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-  } // init
+  
+  if (_self._fragmentChannel == 1){
+    _renderer.fragmentShader = _fs;
+  }else{
+    _renderer.fragmentShader2 = _fs;
+  }
+
+} // init
 
   _self.update = function() {}
 
@@ -474,7 +502,7 @@ vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid
     if ( _num != undefined ) {
       currentEffect = _num
       console.log("effect set to: ", currentEffect)
-      renderer.customUniforms[_self.uuid+'_currentcoloreffect'].value = currentEffect
+      _renderer.customUniforms[_self.uuid+'_currentcoloreffect'].value = currentEffect
       // update uniform ?
     }
 
@@ -490,7 +518,7 @@ vec4 '+_self.uuid+'_output = coloreffect( '+source.uuid+'_output, ' + _self.uuid
   _self.extra = function( _num ){
     if ( _num != undefined ) {
       currentExtra = _num
-      renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
+      _renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
       // update uniform ?
     }
 

@@ -170,8 +170,36 @@ function DistortionEffect2( _renderer, _options ) {
         vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
         gl_FragColor = vec4(pixelColor);
       }else{
-        gl_FragColor = vec4(0.0, 0.2, 0.0, 0.0); 
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
       }
+
+      return gl_FragColor;
+    }//WIPE_HORIZONTAL
+  
+
+        //KALEIDO - https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/KaleidoShader.js
+    if ( currentDistortionEffect2 == 110 ) {
+
+
+      float sides = floor(20.0 * extra);
+      float angle = 1.0;
+      vec2 p = vUv - 0.5;
+			float r = length(p);
+			float a = atan(p.y, p.x) + angle;
+			float tau = 2. * 3.1416 ;
+			a = mod(a, tau/sides);
+			a = abs(a - tau/sides/2.) ;
+			p = r * vec2(cos(a), sin(a));
+			vec4 color = texture2D(src, p + 0.5);
+			gl_FragColor = color;
+
+      // vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      // if (uv.x > (extra - 0.5)){
+      //   vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+      //   gl_FragColor = vec4(pixelColor);
+      // }else{
+      //   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
+      // }
 
       return gl_FragColor;
     }//WIPE_HORIZONTAL

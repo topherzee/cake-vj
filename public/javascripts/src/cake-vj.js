@@ -48,9 +48,13 @@ function addLayer(destId, i){
         newActiveLayer(i);
     }
 
-    document.getElementById('layer_effect_' + i).oninput = function() {
+    document.getElementById('layer_effect_d_p1_' + i).oninput = function() {
         layer_effects[i].extra(this.value)
         // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
+    }
+    document.getElementById('layer_effect_c_p1_' + i).oninput = function() {
+        layer_effects_color[i].extra(this.value)
+        console.log("color layer_effect " + i + " >>", parseFloat(this.value) )
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
@@ -171,7 +175,8 @@ function addLayer(destId, i){
     //     document.getElementById('bpm_display').textContent = Math.round(bpm_tap.bpm)
     //   }
 
-    //populate the dropodown
+    // D-EFFECT
+
     var effect_d_select =  document.getElementById("layer_effect_d_" + i)
 
     for(var j=0; j<dEffects.length; j++){
@@ -187,17 +192,30 @@ function addLayer(destId, i){
         // setBpmModeOnLayer(i, this.value)
         //layerTimes[i].bpm_factor = parseFloat(this.value);
     }
+
+    var effect_c_select =  document.getElementById("layer_effect_c_" + i)
+
+    for(var j=0; j<colorEffects.length; j++){
+        var option = document.createElement("option");
+        option.text = colorEffects[j].n;
+        option.value = colorEffects[j].v;
+        effect_c_select.add(option);
+    }
+
+    effect_c_select.oninput = function() {
+        console.log("layer_effect_c_" + activeLayer, parseFloat(this.value));
+        setColorEffect(i, this.value)
+        // setBpmModeOnLayer(i, this.value)
+        //layerTimes[i].bpm_factor = parseFloat(this.value);
+    }
 }
 
 function setDistortionEffect(i, effect){
     layer_effects[i].effect(effect);
-// layer_effects[2].effect(CAKE_MIRROR_HORIZONTAL);
+}
 
-// layer_effects[3].effect(TOPHER_ONLY_CIRCLE);
-// layer_effects[4].effect(TOPHER_ONLY_CIRCLE);
-
-// layer_effects[1].extra(0.9);
-// layer_effects[2].extra(0.9);
+function setColorEffect(i, effect){
+    layer_effects_color[i].effect(effect);
 }
 
 
@@ -217,8 +235,7 @@ function toggleLayerBpmLock(i){
 
 //COLOR EFFECT
 const LUMAKEY = 50;
-const TOPHER_COLOR_LUMAKEY = 100;
-const TOPHER_COLOR_CIRCLE = 101;
+
 const RED = 10;
 
 
@@ -231,10 +248,12 @@ const TOPHER_DIST_CIRCLE = 103;
 const TOPHER_ONLY_SQUASH = 104;
 const TOPHER_ONLY_CIRCLE = 105;
 
+const CAKE_OFF = 1;
 const CAKE_MIRROR_VERTICAL = 106;
 const CAKE_MIRROR_HORIZONTAL = 107;
 const CAKE_WIPE_HORIZONTAL = 108;
 const CAKE_MIRROR_BOTH = 109;
+const CAKE_KALEIDO = 110;
 
 
 const NAM = 3;
@@ -245,10 +264,62 @@ const BOOM = 9
 
 
 var dEffects = [
-    {n:"No Effect", v:1},
-    {n:"Mirror Horizontal", v:CAKE_MIRROR_HORIZONTAL},
-    {n:"Mirror Vertical", v:CAKE_MIRROR_VERTICAL},
-    {n:"Mirror Both", v:CAKE_MIRROR_BOTH},
+    {n:"No Effect", v:CAKE_OFF},
+    {n:"Mirror Horizontal", v: CAKE_MIRROR_HORIZONTAL},
+    {n:"Mirror Vertical", v: CAKE_MIRROR_VERTICAL},
+    {n:"Wipe Horiz", v: CAKE_WIPE_HORIZONTAL},
+    {n:"Mirror Both", v: CAKE_MIRROR_BOTH},
+    {n:"Kaleido", v: CAKE_KALEIDO},
+];
+
+
+const CAKE_LUMA_TOPHER = 100;
+const CAKE_LUMA_TOPHER_2 = 102;
+const CAKE_LUMA = 50;
+const COLOR_NEGATIVE_3 = 2;
+const COLOR_BLACK_WHITE= 10;
+const COLOR_RED= 11;
+const COLOR_BLUE= 13;
+const COLOR_GREEN = 12;
+const COLOR_YELLOW = 14;
+const COLOR_TEAL = 15;
+const COLOR_PURPLE = 16;
+const COLOR_SEPIA = 17;
+
+const COLOR_SWAP_1 = 20;
+
+const COLOR_PAINT = 52;
+const COLOR_COLORIZE = 53;
+const COLOR_BRIGHTNESS = 60;
+const COLOR_CONTRAST = 61;
+const COLOR_SATURATION = 62;
+const COLOR_HUE= 63;
+const COLOR_BLACK_EDGE= 64;
+
+var colorEffects = [
+    {n:"No Effect", v:CAKE_OFF},
+
+    {n:"Toph Luma Black", v: CAKE_LUMA_TOPHER},
+    {n:"Toph Luma White", v: CAKE_LUMA_TOPHER_2},
+    {n:"Negative 3", v: COLOR_NEGATIVE_3},
+    {n:"B&W", v: COLOR_BLACK_WHITE},
+    {n:"Red", v: COLOR_RED},
+    {n:"Blue", v: COLOR_BLUE},
+    {n:"Green", v: COLOR_GREEN},
+    {n:"Yellow", v: COLOR_YELLOW},
+    {n:"Teal", v: COLOR_TEAL},
+    {n:"Magenta", v: COLOR_PURPLE},
+    {n:"Sepia", v: COLOR_SEPIA},
+    {n:"Swap 1", v: COLOR_SWAP_1},
+
+    {n:"Paint", v: COLOR_PAINT},
+    {n:"Colorize", v: COLOR_COLORIZE},
+    {n:"Brightness", v: COLOR_BRIGHTNESS},
+    {n:"Contrast", v: COLOR_CONTRAST},
+    {n:"Satur8", v: COLOR_SATURATION},
+    {n:"Hue", v: COLOR_HUE},
+    {n:"Black Edge", v: COLOR_BLACK_EDGE},
+
 ];
 
 function addLayers() {
@@ -437,6 +508,8 @@ bpm_tap.add(showBpm)
 let sources = new Array();
 let layer_effects = new Array();
 
+let layer_effects_color = new Array();
+
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
@@ -473,18 +546,22 @@ function handleClipClick(url) {
   
 layer_effects[1] = new DistortionEffect2(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
 layer_effects[2] = new DistortionEffect2(renderer, { source: sources[2],  fragmentChannel:1,  uuid:"Dist_2"} );
-
 layer_effects[3] = new DistortionEffect2(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
 layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
+
+layer_effects_color[1] = new ColorEffect(renderer, { source: layer_effects[1],  fragmentChannel:1,  uuid:"Color_1"} );
+layer_effects_color[2] = new ColorEffect(renderer, { source: layer_effects[2],  fragmentChannel:1,  uuid:"Color_2"} );
+layer_effects_color[3] = new ColorEffect(renderer, { source: layer_effects[3],  fragmentChannel:2,  uuid:"Color_3"} );
+layer_effects_color[4] = new ColorEffect(renderer, { source: layer_effects[4],  fragmentChannel:2,  uuid:"Color_4"} );
 
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
-var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
-var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects_color[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects_color[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
-var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
-var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects_color[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects_color[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
 var output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
