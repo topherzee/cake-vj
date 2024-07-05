@@ -52,9 +52,13 @@ function addLayer(destId, i){
         layer_effects[i].extra(this.value)
         // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
     }
-    document.getElementById('layer_effect_c_p1_' + i).oninput = function() {
-        layer_effects_color[i].extra(this.value)
-        console.log("color layer_effect " + i + " >>", parseFloat(this.value) )
+    document.getElementById('layer_effect_c1_p1_' + i).oninput = function() {
+        layer_effects_color_1[i].extra(this.value)
+        console.log("color layer_effect 1 " + i + " >>", parseFloat(this.value) )
+    }
+    document.getElementById('layer_effect_c2_p1_' + i).oninput = function() {
+        layer_effects_color_2[i].extra(this.value)
+        console.log("color layer_effect 2 " + i + " >>", parseFloat(this.value) )
     }
 
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
@@ -193,29 +197,43 @@ function addLayer(destId, i){
         //layerTimes[i].bpm_factor = parseFloat(this.value);
     }
 
-    var effect_c_select =  document.getElementById("layer_effect_c_" + i)
+    // C EFFECTS
+    var effect_c_select_1 = makeColorEffectSelect(i, 1);
 
+    effect_c_select_1.oninput = function() {
+        console.log("layer_effect_c1_" + activeLayer, parseFloat(this.value));
+        setColorEffect1(activeLayer, this.value)
+    }
+
+    var effect_c_select_2 = makeColorEffectSelect(i, 2);
+
+    effect_c_select_2.oninput = function() {
+        console.log("layer_effect_c2_" + activeLayer, parseFloat(this.value));
+        setColorEffect2(activeLayer, this.value)
+    }
+    
+}
+
+function makeColorEffectSelect(iLayer, iColor){
+    var effect_c_select =  document.getElementById("layer_effect_c" + iColor + "_" + iLayer)
     for(var j=0; j<colorEffects.length; j++){
         var option = document.createElement("option");
         option.text = colorEffects[j].n;
         option.value = colorEffects[j].v;
         effect_c_select.add(option);
     }
-
-    effect_c_select.oninput = function() {
-        console.log("layer_effect_c_" + activeLayer, parseFloat(this.value));
-        setColorEffect(i, this.value)
-        // setBpmModeOnLayer(i, this.value)
-        //layerTimes[i].bpm_factor = parseFloat(this.value);
-    }
+    return effect_c_select;
 }
 
 function setDistortionEffect(i, effect){
     layer_effects[i].effect(effect);
 }
 
-function setColorEffect(i, effect){
-    layer_effects_color[i].effect(effect);
+function setColorEffect1(i, effect){
+    layer_effects_color_1[i].effect(effect);
+}
+function setColorEffect2(i, effect){
+    layer_effects_color_2[i].effect(effect);
 }
 
 
@@ -508,7 +526,8 @@ bpm_tap.add(showBpm)
 let sources = new Array();
 let layer_effects = new Array();
 
-let layer_effects_color = new Array();
+let layer_effects_color_1 = new Array();
+let layer_effects_color_2 = new Array();
 
 sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
@@ -549,19 +568,24 @@ layer_effects[2] = new DistortionEffect2(renderer, { source: sources[2],  fragme
 layer_effects[3] = new DistortionEffect2(renderer, { source: sources[3],  fragmentChannel:2,  uuid:"Dist_3"} );
 layer_effects[4] = new DistortionEffect2(renderer, { source: sources[4],  fragmentChannel:2,  uuid:"Dist_4"} );
 
-layer_effects_color[1] = new ColorEffect(renderer, { source: layer_effects[1],  fragmentChannel:1,  uuid:"Color_1"} );
-layer_effects_color[2] = new ColorEffect(renderer, { source: layer_effects[2],  fragmentChannel:1,  uuid:"Color_2"} );
-layer_effects_color[3] = new ColorEffect(renderer, { source: layer_effects[3],  fragmentChannel:2,  uuid:"Color_3"} );
-layer_effects_color[4] = new ColorEffect(renderer, { source: layer_effects[4],  fragmentChannel:2,  uuid:"Color_4"} );
+layer_effects_color_1[1] = new ColorEffect(renderer, { source: layer_effects[1],  fragmentChannel:1,  uuid:"Color_c1_1"} );
+layer_effects_color_1[2] = new ColorEffect(renderer, { source: layer_effects[2],  fragmentChannel:1,  uuid:"Color_c1_2"} );
+layer_effects_color_1[3] = new ColorEffect(renderer, { source: layer_effects[3],  fragmentChannel:2,  uuid:"Color_c1_3"} );
+layer_effects_color_1[4] = new ColorEffect(renderer, { source: layer_effects[4],  fragmentChannel:2,  uuid:"Color_c1_4"} );
+
+layer_effects_color_2[1] = new ColorEffect(renderer, { source: layer_effects_color_1[1],  fragmentChannel:1,  uuid:"Color_c2_1"} );
+layer_effects_color_2[2] = new ColorEffect(renderer, { source: layer_effects_color_1[2],  fragmentChannel:1,  uuid:"Color_c2_2"} );
+layer_effects_color_2[3] = new ColorEffect(renderer, { source: layer_effects_color_1[3],  fragmentChannel:2,  uuid:"Color_c2_3"} );
+layer_effects_color_2[4] = new ColorEffect(renderer, { source: layer_effects_color_1[4],  fragmentChannel:2,  uuid:"Color_c2_4"} );
 
 var solid_black = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0 }, uuid:"Solid_Black" } );
 var solid_black2 = new SolidSource( renderer, { color: { r:0.0, g:0.0, b:0.0, }, fragmentChannel:2, uuid:"Solid_Black2" } );
 
-var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects_color[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
-var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects_color[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
+var channel_1_a_mixer = new Mixer( renderer, { source1: layer_effects_color_2[1], source2: solid_black,  uuid: "Mixer_1_a"  } )
+var channel_1_b_mixer = new Mixer( renderer, { source1: layer_effects_color_2[2], source2: channel_1_a_mixer,  uuid: "Mixer_1_b"  } )
 
-var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects_color[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
-var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects_color[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
+var channel_2_a_mixer = new Mixer( renderer, { source1: layer_effects_color_2[3], source2: solid_black2,  uuid: "Mixer_2_a", fragmentChannel:2 } )
+var channel_2_b_mixer = new Mixer( renderer, { source1: layer_effects_color_2[4], source2: channel_2_a_mixer,  uuid: "Mixer_2_b", fragmentChannel:2  } )
 
 var output = new Output( renderer, channel_1_b_mixer, channel_2_b_mixer )
 
