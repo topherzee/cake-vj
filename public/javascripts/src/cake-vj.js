@@ -52,6 +52,10 @@ function addLayer(destId, i){
         layer_effects[i].extra(this.value)
         // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
     }
+    document.getElementById('layer_effect_d_p2_' + i).oninput = function() {
+        layer_effects[i].extra2(this.value)
+        // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
+    }
     document.getElementById('layer_effect_c1_p1_' + i).oninput = function() {
         layer_effects_color_1[i].extra(this.value)
         console.log("color layer_effect 1 " + i + " >>", parseFloat(this.value) )
@@ -256,9 +260,16 @@ const LUMAKEY = 50;
 
 const RED = 10;
 
+const NAM = 3;
+const FAM = 4;
+const LUM1 = 10;
+const LUM2 = 11;
+const BOOM = 9
 
 
 //DISTORTION EFFECT
+
+
 const TOPHER_DIST_MIRROR_CIRCLES = 100;
 const TOPHER_DIST_CIRCLES_3 = 102;
 
@@ -273,12 +284,11 @@ const CAKE_WIPE_HORIZONTAL = 108;
 const CAKE_MIRROR_BOTH = 109;
 const CAKE_KALEIDO = 110;
 
+const CAKE_WIPE_VERTICAL = 110;
+const CAKE_WIPE_ANGLE = 111;
+const CAKE_WIPE_DONUT = 112;
 
-const NAM = 3;
-const FAM = 4;
-const LUM1 = 10;
-const LUM2 = 11;
-const BOOM = 9
+
 
 
 var dEffects = [
@@ -286,6 +296,9 @@ var dEffects = [
     {n:"Mirror Horizontal", v: CAKE_MIRROR_HORIZONTAL},
     {n:"Mirror Vertical", v: CAKE_MIRROR_VERTICAL},
     {n:"Wipe Horiz", v: CAKE_WIPE_HORIZONTAL},
+    {n:"Wipe Vert", v: CAKE_WIPE_VERTICAL},
+    {n:"Wipe Angle", v: CAKE_WIPE_ANGLE},
+    {n:"Wipe Donut", v: CAKE_WIPE_DONUT},
     {n:"Mirror Both", v: CAKE_MIRROR_BOTH},
     {n:"Kaleido", v: CAKE_KALEIDO},
 ];

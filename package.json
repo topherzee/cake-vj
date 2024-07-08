@@ -1,7 +1,7 @@
 {
-  "name": "virtualmixerproject",
-  "version": "0.0.4",
-  "description": "Build your own video mixers in javascript.",
+  "name": "cake-vj",
+  "version": "0.0.1",
+  "description": "Javascript VJ software. Based on virtualmixerproject",
   "main": "app.js",
   "scripts": {
     "start": "node ./bin/www",
@@ -21,20 +21,12 @@
     "node": ">=18.17.1",
     "npm": ">=9.6.7"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/Sense-Studios/VirtualMixerProject.git"
-  },
+
   "keywords": [
     "VJ",
-    "VMA",
-    "Video",
-    "Mixer",
-    "Videomixer",
-    "javascript",
     "WebGL"
   ],
-  "author": "Sense Studios",
+  "author": "dandelion.org",
   "license": "MIT",
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -50,10 +42,8 @@
     "ytdl-core": "^4.11.5",
     "ytsr": "^3.8.4"
   },
-  "bugs": {
-    "url": "https://github.com/Sense-Studios/VirtualMixerProject/issues"
-  },
-  "homepage": "https://virtualmixproject.com",
+
+  "homepage": "https://dandelion.org",
   "devDependencies": {
     "del": "5.1.0",
     "express-dart-sass": "",

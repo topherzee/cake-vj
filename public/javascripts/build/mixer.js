@@ -1746,6 +1746,10 @@ function addLayer(destId, i){
         layer_effects[i].extra(this.value)
         // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
     }
+    document.getElementById('layer_effect_d_p2_' + i).oninput = function() {
+        layer_effects[i].extra2(this.value)
+        // console.log("layer_effect " + i + " >>", parseFloat(this.value) )
+    }
     document.getElementById('layer_effect_c1_p1_' + i).oninput = function() {
         layer_effects_color_1[i].extra(this.value)
         console.log("color layer_effect 1 " + i + " >>", parseFloat(this.value) )
@@ -1950,9 +1954,16 @@ const LUMAKEY = 50;
 
 const RED = 10;
 
+const NAM = 3;
+const FAM = 4;
+const LUM1 = 10;
+const LUM2 = 11;
+const BOOM = 9
 
 
 //DISTORTION EFFECT
+
+
 const TOPHER_DIST_MIRROR_CIRCLES = 100;
 const TOPHER_DIST_CIRCLES_3 = 102;
 
@@ -1967,12 +1978,11 @@ const CAKE_WIPE_HORIZONTAL = 108;
 const CAKE_MIRROR_BOTH = 109;
 const CAKE_KALEIDO = 110;
 
+const CAKE_WIPE_VERTICAL = 110;
+const CAKE_WIPE_ANGLE = 111;
+const CAKE_WIPE_DONUT = 112;
 
-const NAM = 3;
-const FAM = 4;
-const LUM1 = 10;
-const LUM2 = 11;
-const BOOM = 9
+
 
 
 var dEffects = [
@@ -1980,6 +1990,9 @@ var dEffects = [
     {n:"Mirror Horizontal", v: CAKE_MIRROR_HORIZONTAL},
     {n:"Mirror Vertical", v: CAKE_MIRROR_VERTICAL},
     {n:"Wipe Horiz", v: CAKE_WIPE_HORIZONTAL},
+    {n:"Wipe Vert", v: CAKE_WIPE_VERTICAL},
+    {n:"Wipe Angle", v: CAKE_WIPE_ANGLE},
+    {n:"Wipe Donut", v: CAKE_WIPE_DONUT},
     {n:"Mirror Both", v: CAKE_MIRROR_BOTH},
     {n:"Kaleido", v: CAKE_KALEIDO},
 ];
@@ -4517,6 +4530,7 @@ function DistortionEffect2( _renderer, _options ) {
   var currentEffect = _options.effect
   var currentEffect = 1
   var currentExtra = 0.8
+  var currentExtra2 = 0.0
 
   var shaderScript = `
 
@@ -4535,7 +4549,7 @@ function DistortionEffect2( _renderer, _options ) {
     return true;
   }
   
-  vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv ) {
+  vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, float extra2, vec2 vUv ) {
     
     // normal
     if ( currentDistortionEffect2 == 1 ) {
@@ -4628,19 +4642,84 @@ function DistortionEffect2( _renderer, _options ) {
       return gl_FragColor;
     }//WIPE_HORIZONTAL
   
+        //WIPE_VERTICAL
+    if ( currentDistortionEffect2 == 110 ) {
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+      if (uv.y > (extra - 0.5)){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
+      }
+
+      return gl_FragColor;
+    }//WIPE_VERTICAL
+
+
+
+     //WIPE_ANGLE
+    if ( currentDistortionEffect2 == 111 ) {
+
+    float ratio = extra;
+    float angle = extra2;
+      // Convert angle to radians
+      float angleRad = angle * 3.141 * 2.0;
+
+      // Calculate the direction of the wipe
+      vec2 direction = vec2(cos(angleRad), sin(angleRad));
+
+      // Compute the position relative to the center
+      vec2 center = vec2(0.5, 0.5);
+      vec2 relativePos = vUv - center;
+
+      // Project the relative position onto the direction vector
+      float projection = dot(relativePos, direction);
+
+      // Determine if the current pixel is before or after the wipe threshold
+      if (projection < ratio - 0.5) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); // Black
+      } else {
+          // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // White
+        vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+          vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5));
+          gl_FragColor = vec4(pixelColor);
+      }
+
+      return gl_FragColor;
+    }//WIPE_ANGLE
+
+            //WIPE_DONUT
+    if ( currentDistortionEffect2 == 112 ) {
+      vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
+
+      vec2 p = vUv - 0.5;
+			// float r = length(p)*2.0;
+			float r = length(p);
+
+      if (r > extra){
+        vec4 pixelColor = texture2D(src, vec2(uv.x + 0.5, uv.y + 0.5)); 
+        gl_FragColor = vec4(pixelColor);
+      }else{
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); 
+      }
+
+      return gl_FragColor;
+    }//WIPE_DONUT
 
         //KALEIDO - https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/KaleidoShader.js
     if ( currentDistortionEffect2 == 110 ) {
 
 
-      float sides = floor(20.0 * extra);
+      float sides = 0.0 + 20.0 * extra;
       float angle = 1.0;
+      // float angle = 2.0 * extra2;
       vec2 p = vUv - 0.5;
+			// float r = length(p)*2.0;
 			float r = length(p);
 			float a = atan(p.y, p.x) + angle;
-			float tau = 2. * 3.1416 ;
+			float tau = 2. * 3.1416;
 			a = mod(a, tau/sides);
-			a = abs(a - tau/sides/2.) ;
+			a = abs(a - tau/sides/2.) + extra2 * 3.14 ;
 			p = r * vec2(cos(a), sin(a));
 			vec4 color = texture2D(src, p + 0.5);
 			gl_FragColor = color;
@@ -4676,41 +4755,35 @@ function DistortionEffect2( _renderer, _options ) {
     // add uniforms to renderer
     _renderer.customUniforms[_self.uuid+'_currentDistortionEffect2'] = { type: "i", value: 1 }
     _renderer.customUniforms[_self.uuid+'_extra'] = { type: "f", value: 2.0 }
+    _renderer.customUniforms[_self.uuid+'_extra2'] = { type: "f", value: 2.0 }
 
+    var _fs;
     if (_self._fragmentChannel == 1){
-
-      // add uniforms to fragmentshader
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-      if ( _renderer.fragmentShader.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect2 REPLACE"); 
-        _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_helpers */',shaderScript);
-      };
-
-      _renderer.fragmentShader = _renderer.fragmentShader.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-      
-
+      _fs = _renderer.fragmentShader;
     }else{
-      // add uniforms to fragmentshader
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
-
-      if ( _renderer.fragmentShader2.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, vec2 vUv )') == -1 ) {
-        console.log("DistortionEffect2 REPLACE"); 
-        _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_helpers */',shaderScript);
-
-      };
-
-      _renderer.fragmentShader2 = _renderer.fragmentShader2.replace('/* custom_main */', '\
-      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', vUv );\n  /* custom_main */');
-
-
+      _fs = _renderer.fragmentShader2;
     }
 
+      // add uniforms to fragmentshader
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform vec4 '+_self.uuid+'_output;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform int '+_self.uuid+'_currentDistortionEffect2;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra;\n/* custom_uniforms */')
+      _fs = _fs.replace('/* custom_uniforms */', 'uniform float '+_self.uuid+'_extra2;\n/* custom_uniforms */')
+
+      if ( _fs.indexOf('vec4 DistortionEffect2 ( sampler2D src, int currentDistortionEffect2, float extra, float extra2, vec2 vUv )') == -1 ) {
+        console.log("DistortionEffect2 REPLACE"); 
+        _fs = _fs.replace('/* custom_helpers */',shaderScript);
+      };
+
+      _fs = _fs.replace('/* custom_main */', '\
+      vec4 '+_self.uuid+'_output = DistortionEffect2( '+source.uuid+', ' + _self.uuid+'_currentDistortionEffect2' + ', '+ _self.uuid+'_extra' +', '+ _self.uuid+'_extra2' +', vUv );\n  /* custom_main */');
+      
+
+      if (_self._fragmentChannel == 1){
+        _renderer.fragmentShader = _fs;
+      }else{
+        _renderer.fragmentShader2 = _fs;
+      }
 
 
 } // init
@@ -4791,6 +4864,16 @@ function DistortionEffect2( _renderer, _options ) {
     if ( _num != undefined ) {
       currentExtra = _num
       if (_renderer.customUniforms[_self.uuid+'_extra']) _renderer.customUniforms[_self.uuid+'_extra'].value = currentExtra
+      // update uniform ?
+    }
+    return _num
+  }
+
+  _self.extra2 = function( _num ){
+
+    if ( _num != undefined ) {
+      currentExtra2 = _num
+      if (_renderer.customUniforms[_self.uuid+'_extra2']) _renderer.customUniforms[_self.uuid+'_extra2'].value = currentExtra2
       // update uniform ?
     }
     return _num
