@@ -1869,6 +1869,11 @@ function addLayer(destId, i){
         console.log('layer_blendmode_' + i, parseFloat(this.value) )
     }
 
+    document.getElementById('layer_samples_' + i).oninput = function() {
+        loadSample(i, this.value)
+        console.log('layer_samples_' + i, parseFloat(this.value) )
+    }
+
 
 
     // document.getElementById('bpm_tap_btn').onmousedown = function() {
@@ -1897,18 +1902,23 @@ function addLayer(destId, i){
 
     // C EFFECTS
     var effect_c_select_1 = makeColorEffectSelect(i, 1);
-
     effect_c_select_1.oninput = function() {
         console.log("layer_effect_c1_" + activeLayer, parseFloat(this.value));
         setColorEffect1(activeLayer, this.value)
     }
 
     var effect_c_select_2 = makeColorEffectSelect(i, 2);
-
     effect_c_select_2.oninput = function() {
         console.log("layer_effect_c2_" + activeLayer, parseFloat(this.value));
         setColorEffect2(activeLayer, this.value)
     }
+
+    var sampleArray = [
+        {name:"samples", in: -1, out: -1},
+        {name:"announcer", in: 6, out: 7},
+        {name:"gold pair", in: 31, out: 34}
+    ]
+    makeSampleSelect(i, sampleArray)
     
 }
 
@@ -1922,6 +1932,30 @@ function makeColorEffectSelect(iLayer, iColor){
     }
     return effect_c_select;
 }
+
+
+
+function makeSampleSelect(iLayer, sampleArray){
+    var sample_select =  document.getElementById("layer_samples_" + iLayer)
+    for(var j=0; j<sampleArray.length; j++){
+        var option = document.createElement("option");
+        option.text = sampleArray[j].name;
+        option.value = sampleArray[j].in + "-" + sampleArray[j].out;
+        sample_select.add(option);
+    }
+    return sample_select;
+}
+
+
+function loadSample(i, sample){
+    // TODO.
+     console.log("loadSample", i, sample);
+    let intime = parseFloat(sample.split("-")[0]);
+    let outtime = parseFloat(sample.split("-")[1]);
+    clobberInOnLayer(i, intime);
+     clobberOutOnLayer(i, outtime);
+
+ }
 
 function setDistortionEffect(i, effect){
     layer_effects[i].effect(effect);
@@ -1976,7 +2010,7 @@ const CAKE_MIRROR_VERTICAL = 106;
 const CAKE_MIRROR_HORIZONTAL = 107;
 const CAKE_WIPE_HORIZONTAL = 108;
 const CAKE_MIRROR_BOTH = 109;
-const CAKE_KALEIDO = 110;
+const CAKE_KALEIDO = 120;
 
 const CAKE_WIPE_VERTICAL = 110;
 const CAKE_WIPE_ANGLE = 111;
@@ -2148,7 +2182,8 @@ window.addEventListener("keydown", (e) => {
     //     setBpmModeOnLayer(i, this.value)
     // }
 
-    // e.preventDefault();
+
+    e.preventDefault();
 
 });
 
@@ -2162,7 +2197,7 @@ function changeBeatFactor(i, step){
 
 function changeOption(select, step) {
     const i = select.selectedIndex + step;
-    if (i>-1 && i < 5){
+    if (i>-1 && i < 9){
         select.selectedIndex = i;
     }
 }
@@ -2236,7 +2271,8 @@ let layer_effects = new Array();
 let layer_effects_color_1 = new Array();
 let layer_effects_color_2 = new Array();
 
-sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+// sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+sources[1]= new FlexSource(renderer, {src: "/video/dancing/Soul Train Line Dance to Jungle Boogie (1973).mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
 sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
@@ -2543,13 +2579,13 @@ function updateVideo(source, rate, layer, layerTime){
 
 
     
+    // Note: time_last_beat is the last time it reset / jumped.
 
     let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
    
     //Include speed? maybe time_elapsed += speed?
 
     if (layerTime.just_reversed){
-        
         
         layerTime.just_reversed = false;
         let timeRatio = time_elapsed / duration;
@@ -2768,6 +2804,21 @@ function setOutOnLayer(i){
         document.getElementById('layer_out_' + i).classList.remove("active");
     }
     console.log("setOutOnLayer", layerTimes[i].out)
+}
+
+function clobberInOnLayer(i, time){
+        //set in
+        layerTimes[i].in = time;
+        layerTimes[i].time_last_beat = Date.now();
+
+        layerTimes[i].is_playing = true;
+        document.getElementById('layer_in_' + i).classList.add("active");
+    
+}
+function clobberOutOnLayer(i, time){
+        //set out
+        layerTimes[i].out = time;
+        document.getElementById('layer_out_' + i).classList.add("active");
 }
 
 
@@ -4642,7 +4693,8 @@ function DistortionEffect2( _renderer, _options ) {
       return gl_FragColor;
     }//WIPE_HORIZONTAL
   
-        //WIPE_VERTICAL
+
+    //WIPE_VERTICAL
     if ( currentDistortionEffect2 == 110 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.y > (extra - 0.5)){
@@ -4707,7 +4759,7 @@ function DistortionEffect2( _renderer, _options ) {
     }//WIPE_DONUT
 
         //KALEIDO - https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/KaleidoShader.js
-    if ( currentDistortionEffect2 == 110 ) {
+    if ( currentDistortionEffect2 == 120 ) {
 
 
       float sides = 0.0 + 20.0 * extra;
@@ -4733,7 +4785,7 @@ function DistortionEffect2( _renderer, _options ) {
       // }
 
       return gl_FragColor;
-    }//WIPE_HORIZONTAL
+    }//KALEIDO
   
     
   }

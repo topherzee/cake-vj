@@ -177,7 +177,8 @@ function DistortionEffect2( _renderer, _options ) {
       return gl_FragColor;
     }//WIPE_HORIZONTAL
   
-        //WIPE_VERTICAL
+
+    //WIPE_VERTICAL
     if ( currentDistortionEffect2 == 110 ) {
       vec2 uv = vec2(vUv.x - 0.5, vUv.y - 0.5); //assuming they are 0 to 1.
       if (uv.y > (extra - 0.5)){
@@ -242,7 +243,7 @@ function DistortionEffect2( _renderer, _options ) {
     }//WIPE_DONUT
 
         //KALEIDO - https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/KaleidoShader.js
-    if ( currentDistortionEffect2 == 110 ) {
+    if ( currentDistortionEffect2 == 120 ) {
 
 
       float sides = 0.0 + 20.0 * extra;
@@ -268,7 +269,7 @@ function DistortionEffect2( _renderer, _options ) {
       // }
 
       return gl_FragColor;
-    }//WIPE_HORIZONTAL
+    }//KALEIDO
   
     
   }
