@@ -1913,13 +1913,87 @@ function addLayer(destId, i){
         setColorEffect2(activeLayer, this.value)
     }
 
-    var sampleArray = [
-        {name:"samples", in: -1, out: -1},
-        {name:"announcer", in: 6, out: 7},
-        {name:"gold pair", in: 31, out: 34}
-    ]
-    makeSampleSelect(i, sampleArray)
+    document.getElementById('layer_new_sample_' + i).onclick = async function() {
+        console.log("layer_new_sample_ ", i)
+        saveSamples(i);
+    }
+
+
+    // var sampleArray = [
+    //     {"name":"samples", "in": -1, "out": -1},
+    //     {"name":"announcer", "in": 6, "out": 7},
+    //     {"name":"gold pair", "in": 31, "out": 34}
+    // ]
+    // makeSampleSelect(i, sampleArray)
     
+}
+
+
+
+async function saveSamples(iLayer){
+    console.log("saveSamples")
+
+    //First check if there is new content.
+    //First check if there is new content.
+    let lt = layerTimes[iLayer];
+    if (lt.in == -1 || lt.out == -1){
+        console.log("no new sample to save");
+        return;
+    }
+    let samp = {"name":"new1", "in": parseFloat(lt.in.toFixed(2)), "out": parseFloat(lt.out.toFixed(2))}
+    layerTimes[iLayer].samplesArray.push(samp);
+
+    
+
+    // const data = {
+    //     name: "John Doe",
+    //     age: 30
+    // };
+    // const file = "test.json";
+    var samplesUrl = lt.url.split('.').slice(0, -1).join('.');
+    samplesUrl += ".json";
+
+    const urlSaveSamples = `${SAVE_SAMPLES_URL}?file=${encodeURIComponent(samplesUrl)}`;
+    // var url = SAVE_SAMPLES_URL + "/YOOOO";
+
+    fetch(urlSaveSamples, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(layerTimes[iLayer].samplesArray)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        
+        // console.log('Result:', response.json());
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+    
+    
+    // try {
+    //     // Replace 'https://example.com/api/images' with the actual URL of the REST endpoint
+    //     var url = SAVE_SAMPLES_URL + "/YOOOO";
+    //     const response = await fetch(url);
+    //     if (!response.ok) {
+    //         // return;
+    //         throw new Error('Network response was not ok ' + response.statusText);
+    //     }
+    //     // Assuming the API returns an array of image URLs
+    //     // const samplesArray = await response.json();
+    //     console.log("samples:", "OKOK");
+    // } catch (error) {
+    //     console.error('Error fetching images:', error);
+    //     // return;
+    // }
 }
 
 function makeColorEffectSelect(iLayer, iColor){
@@ -1933,10 +2007,17 @@ function makeColorEffectSelect(iLayer, iColor){
     return effect_c_select;
 }
 
-
+function removeOptions(selectElement) {
+    var i, L = selectElement.options.length - 1;
+    for(i = L; i >= 0; i--) {
+       selectElement.remove(i);
+    }
+ }
 
 function makeSampleSelect(iLayer, sampleArray){
     var sample_select =  document.getElementById("layer_samples_" + iLayer)
+    removeOptions(sample_select);
+
     for(var j=0; j<sampleArray.length; j++){
         var option = document.createElement("option");
         option.text = sampleArray[j].name;
@@ -1956,6 +2037,8 @@ function loadSample(i, sample){
      clobberOutOnLayer(i, outtime);
 
  }
+
+ 
 
 function setDistortionEffect(i, effect){
     layer_effects[i].effect(effect);
@@ -2287,7 +2370,9 @@ var FILE_URL_1 = "http://localhost:4000/files/DCVS01"
 var FILE_URL_2 = "http://localhost:4000/files/disco"
 var FILE_URL_ROOT = "http://localhost:4000/files"
   
-function handleClipClick(url) {
+var SAVE_SAMPLES_URL = "http://localhost:4000/save"
+  
+async function handleClipClick(url) {
     console.log("clip click:" + url);
     url = "/video/" + url;// + "#t20,25";
 
@@ -2299,11 +2384,43 @@ function handleClipClick(url) {
     }
     // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
 
+    layerTimes[activeLayer].url = url;
+
     //Prevent crash due to requesting non existant currentTime.
     layerTimes[activeLayer].time_last_beat = Date.now();
     sources[activeLayer].video.currentTime = 0;
     sources[activeLayer].src(url);
     sources[activeLayer].pause();
+
+    // Load samples file if there is one.
+    
+    var samplesUrl = url.split('.').slice(0, -1).join('.');
+    samplesUrl += ".json";
+
+    try {
+        // Replace 'https://example.com/api/images' with the actual URL of the REST endpoint
+        const response = await fetch(samplesUrl);
+        
+        if (!response.ok) {
+            return;
+            // throw new Error('Network response was not ok ' + response.statusText);
+        }
+
+        // Assuming the API returns an array of image URLs
+        const samplesArray = await response.json();
+        console.log("samples:", samplesArray);
+
+        layerTimes[activeLayer].samplesArray = samplesArray;
+        
+        makeSampleSelect(activeLayer, samplesArray)
+
+
+    } catch (error) {
+        // console.error('Error fetching images:', error);
+        return;
+    }
+
+
 }
   
 layer_effects[1] = new DistortionEffect2(renderer, { source: sources[1],  fragmentChannel:1,  uuid:"Dist_1"} );
@@ -2462,22 +2579,27 @@ async function fetchAndDisplayImages(filesUrl, domElementId) {
 
         // Iterate over the image URLs and create image elements
         imageUrls.forEach(url => {
-            const div = document.createElement('div');
-            div.className = 'clip';
 
-            const text = document.createElement('span');
-            const msg = url.replace("/video/DCVS01/DCVS01 ","");
-            text.textContent = msg;
- 
-            // const img = document.createElement('img');
-            // img.src = url;
-            // img.alt = 'Image';
-            // div.appendChild(img);
-            div.appendChild(text);
-            // div.onclick = handleClipClick(url);
-            div.onclick = () => handleClipClick(url);
+            var fileExt = url.split('.').pop();
+            if (fileExt != "json"){
 
-            container.appendChild(div);
+                const div = document.createElement('div');
+                div.className = 'clip';
+
+                const text = document.createElement('span');
+                const msg = url.replace("/video/DCVS01/DCVS01 ","");
+                text.textContent = msg;
+    
+                // const img = document.createElement('img');
+                // img.src = url;
+                // img.alt = 'Image';
+                // div.appendChild(img);
+                div.appendChild(text);
+                // div.onclick = handleClipClick(url);
+                div.onclick = () => handleClipClick(url);
+
+                container.appendChild(div);
+            }
         });
     } catch (error) {
         console.error('Error fetching images:', error);

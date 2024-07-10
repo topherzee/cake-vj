@@ -1,0 +1,37 @@
+[
+  {
+    "name": "samples",
+    "in": -1,
+    "out": -1
+  },
+  {
+    "name": "announcer",
+    "in": 6,
+    "out": 7
+  },
+  {
+    "name": "gold pair",
+    "in": 31,
+    "out": 34
+  },
+  {
+    "name": "new1",
+    "in": 0,
+    "out": 159.63
+  },
+  {
+    "name": "new1",
+    "in": 0,
+    "out": 159.63
+  },
+  {
+    "name": "new1",
+    "in": 0,
+    "out": 159.63
+  },
+  {
+    "name": "new1",
+    "in": 0,
+    "out": 159.63
+  }
+]

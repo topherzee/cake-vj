@@ -7,6 +7,8 @@ const app = express();
 const port = 4000;
 
 app.use(cors());
+app.use(express.json());
+
 // const corsOptions = {
 //     origin: 'https://www.nileshblog.tech/',//(https://your-client-app.com)
 //     optionsSuccessStatus: 200,
@@ -96,6 +98,63 @@ app.get('/dirs/*', async (req, res) => {
         res.status(500).json({ error: 'Unable to read directory' });
     }
 });
+
+
+
+// Store samples to a file for each clip.
+app.post('/save', (req, res) => {
+    const jsonContent = req.body;
+    const filePath = req.query.file;
+
+    if (!filePath) {
+        return res.status(400).send({ error: 'Query parameter "file" is required' });
+    }
+
+    // const fullPath = path.resolve(__dirname, filePath);
+    const fullPath = path.join(__dirname, "../public/", filePath);
+    
+    const dir = path.dirname(fullPath);
+
+    // Debugging: Log the file path and JSON content
+    console.log('Full path:', filePath);
+    console.log('Full path:', fullPath);
+    console.log('Directory:', dir);
+    console.log('JSON content:', jsonContent);
+
+
+    // Ensure the directory exists
+    fs.mkdir(dir, { recursive: true }, (err) => {
+        console.log("z");
+        if (err) {
+            console.log("y ", err);
+            return res.status(500).send({ error: 'Failed to create directory' });
+        }
+
+        const jsonString = JSON.stringify(jsonContent, null, 2);
+
+        if (!jsonString) {
+            return res.status(400).send({ error: 'Invalid JSON content' });
+        }
+        console.log("a");
+
+        fs.writeFile(fullPath, jsonString, (err) => {
+            console.log("b");
+            if (err) {
+                console.log("c err", err);
+                return res.status(500).send({ error: 'Failed to write to file' });
+            }
+            console.log("d");
+            res.send({ message: 'File has been saved successfully' });
+        });
+
+
+    });
+
+
+    
+});
+
+
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
