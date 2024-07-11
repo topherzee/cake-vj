@@ -180,7 +180,7 @@ import * as THREE from 'three';
 
   #cake-mixer select {
     font-size: 10px;
-    max-width: 60px;
+    width: 60px;
   }
 
   #cake-mixer {
@@ -244,6 +244,28 @@ import * as THREE from 'three';
 #word_control input{
     width: 60px;
     font-size: 10px
+}
+
+.dialog_hidden{
+    display:none;
+}
+.dialog{
+    z-index: 100;
+    width: 120px;
+    font-size: 14px;
+    position: absolute;
+    border:solid hotpink 2px;
+
+    top: 0; /* Adjust as needed */
+    left: 100%; /* Adjust as needed */
+    margin-left: 0px; /* Optional spacing */
+}
+
+.add_sample_button{
+    position: relative;
+}
+.container{
+    position:relative;
 }
 
 </style>
@@ -343,11 +365,13 @@ import * as THREE from 'three';
                             <canvas id="monitor_4" class="monitor"></canvas>
                             <div class="layer_controls">
                                 <input id="layer_time_4" class="layer_time_input" type="range" min="0" max="1" step="0.01">
-                                <input id="layer_speed_4" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
-
-                                <select id="layer_samples_4"></select>
-                                <button id="layer_new_sample_4"> + </button><br>
                                 
+                                <div class="container">
+                                    <input id="layer_speed_4" class="layer_speed_input" type="range" min="-2" max="2" step="0.01">
+                                    <select id="layer_samples_4"></select>
+                                    <button id="layer_new_sample_4" class="add_sample_button"> + </button>
+                                    <input id="layer_sample_name_4" class="dialog dialog_hidden" value="" placeholder="Sample name">
+                                </div>
                                 
                                 <select id="layer_play_mode_4">
                                     <option value="FORWARD">Forward</option>

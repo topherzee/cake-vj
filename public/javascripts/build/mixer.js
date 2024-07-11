@@ -1915,23 +1915,32 @@ function addLayer(destId, i){
 
     document.getElementById('layer_new_sample_' + i).onclick = async function() {
         console.log("layer_new_sample_ ", i)
-        saveSamples(i);
+
+        var dialog = document.getElementById('layer_sample_name_' +i)
+        dialog.classList.remove("dialog_hidden");
+        dialog.focus();
+        
     }
 
+    document.getElementById('layer_sample_name_' +i).onkeypress = function(e) {
+        console.log("sample name", this.value)
+        // document.getElementById('word_left').textContent = this.value;
+        if (e.keyCode == 13) {
+            // console.log('You pressed a "enter" key in somewhere');  
+            
+            saveSample(i, this.value);
+            this.value = "";
+            var dialog = document.getElementById('layer_sample_name_' +i)
+            dialog.classList.add("dialog_hidden");
+          }
+    }
 
-    // var sampleArray = [
-    //     {"name":"samples", "in": -1, "out": -1},
-    //     {"name":"announcer", "in": 6, "out": 7},
-    //     {"name":"gold pair", "in": 31, "out": 34}
-    // ]
-    // makeSampleSelect(i, sampleArray)
-    
 }
 
 
 
-async function saveSamples(iLayer){
-    console.log("saveSamples")
+async function saveSample(iLayer, newSampleName){
+    console.log("saveSample", iLayer, newSampleName)
 
     //First check if there is new content.
     //First check if there is new content.
@@ -1940,9 +1949,12 @@ async function saveSamples(iLayer){
         console.log("no new sample to save");
         return;
     }
-    let samp = {"name":"new1", "in": parseFloat(lt.in.toFixed(2)), "out": parseFloat(lt.out.toFixed(2))}
-    layerTimes[iLayer].samplesArray.push(samp);
+    var name = (newSampleName != "") ? newSampleName : "samp " + parseInt(lt.in) + "->" + parseInt(lt.out)
+    
+    let samp = {"name":name , "in": parseFloat(lt.in.toFixed(2)), "out": parseFloat(lt.out.toFixed(2))}
+    lt.metadata.samples.push(samp);
 
+    makeSampleSelect(iLayer, lt.metadata.samples)
     
 
     // const data = {
@@ -1952,16 +1964,17 @@ async function saveSamples(iLayer){
     // const file = "test.json";
     var samplesUrl = lt.url.split('.').slice(0, -1).join('.');
     samplesUrl += ".json";
+    console.log("Save url", samplesUrl)
 
-    const urlSaveSamples = `${SAVE_SAMPLES_URL}?file=${encodeURIComponent(samplesUrl)}`;
+    const urlsaveSample = `${SAVE_SAMPLES_URL}?file=${encodeURIComponent(samplesUrl)}`;
     // var url = SAVE_SAMPLES_URL + "/YOOOO";
 
-    fetch(urlSaveSamples, {
+    fetch(urlsaveSample, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(layerTimes[iLayer].samplesArray)
+        body: JSON.stringify(layerTimes[iLayer].metadata)
     })
     .then(response => {
         if (!response.ok) {
@@ -2018,6 +2031,11 @@ function makeSampleSelect(iLayer, sampleArray){
     var sample_select =  document.getElementById("layer_samples_" + iLayer)
     removeOptions(sample_select);
 
+    var option = document.createElement("option");
+    option.text = "Samples";
+    option.value = "-";
+    sample_select.add(option);
+
     for(var j=0; j<sampleArray.length; j++){
         var option = document.createElement("option");
         option.text = sampleArray[j].name;
@@ -2027,10 +2045,18 @@ function makeSampleSelect(iLayer, sampleArray){
     return sample_select;
 }
 
+function clearSampleSelect(iLayer){
+    var sample_select =  document.getElementById("layer_samples_" + iLayer)
+    removeOptions(sample_select);
+}
+
 
 function loadSample(i, sample){
-    // TODO.
+    
      console.log("loadSample", i, sample);
+     if (sample == "-"){
+        return;
+     }
     let intime = parseFloat(sample.split("-")[0]);
     let outtime = parseFloat(sample.split("-")[1]);
     clobberInOnLayer(i, intime);
@@ -2355,8 +2381,8 @@ let layer_effects_color_1 = new Array();
 let layer_effects_color_2 = new Array();
 
 // sources[1]= new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
-sources[1]= new FlexSource(renderer, {src: "/video/dancing/Soul Train Line Dance to Jungle Boogie (1973).mp4", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
-sources[2] = new FlexSource(renderer, {src: "/video/DCVS01/DCVS01 container 02 scape.mp4", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
+sources[1]= new FlexSource(renderer, {src: "", uuid:"Video_1", fragmentChannel:1, elementId:"monitor_1",});
+sources[2] = new FlexSource(renderer, {src: "", uuid:"Video_2", fragmentChannel:1, elementId:"monitor_2"});
 //var sources[2] = new VideoSource(renderer, {src: "/video/DCVS01/DCVS01 wires 03 shift.mp4",});
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
@@ -2372,30 +2398,37 @@ var FILE_URL_ROOT = "http://localhost:4000/files"
   
 var SAVE_SAMPLES_URL = "http://localhost:4000/save"
   
-async function handleClipClick(url) {
-    console.log("clip click:" + url);
-    url = "/video/" + url;// + "#t20,25";
 
-    //TODO Check if type is changed first.
-    var l = activeLayer;
+async function handleClipClick(url) {
+    url = "/video/" + url;// + "#t20,25";
+    loadClip(url, activeLayer)
+}
+
+async function loadClip(url, layer) {
+    console.log("clip click:", layer, url);
+    
+
     var channel = 1;
-    if (activeLayer > 2){
+    if (layer > 2){
         channel = 2;
     }
     // sources[l]= new FlexSource(renderer, {src: url, uuid:"Video_" + l, fragmentChannel:channel, elementId:"monitor_" + l,});
 
-    layerTimes[activeLayer].url = url;
+    layerTimes[layer].url = url;
 
     //Prevent crash due to requesting non existant currentTime.
-    layerTimes[activeLayer].time_last_beat = Date.now();
-    sources[activeLayer].video.currentTime = 0;
-    sources[activeLayer].src(url);
-    sources[activeLayer].pause();
+    layerTimes[layer].time_last_beat = Date.now();
+    sources[layer].video.currentTime = 0;
+    sources[layer].src(url);
+    sources[layer].pause();
 
     // Load samples file if there is one.
     
     var samplesUrl = url.split('.').slice(0, -1).join('.');
     samplesUrl += ".json";
+
+    clearSampleSelect(layer);
+// debugger;
 
     try {
         // Replace 'https://example.com/api/images' with the actual URL of the REST endpoint
@@ -2407,12 +2440,12 @@ async function handleClipClick(url) {
         }
 
         // Assuming the API returns an array of image URLs
-        const samplesArray = await response.json();
-        console.log("samples:", samplesArray);
+        const metadata = await response.json();
+        console.log("metadata:", metadata);
 
-        layerTimes[activeLayer].samplesArray = samplesArray;
+        layerTimes[layer].metadata = metadata;
         
-        makeSampleSelect(activeLayer, samplesArray)
+        makeSampleSelect(layer, metadata.samples)
 
 
     } catch (error) {
@@ -2885,6 +2918,11 @@ function initLayerTimes(lt){
         is_scrubbing: false,
         is_jogging: false,
         jog_start_x: -1,
+
+        url:"",
+        metadata:{
+            samples:[]
+        },
     }
     return lt;
 }
@@ -3045,6 +3083,14 @@ document.getElementById('word_input_right').oninput = function(event) {
 document.getElementById('words_on').onmousedown = function() {
     toggleWords();
 }
+
+// newActiveLayer(1);
+// loadClip("/video/dancing/Soul Train Line Dance to Jungle Boogie (1973).mp4");
+loadClip("/video/DCVS01/DCVS01 container 02 scape.mp4", 2);
+
+loadClip("/video/DCVS01/DCVS01 container 01 ominouslong chop.mp4", 1);
+
+newActiveLayer(1);
 
 }//start
 
