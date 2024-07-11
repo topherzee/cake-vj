@@ -37,7 +37,7 @@ import * as THREE from 'three';
     border:solid 1px grey;
     color:white;
     padding: 0px;
-    width: 15612px;
+    width: 295px;
     margin-bottom: 10px;
 }
 .layer{
@@ -68,8 +68,9 @@ import * as THREE from 'three';
 
 .layer_effects{
     color:white;
-    width:150px;
+    width:130px;
     display:inline-block;
+    text-align:right;
 }
 
 .layer_controls{
@@ -182,6 +183,10 @@ import * as THREE from 'three';
     font-size: 10px;
     width: 60px;
   }
+  #cake-mixer select.select-small {
+    font-size: 10px;
+    width: 36px;
+  }
 
   #cake-mixer {
     font-size: 10px;
@@ -198,10 +203,16 @@ import * as THREE from 'three';
 .left{
     display:inline-block;
 }
-#cake-mixer #bpm_reset{
+#cake-mixer .bpm_color{
     background-color:green;
 }
-#cake-mixer #bpm_reset.phase{
+#cake-mixer .bpm_color.phase{
+    background-color:lightgreen;
+}
+#cake-mixer .bpm_color.active{
+    background-color:lightgreen;
+}
+#cake-mixer .bpm_color:active{
     background-color:lightgreen;
 }
 
@@ -268,6 +279,25 @@ import * as THREE from 'three';
     position:relative;
 }
 
+.shortcut-popup {
+    position: absolute;
+    background-color: hotpink;
+    border: 0px solid black;
+    padding: 1px 1px;
+    font-size: 10px;
+    z-index: 1000;
+    min-width: 12px;
+    text-align: center;
+
+    display: none;
+}
+
+.controls_bank{
+    width: 220px;
+    text-align: right;
+    border: solid 1px grey;
+}
+
 </style>
 </head>
 
@@ -315,9 +345,9 @@ import * as THREE from 'three';
                 <div id="bpmcontrol">
                     <div class="bpm_control">
                         <div id="bpm_display" class="display left" >128</div>
-                        <button id="bpm_tap_btn" class="left"></button>
-                        <input id="bpm_slide" class="left" type="range" min="20" max="160" step="1">
-                        <button id="bpm_reset" class="left"></button>
+                        <button id="bpm_tap_btn" data-key="a" class="left"></button>
+                        <input id="bpm_slide" data-key="w,s" class="left" type="range" min="20" max="160" step="1">
+                        <button id="bpm_reset"  data-key="d" class="bpm_color left"></button>
                     </div>
                 </div>
                 <button id="pause_all">Pause</button>
@@ -360,7 +390,7 @@ import * as THREE from 'three';
                 <div id="channel_2_layers"></div>
 
                 <template id="layer_template">
-                    <div id="layer_4" class="layer">
+                    <div id="layer_4" class="layer" data-key="1,2,3,4">
                         <div class="layer_stack">
                             <canvas id="monitor_4" class="monitor"></canvas>
                             <div class="layer_controls">
@@ -373,25 +403,25 @@ import * as THREE from 'three';
                                     <input id="layer_sample_name_4" class="dialog dialog_hidden" value="" placeholder="Sample name">
                                 </div>
                                 
-                                <select id="layer_play_mode_4">
+                                <select id="layer_play_mode_4" data-key="Arrows">
                                     <option value="FORWARD">Forward</option>
                                     <option value="REVERSE">Reverse</option>
                                     <option value="BOUNCE">Bounce</option>
                                     <option value="RANDOM">Random</option>
                                 </select>
-                                <button id="layer_play_4"> &gt; </button>
+                                <button id="layer_play_4" data-key="Space"> &gt; </button>
                                 <button id="layer_pause_4"> || </button>
-                                <button id="layer_in_4"> i </button>
-                                <button id="layer_out_4"> o </button>
+                                <button id="layer_in_4" data-key="i"> i </button>
+                                <button id="layer_out_4" data-key="o"> o </button>
                                 
                                 <br>
                                 
                                 BPM
-                                <select id="layer_bpm_mode_4">
+                                <select id="layer_bpm_mode_4" data-key="u">
                                     <option value="STRETCH">Stretch</option>
                                     <option value="CUT">Cut</option>
                                 </select>
-                                <select id="layer_bpm_factor_4">
+                                <select id="layer_bpm_factor_4" class="select-small" data-key="j,l">
                                     <option  value="0.02">1/5</option>
                                     <option  value="0.25">1/4</option>
                                     <option  value="0.33333">1/3</option>
@@ -402,7 +432,7 @@ import * as THREE from 'three';
                                     <option value="4.0">4</option>
                                     <option value="5.0">5</option>
                                 </select>
-                                <button id="btn_bpm_layer_4"></button>
+                                <button id="btn_bpm_layer_4" data-key="k" class="bpm_color"></button>
                             </div>
                         </div>
                         <div class="layer_fader">

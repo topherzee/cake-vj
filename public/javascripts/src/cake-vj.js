@@ -1432,4 +1432,58 @@ document.body.onload = function(){
     console.log("--------- cake.js onload ------------");
     
     start();
+    initKeyboardTips();
 };
+
+
+
+// document.addEventListener('DOMContentLoaded', () => {
+function initKeyboardTips(){
+    let showShortcuts = false;
+    const popups = [];
+
+    function toggleShortcuts() {
+        showShortcuts = !showShortcuts;
+        popups.forEach(popup => {
+            popup.style.display = showShortcuts ? 'block' : 'none';
+        });
+    }
+
+    function createPopups() {
+        const controls = document.querySelectorAll('[data-key]');
+        controls.forEach(control => {
+            const key = control.getAttribute('data-key');
+            const popup = document.createElement('div');
+            popup.classList.add('shortcut-popup');
+            popup.textContent = key;
+            document.body.appendChild(popup);
+            popups.push(popup);
+
+            const rect = control.getBoundingClientRect();
+            popup.style.top = `${rect.top - popup.offsetHeight}px`;
+            popup.style.left = `${rect.left}px`;
+        });
+    }
+
+    function positionPopups() {
+        const controls = document.querySelectorAll('[data-key]');
+        controls.forEach((control, index) => {
+            const popup = popups[index];
+            const rect = control.getBoundingClientRect();
+            popup.style.top = `${rect.top - popup.offsetHeight}px`;
+            popup.style.left = `${rect.left}px`;
+        });
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab') {
+            event.preventDefault(); // Prevent default tab behavior
+            toggleShortcuts();
+            if (showShortcuts) {
+                positionPopups();
+            }
+        }
+    });
+
+    createPopups();
+}
