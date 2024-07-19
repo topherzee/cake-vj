@@ -293,6 +293,7 @@ let material_out;//: THREE.MeshBasicMaterial;
         _self.surface3.position.set( -25, -13, 1 );
     
 
+ 
 // FEEDBACK ATTEMPT
 
 
@@ -429,6 +430,24 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
           _self.surface3.rotation.y = Math.PI / 1;
         }else{
           _self.surface3.rotation.y = 0;
+        }
+      }
+
+      _self.setChannels = function(isSwapCenter, isSwapSide){
+        // _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial2);
+        // _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial );
+        // _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial );
+        if (isSwapCenter){
+          _self.surface.material = _self.shaderMaterial2;
+        }else{
+          _self.surface.material = _self.shaderMaterial;
+        }
+        if (isSwapSide){
+          _self.surface2.material = _self.shaderMaterial2;
+          _self.surface3.material = _self.shaderMaterial2;
+        }else{
+          _self.surface2.material = _self.shaderMaterial;
+          _self.surface3.material = _self.shaderMaterial;
         }
       }
 

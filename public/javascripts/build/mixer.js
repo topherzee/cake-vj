@@ -2369,17 +2369,7 @@ function showBpm(f){
         document.getElementById('bpm_reset').classList.remove("phase")
     }
 
-    //Use for SideScreens
-    if (f<bpmLastF){
-        if (isSideFlipMirrorBPM){
-            toggleSideFlipMirror();
-        }
-        if (isSideFlipSameBPM){
-            toggleSideFlipSame();
-        }
-        
-        
-    }
+
     bpmLastF = f;
 }
 
@@ -2576,6 +2566,7 @@ function newActiveLayer(newLayer){
 
 }
 
+
 let isSideFlipMirror = true;
 function toggleSideFlipMirror(){
     isSideFlipMirror = !isSideFlipMirror;
@@ -2601,7 +2592,7 @@ function toggleSideFlipSame(){
     }
 }
 
-//See showBpm()!
+
 let isSideFlipMirrorBPM = false;
 function toggleSideFlipMirrorBPM(){
     isSideFlipMirrorBPM = !isSideFlipMirrorBPM;
@@ -2621,6 +2612,26 @@ function toggleSideFlipSameBPM(){
     }else{
         el.classList.remove("active");
     }
+}
+
+var sideFlipBPMFactor = 1.0;
+
+document.getElementById("side_flip_bpm_factor").oninput = function() {
+    // console.log("layer_bpm_factor_" + i, parseFloat(this.value));
+    // setBpmModeOnLayer(i, this.value)
+    sideFlipBPMFactor = parseFloat(this.value);
+}
+
+
+let isChannelSide = false;
+function toggleChannelSide(){
+    isChannelSide = !isChannelSide;
+    renderer.setChannels(isChannelCenter, isChannelSide);
+}
+let isChannelCenter = false;
+function toggleChannelCenter(){
+    isChannelCenter = !isChannelCenter;
+    renderer.setChannels(isChannelCenter, isChannelSide);
 }
 
 // .onmousedown = function() {
@@ -2945,11 +2956,34 @@ function playVideos () {
         frameCheck = 0;
     }
 
+    
     let r = bpm_tap.render2(1)//layerTime.bpm_factor
 
 
   requestAnimationFrame(playVideos);
 };
+
+//Things besides pllaying videoss..
+var lastSideFlipBeat = 0;
+
+function updateCake () {
+    
+    let rSideFlip = bpm_tap.render2(sideFlipBPMFactor)
+
+    //Use for SideScreens
+    if (rSideFlip < lastSideFlipBeat){
+        if (isSideFlipMirrorBPM){
+            toggleSideFlipMirror();
+        }
+        if (isSideFlipSameBPM){
+            toggleSideFlipSame();
+        }
+    }
+    lastSideFlipBeat = rSideFlip;
+
+  requestAnimationFrame(updateCake);
+};
+
 const PLAY_MODE_FORWARD = "FORWARD";
 const PLAY_MODE_REVERSE = "REVERSE";
 const PLAY_MODE_BOUNCE = "BOUNCE";
@@ -3051,6 +3085,7 @@ function clobberOutOnLayer(i, time){
 
 if (TIME_BY_TOPHER){
     playVideos();
+    updateCake();
 }else{
     //something
 }
@@ -3162,6 +3197,13 @@ document.getElementById('side_flip_mirror_bpm').onmousedown = function() {
 }
 document.getElementById('side_flip_same_bpm').onmousedown = function() {
     toggleSideFlipSameBPM();
+}
+
+document.getElementById('channel_side').onmousedown = function() {
+    toggleChannelSide();
+}
+document.getElementById('channel_center').onmousedown = function() {
+    toggleChannelCenter();
 }
 
 // newActiveLayer(1);
@@ -5783,6 +5825,7 @@ let material_out;//: THREE.MeshBasicMaterial;
         _self.surface3.position.set( -25, -13, 1 );
     
 
+ 
 // FEEDBACK ATTEMPT
 
 
@@ -5919,6 +5962,24 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
           _self.surface3.rotation.y = Math.PI / 1;
         }else{
           _self.surface3.rotation.y = 0;
+        }
+      }
+
+      _self.setChannels = function(isSwapCenter, isSwapSide){
+        // _self.surface =new THREE.Mesh( _self.flatGeometry,_self.shaderMaterial2);
+        // _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial );
+        // _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial );
+        if (isSwapCenter){
+          _self.surface.material = _self.shaderMaterial2;
+        }else{
+          _self.surface.material = _self.shaderMaterial;
+        }
+        if (isSwapSide){
+          _self.surface2.material = _self.shaderMaterial2;
+          _self.surface3.material = _self.shaderMaterial2;
+        }else{
+          _self.surface2.material = _self.shaderMaterial;
+          _self.surface3.material = _self.shaderMaterial;
         }
       }
 
