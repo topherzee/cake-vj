@@ -120,6 +120,7 @@ import * as THREE from 'three';
     width: 800px;
     border: solid 1px lightblue;
     padding: 5px;
+   
 }
 
 .sources{
@@ -163,7 +164,8 @@ import * as THREE from 'three';
     background-color: #933;
     border: 0;
     border-bottom: solid 2px #511;
-    width: 18px;
+    padding: 1px;
+    min-width: 18px;
     height: 18px;
   }
   #cake-mixer button:active, #cake-mixer button.active {
@@ -296,6 +298,8 @@ import * as THREE from 'three';
     width: 220px;
     text-align: right;
     border: solid 1px grey;
+    display:inline-block;
+    vertical-align: top;
 }
 
 </style>
@@ -375,6 +379,17 @@ import * as THREE from 'three';
                     <input id="word_input_main" value="NOT">
                     <input id="word_input_right" value="BORDERS">
                     <button id="words_on"> w </button>
+                </div>
+
+                <div id="side_flip_control">
+                    SIDE SCREENS
+                    <button id="side_flip_mirror" data-key=""> &hyphen;&gt; &lt;&hyphen;</button>
+                    <button id="side_flip_mirror_bpm" data-key="" class="bpm_color"></button>
+
+                    <button id="side_flip_same" data-key=""> &hyphen;&gt; &hyphen;&gt;</button>
+                    <button id="side_flip_same_bpm" data-key="" class="bpm_color"></button>
+
+
                 </div>
 
             </div>
@@ -482,6 +497,12 @@ import * as THREE from 'three';
    <script>
 
     
+
+
+
+
+
+
    </script>
     
     <div id="mixer">

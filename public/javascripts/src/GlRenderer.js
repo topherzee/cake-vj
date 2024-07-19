@@ -413,8 +413,24 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
 
 
 
+      _self.setRight = function(direction){
+        // _self.flatGeometry2.rotateY(Math.PI / 1);
+        // return;
 
+        if (direction ==0){
+          _self.surface2.rotation.y = Math.PI / 1;
+        }else{
+          _self.surface2.rotation.y = 0;
+        }
+      }
 
+      _self.setLeft = function(direction){
+        if (direction ==0){
+          _self.surface3.rotation.y = Math.PI / 1;
+        }else{
+          _self.surface3.rotation.y = 0;
+        }
+      }
 
 
 

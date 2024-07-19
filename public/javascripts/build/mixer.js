@@ -2360,7 +2360,7 @@ document.getElementById('layer_fader_4').oninput = function() {
 //  console.log("Unknown Source:", options.src)
 // }
 
-
+var bpmLastF = 0;
 function showBpm(f){
     //console.log("yooooooooooo", i);
     if (f<0.1){
@@ -2368,6 +2368,19 @@ function showBpm(f){
     }else{
         document.getElementById('bpm_reset').classList.remove("phase")
     }
+
+    //Use for SideScreens
+    if (f<bpmLastF){
+        if (isSideFlipMirrorBPM){
+            toggleSideFlipMirror();
+        }
+        if (isSideFlipSameBPM){
+            toggleSideFlipSame();
+        }
+        
+        
+    }
+    bpmLastF = f;
 }
 
 
@@ -2562,6 +2575,59 @@ function newActiveLayer(newLayer){
     el.classList.add("active");
 
 }
+
+let isSideFlipMirror = true;
+function toggleSideFlipMirror(){
+    isSideFlipMirror = !isSideFlipMirror;
+    console.log("toggleSideFlipMirror")
+    if (isSideFlipMirror){
+        renderer.setLeft(0);
+        renderer.setRight(0);
+    }else{
+        renderer.setLeft(1);
+        renderer.setRight(1);
+    }
+}
+let isSideFlipSame = true;
+function toggleSideFlipSame(){
+    isSideFlipSame = !isSideFlipSame;
+    console.log("toggleSideFlipSame")
+    if (isSideFlipSame){
+        renderer.setLeft(0);
+        renderer.setRight(1);
+    }else{
+        renderer.setLeft(1);
+        renderer.setRight(0);
+    }
+}
+
+//See showBpm()!
+let isSideFlipMirrorBPM = false;
+function toggleSideFlipMirrorBPM(){
+    isSideFlipMirrorBPM = !isSideFlipMirrorBPM;
+    let el = document.getElementById('side_flip_mirror_bpm');
+    if (isSideFlipMirrorBPM){
+        el.classList.add("active");
+    }else{
+        el.classList.remove("active");
+    }
+}
+let isSideFlipSameBPM = false;
+function toggleSideFlipSameBPM(){
+    isSideFlipSameBPM = !isSideFlipSameBPM;
+    let el = document.getElementById('side_flip_same_bpm');
+    if (isSideFlipSameBPM){
+        el.classList.add("active");
+    }else{
+        el.classList.remove("active");
+    }
+}
+
+// .onmousedown = function() {
+//     toggleSideFlipMirrorBPM();
+// }
+
+
 
 let isWords = false;
 function toggleWords(){
@@ -3082,6 +3148,20 @@ document.getElementById('word_input_right').oninput = function(event) {
 
 document.getElementById('words_on').onmousedown = function() {
     toggleWords();
+}
+
+document.getElementById('side_flip_mirror').onmousedown = function() {
+    toggleSideFlipMirror();
+}
+document.getElementById('side_flip_same').onmousedown = function() {
+    toggleSideFlipSame();
+}
+
+document.getElementById('side_flip_mirror_bpm').onmousedown = function() {
+    toggleSideFlipMirrorBPM();
+}
+document.getElementById('side_flip_same_bpm').onmousedown = function() {
+    toggleSideFlipSameBPM();
 }
 
 // newActiveLayer(1);
@@ -5823,8 +5903,24 @@ material_in.uniforms.u_resolution.value = new THREE.Vector2(_self.width , _self.
 
 
 
+      _self.setRight = function(direction){
+        // _self.flatGeometry2.rotateY(Math.PI / 1);
+        // return;
 
+        if (direction ==0){
+          _self.surface2.rotation.y = Math.PI / 1;
+        }else{
+          _self.surface2.rotation.y = 0;
+        }
+      }
 
+      _self.setLeft = function(direction){
+        if (direction ==0){
+          _self.surface3.rotation.y = Math.PI / 1;
+        }else{
+          _self.surface3.rotation.y = 0;
+        }
+      }
 
 
 
