@@ -1692,6 +1692,170 @@ function Behaviour( _renderer, options ) {
   */
 }
 
+
+function playVideosClosure(sources, layerTimes, bpm_tap, c){
+
+    const FRAME_DELAY = 1 / 60;
+    let frameCheck = 0;
+
+    function playVideos () {
+        if (frameCheck==0){
+            updateVideo(sources[1], "1", layerTimes[1]);
+            // updateVideo(sources[2], "2", layerTimes[2]);
+    
+            // updateVideo(sources[3], "3", layerTimes[3]);
+            // updateVideo(sources[4], "4", layerTimes[4]);
+        }
+        frameCheck++;
+        if (frameCheck == 3){
+            frameCheck = 0;
+        }
+        
+        let r = bpm_tap.render2(1)//layerTime.bpm_factor
+    
+        requestAnimationFrame(playVideos);
+    };
+
+    playVideos();
+
+
+function bps(bpm){
+    return 1 / (bpm / 60.0);
+}
+
+function updateVideo(source, layer, layerTime){
+
+    let video = source.video;
+    if (video == null || source.type2 != "Video" ){//|| ! video.hasOwnProperty("duration")){
+        return;
+    }
+    if (layerTime.is_playing==false){
+        return;
+    }
+    if (layerTime.is_scrubbing==true){
+        return;
+    }
+
+    // -----------------------------------------------------------------------------
+    // DETERMINE DURATION & TIMERATIO (Including in and out.)
+
+    // TIMERATIO is the ratio in actual playback time.
+
+    var timeRatio;
+
+    let end = video.duration;
+    if (layerTime.out != -1){
+        end = layerTime.out;
+    }
+    let start = 0;
+    if (layerTime.in != -1){
+        start = layerTime.in;
+    }
+    let duration = (end - start);
+
+
+    
+    // Note: time_last_beat is the last time it reset / jumped.
+
+    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+   
+    //Include speed? maybe time_elapsed += speed?
+
+    if (layerTime.just_reversed){
+        // just_reversed - actually means that the play mode changed just now.
+
+        // If direction changed, to prevent a jump in time, 
+        // We need to reset layerTime.time_last_beat. Because all timing is based on that time point.
+
+        layerTime.just_reversed = false;
+        var timeRatioR = time_elapsed / duration;
+
+        let ratioChunk = (1 - timeRatioR) - timeRatioR;
+
+        layerTime.time_last_beat -= (ratioChunk *  duration) * 1000;
+
+        //recalc.
+        time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+    }
+
+    // Check for a loop - // Check if BPM wants to create a beat.
+
+    let loopFlag = false;
+
+    if (!layerTime.bpm_on ){
+
+        if (time_elapsed > duration){
+            console.log("loop normal")
+            loopFlag = true;
+        }
+
+    }else if (layerTime.bpm_on ){
+        
+        if (bpm_tap.render2(layerTime.bpm_factor) < layerTime.last_bpm_tap_render){
+            // it looped.
+            console.log("loop BPM")
+            loopFlag = true;
+        }
+    }
+    layerTime.last_bpm_tap_render = bpm_tap.render2(layerTime.bpm_factor);
+
+    
+    if (loopFlag){
+        time_elapsed = 0;
+        layerTime.time_last_beat = Date.now();
+        layerTime.is_bounce_reverse = !layerTime.is_bounce_reverse;
+    }
+    loopFlag = false;
+
+
+    // Set timeRatio.
+    timeRatio = time_elapsed / duration;
+
+    if (layerTime.bpm_on){
+
+        if (layerTime.bpm_mode == c.BPM_MODE_STRETCH){
+            timeRatio = bpm_tap.render2(layerTime.bpm_factor) ;
+        } 
+
+    }
+
+
+    // ? What if it is a cut, but the sample time is shorter than beat?
+
+    // -----------------------------------------------------------------------------
+    // Use DURATION & TIMERATIO in function.
+
+    let time = 0;
+    if (layerTime.play_mode == c.PLAY_MODE_FORWARD){
+        time = start + timeRatio * duration;
+
+    } else if (layerTime.play_mode == c.PLAY_MODE_REVERSE){
+        time = start + (1.0 -timeRatio) * duration;
+
+    } else if (layerTime.play_mode == c.PLAY_MODE_BOUNCE){
+
+        if (layerTime.is_bounce_reverse == false){
+            time = start + timeRatio * duration;
+        }else{
+            time = start + (1.0 -timeRatio) * duration;
+        }
+        
+    }
+
+    if (isFinite(time)){
+        video.currentTime = time;
+    }else{
+        console.log("warn updateVideo infinite time", time)
+    }
+    
+    //full time scrubber - not the current loop or anything
+    var scrubber = document.getElementById('layer_time_' + layer );
+    if (scrubber){
+        scrubber.value = video.currentTime / video.duration;
+    }
+}
+
+}//closure
 /*
 * Example V4
 *
@@ -1724,6 +1888,7 @@ var renderer = new GlRenderer({element: 'glcanvas', width:800, height:450});
 // const composer = new EffectComposer( renderer.glrenderer );
 // import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
   
+
 
 function addLayer(destId, i){
     let template = document.getElementById("layer_template");
@@ -1858,8 +2023,7 @@ function addLayer(destId, i){
 
 //todo
     document.getElementById('layer_speed_' + i).oninput = function() {
-        // rate3 = this.value 
-        // TODO use layerTime.
+        layerTimes[i].speed = parseFloat(this.value);
         console.log("layer_speed >>",i,  parseFloat(this.value) )
     }
 
@@ -2227,16 +2391,16 @@ window.addEventListener("keydown", (e) => {
 
     //TODO - also update the controls.
     if (e.code == "ArrowLeft"){
-        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_REVERSE)
+        setControlPlayModeOnLayer(activeLayer, c.PLAY_MODE_REVERSE)
     }
     if (e.code == "ArrowRight"){
-        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_FORWARD)
+        setControlPlayModeOnLayer(activeLayer, c.PLAY_MODE_FORWARD)
     }
     if (e.code == "ArrowDown"){
-        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_BOUNCE)
+        setControlPlayModeOnLayer(activeLayer, c.PLAY_MODE_BOUNCE)
     }
     if (e.code == "ArrowUp"){
-        setControlPlayModeOnLayer(activeLayer, PLAY_MODE_RANDOM)
+        setControlPlayModeOnLayer(activeLayer, c.PLAY_MODE_RANDOM)
     }
 
     if (e.code == "Space"){
@@ -2277,9 +2441,9 @@ window.addEventListener("keydown", (e) => {
     }
     if (e.code == "KeyU"){
         //toggle mode.
-        let newMode = BPM_MODE_STRETCH;
-        if (layerTimes[activeLayer].bpm_mode == BPM_MODE_STRETCH){
-            newMode = BPM_MODE_CUT;
+        let newMode = c.BPM_MODE_STRETCH;
+        if (layerTimes[activeLayer].bpm_mode == c.BPM_MODE_STRETCH){
+            newMode = c.BPM_MODE_CUT;
         }
         let el = document.getElementById("layer_bpm_mode_" + activeLayer);
         el.value = newMode;
@@ -2772,161 +2936,6 @@ clip_bank_select_2.oninput = function() {
     // TIMING
 // ---------------------------------------------------------------------------
 
-const FRAME_DELAY = 1 / 60;
-let frameCheck = 0;
-let rate1 = 0.5;
-let rate2 = 0.1;
-let rate3 = 0.1;
-let rate4 = 0.1;
-
-// let time1 = 0.0;
-// let time2 = 0.0;
-// let time3 = 0.0;
-
-function bps(bpm){
-    return 1 / (bpm / 60.0);
-}
-function updateVideo(source, rate, layer, layerTime){
-    let video = source.video;
-    if (video == null || source.type2 != "Video" ){//|| ! video.hasOwnProperty("duration")){
-        return;
-    }
-    if (layerTime.is_playing==false){
-        return;
-    }
-    if (layerTime.is_scrubbing==true){
-        return;
-    }
-
-    // DETERMINE DURATION & TIMERATIO
-    let end = video.duration;
-    if (layerTime.out != -1){
-        end = layerTime.out;
-    }
-    let start = 0;
-    if (layerTime.in != -1){
-        start = layerTime.in;
-    }
-    let duration = end - start;
-
-
-    
-    // Note: time_last_beat is the last time it reset / jumped.
-
-    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
-   
-    //Include speed? maybe time_elapsed += speed?
-
-    if (layerTime.just_reversed){
-        
-        layerTime.just_reversed = false;
-        let timeRatio = time_elapsed / duration;
-        // console.log("duration", duration.toFixed(2))
-        // console.log("time_elapsed", time_elapsed.toFixed(2))
-        // console.log("just reversed - ratio", timeRatio.toFixed(2))
-
-        let ratioGoal = (1 - timeRatio)
-        let ratioChunk = (1 - timeRatio) - timeRatio;
-        // console.log("ratioGoal", ratioGoal.toFixed(2))
-        // console.log("ratioChunk", ratioChunk.toFixed(2))
-        // console.log("secondsToMove", (ratioChunk *  duration).toFixed(2))
-        
-        // debugger;
-        layerTime.time_last_beat -= (ratioChunk *  duration) * 1000;
-
-        //recalc.
-        
-        time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
-        timeRatio = time_elapsed / duration;
-        // console.log("time_elapsed", time_elapsed.toFixed(2))
-        // console.log("just reversed - ratio", timeRatio.toFixed(2))
-    }
-
-    let loopFlag = false;
-    if (time_elapsed > duration){
-        console.log("loop normal")
-        loopFlag = true;
-
-    }
-    //Check if BPM wants to create a beat.
-    if (layerTime.bpm_on && layerTime.bpm_mode == BPM_MODE_CUT){
-        
-        if (bpm_tap.render2(layerTime.bpm_factor) < layerTime.last_bpm_tap_render){
-            // it looped.
-            console.log("loop BPM")
-            loopFlag = true;
-        }
-    }
-    layerTime.last_bpm_tap_render = bpm_tap.render2(layerTime.bpm_factor);
-
-    if (loopFlag){
-        time_elapsed = 0;
-        layerTime.time_last_beat = Date.now();
-        layerTime.is_bounce_reverse = !layerTime.is_bounce_reverse;
-    }
-    loopFlag = false;
-
-
-    let timeRatio = time_elapsed / duration;
-
-    if (layerTime.bpm_on){
-
-        if (layerTime.bpm_mode == BPM_MODE_STRETCH){
-            timeRatio = bpm_tap.render2(layerTime.bpm_factor) ;
-        } else if(layerTime.bpm_mode == BPM_MODE_CUT) {
-
-        }
-        
-        //todo for bounce - still need to know when it loops.
-    }
-
-    // USE IN FUNCTION
-    let time = 0;
-    if (layerTime.play_mode == PLAY_MODE_FORWARD){
-        time = start + timeRatio * duration;
-    } else if (layerTime.play_mode == PLAY_MODE_REVERSE){
-        time = start + (1.0 -timeRatio) * duration;
-    } else if (layerTime.play_mode == PLAY_MODE_BOUNCE){
-
-       if (layerTime.is_bounce_reverse == false){
-        time = start + timeRatio * duration;
-       }else{
-        time = start + (1.0 -timeRatio) * duration;
-       }
-        
-    }
-
-
-
-    // let time_in_range = start + time_elapsed;
-    // if (layerTime.bpm_on){
-    //     time_in_range = start + bpm_tap.render() * duration;
-    // }else{
-    //     if (time_elapsed > duration){
-    //         time_elapsed = 0;
-    //         layerTime.time_last_beat = Date.now();
-    //         console.log("loop")
-    //     }
-    // }
-
-    //BPM - Map the beat to whatever in and out and speed stuff going on above.
-    //Based on time_in_range and duration.
-        // time_in_range = 
-    // video.currentTime = time_in_range;
-
-    if (isFinite(time)){
-        video.currentTime = time;
-    }else{
-        console.log("warn updateVideo infinite time")
-    }
-    
-    
-    //full time scrubber - not the current loop or anything
-    var scrubber = document.getElementById('layer_time_' + layer );
-    if (scrubber){
-        scrubber.value = video.currentTime / video.duration;
-    }
-}
 function setPlayModeOnLayer(i, mode){
 
     if (mode != layerTimes[i].play_mode){
@@ -2936,32 +2945,11 @@ function setPlayModeOnLayer(i, mode){
 }
 function setBpmModeOnLayer(i, mode){
 
-    // if (mode != layerTimes[i].play_mode){
-    //     layerTimes[i].just_reversed = true;
-    // }
     layerTimes[i].bpm_mode = mode;
     console.log("setBpmModeOnLayer", i, mode)
 }
 
-function playVideos () {
-    if (frameCheck==0){
-        updateVideo(sources[1], rate1, "1", layerTimes[1]);
-        updateVideo(sources[2], rate2, "2", layerTimes[2]);
 
-        updateVideo(sources[3], rate3, "3", layerTimes[3]);
-        updateVideo(sources[4], rate4, "4", layerTimes[4]);
-    }
-    frameCheck++;
-    if (frameCheck == 3){
-        frameCheck = 0;
-    }
-
-    
-    let r = bpm_tap.render2(1)//layerTime.bpm_factor
-
-
-  requestAnimationFrame(playVideos);
-};
 
 //Things besides pllaying videoss..
 var lastSideFlipBeat = 0;
@@ -2984,13 +2972,14 @@ function updateCake () {
   requestAnimationFrame(updateCake);
 };
 
-const PLAY_MODE_FORWARD = "FORWARD";
-const PLAY_MODE_REVERSE = "REVERSE";
-const PLAY_MODE_BOUNCE = "BOUNCE";
-const PLAY_MODE_RANDOM = "RANDOM";
+var c = {};
+c.PLAY_MODE_FORWARD = "FORWARD";
+c.PLAY_MODE_REVERSE = "REVERSE";
+c.PLAY_MODE_BOUNCE = "BOUNCE";
+c.LAY_MODE_RANDOM = "RANDOM";
 
-const BPM_MODE_STRETCH = "STRETCH";
-const BPM_MODE_CUT = "CUT";
+c.BPM_MODE_STRETCH = "STRETCH";
+c.BPM_MODE_CUT = "CUT";
 
 
 
@@ -3003,9 +2992,10 @@ let layerTimes = new Array();
 function initLayerTimes(lt){
     lt =  {
         is_playing:false,
-        play_mode: PLAY_MODE_FORWARD,
+        play_mode: c.PLAY_MODE_FORWARD,
+        speed: 1.0,
         bpm_on: false,
-        bpm_mode: BPM_MODE_STRETCH,
+        bpm_mode: c.BPM_MODE_STRETCH,
         bpm_factor: 1.0,
 
         in:-1,
@@ -3026,7 +3016,7 @@ function initLayerTimes(lt){
     }
     return lt;
 }
-//play_mode: PLAY_MODE_FORWARD,
+//play_mode: c.PLAY_MODE_FORWARD,
 for (let i=1; i<5; i++){
     layerTimes[i] =initLayerTimes(layerTimes[i]);
 }
@@ -3084,7 +3074,7 @@ function clobberOutOnLayer(i, time){
 
 
 if (TIME_BY_TOPHER){
-    playVideos();
+    playVideosClosure(sources, layerTimes, bpm_tap, c);
     updateCake();
 }else{
     //something
