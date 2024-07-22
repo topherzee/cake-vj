@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Circle Effect with Three.js and dat.GUI</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <script>
+        // Setup scene, camera, renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Parameters object
+        const params = {
+            density: 0.5, // 0 to 1
+            chaos: 0.5, // 0 to 1
+            energy: 0.5, // 0 to 1
+            colorfulness: 0.5 // 0 to 1
+        };
+
+        const rings = [];
+        let arcMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+
+        function createRing(radius, thickness, arcCount) {
+            const ringGroup = new THREE.Group();
+            for (let i = 0; i < arcCount; i++) {
+                const arcLength = THREE.MathUtils.lerp(0.1, 2 * Math.PI, Math.random() * params.chaos);
+                const arcAngle = Math.random() * 2 * Math.PI;
+                const geometry = new THREE.RingGeometry(radius, radius + thickness, 32, 1, arcAngle, arcLength);
+                const material = params.colorfulness > 0 ? new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, side: THREE.DoubleSide }) : arcMaterial;
+                const arc = new THREE.Mesh(geometry, material);
+                ringGroup.add(arc);
+            }
+            scene.add(ringGroup);
+            rings.push(ringGroup);
+        }
+
+        function initRings() {
+            rings.forEach(ring => scene.remove(ring));
+            rings.length = 0;
+
+            const baseRadius = 1;
+            const baseThickness = 0.1;
+            const ringCount = Math.floor(5 + 10 * params.density);
+            for (let i = 0; i < ringCount; i++) {
+                const radius = baseRadius * (i + 1);
+                const thickness = baseThickness * (params.chaos > 0.5 ? Math.random() * 2 : 1);
+                const arcCount = Math.floor(10 + 30 * params.density);
+                createRing(radius, thickness, arcCount);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            rings.forEach((ringGroup, index) => {
+                ringGroup.rotation.z += 0.01 * params.energy;
+                ringGroup.children.forEach(arc => {
+                    arc.material.opacity = Math.abs(Math.sin(Date.now() * 0.001 * params.energy)) * params.colorfulness;
+                    arc.material.transparent = true;
+                });
+            });
+            renderer.render(scene, camera);
+        }
+
+        camera.position.z = 10;
+        initRings();
+        animate();
+
+        // dat.GUI setup
+        const gui = new dat.GUI();
+        gui.add(params, 'density', 0, 1).onChange(initRings);
+        gui.add(params, 'chaos', 0, 1).onChange(initRings);
+        gui.add(params, 'energy', 0, 1);
+        gui.add(params, 'colorfulness', 0, 1).onChange(initRings);
+    </script>
+</body>
+</html>

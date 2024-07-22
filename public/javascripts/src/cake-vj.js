@@ -166,7 +166,7 @@ function addLayer(destId, i){
 //todo
     document.getElementById('layer_speed_' + i).oninput = function() {
         layerTimes[i].speed = parseFloat(this.value);
-        console.log("layer_speed >>",i,  parseFloat(this.value) )
+        // console.log("layer_speed >>",i,  parseFloat(this.value) )
     }
 
 
@@ -1136,6 +1136,8 @@ function initLayerTimes(lt){
         is_playing:false,
         play_mode: c.PLAY_MODE_FORWARD,
         speed: 1.0,
+        lastSpeed: 1.0,
+
         bpm_on: false,
         bpm_mode: c.BPM_MODE_STRETCH,
         bpm_factor: 1.0,

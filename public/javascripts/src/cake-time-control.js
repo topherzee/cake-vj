@@ -60,10 +60,22 @@ function updateVideo(source, layer, layerTime){
     let duration = (end - start);
 
 
-    
-    // Note: time_last_beat is the last time it reset / jumped.
+    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000  * layerTime.speed;
 
-    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+    //TRY TO FACTOR IN SPEED _ BUT ALLWAYS CHANGS POSITION
+    // Note: time_last_beat is the last time it reset / jumped.
+    // let lt = layerTime;
+    // let time_elapsed = (Date.now() - lt.time_last_beat) / 1000 * lt.speed;
+
+    // if (lt.speed != lt.lastSpeed){
+    //     //compensate
+    //     let last_time_elapsed = (Date.now() - lt.time_last_beat) / 1000  * lt.speed;
+    //     layerTime.time_last_beat += (time_elapsed - last_time_elapsed) * 1000;
+
+    //     //recalc.
+    //     time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000  * lt.speed;
+    // }
+    // lt.lastSpeed = lt.speed;
    
     //Include speed? maybe time_elapsed += speed?
 
@@ -159,6 +171,8 @@ function updateVideo(source, layer, layerTime){
     if (scrubber){
         scrubber.value = video.currentTime / video.duration;
     }
+
+    
 }
 
 }//closure

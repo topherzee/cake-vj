@@ -1754,10 +1754,22 @@ function updateVideo(source, layer, layerTime){
     let duration = (end - start);
 
 
-    
-    // Note: time_last_beat is the last time it reset / jumped.
+    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000  * layerTime.speed;
 
-    let time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000;
+    //TRY TO FACTOR IN SPEED _ BUT ALLWAYS CHANGS POSITION
+    // Note: time_last_beat is the last time it reset / jumped.
+    // let lt = layerTime;
+    // let time_elapsed = (Date.now() - lt.time_last_beat) / 1000 * lt.speed;
+
+    // if (lt.speed != lt.lastSpeed){
+    //     //compensate
+    //     let last_time_elapsed = (Date.now() - lt.time_last_beat) / 1000  * lt.speed;
+    //     layerTime.time_last_beat += (time_elapsed - last_time_elapsed) * 1000;
+
+    //     //recalc.
+    //     time_elapsed = (Date.now() - layerTime.time_last_beat) / 1000  * lt.speed;
+    // }
+    // lt.lastSpeed = lt.speed;
    
     //Include speed? maybe time_elapsed += speed?
 
@@ -1853,6 +1865,8 @@ function updateVideo(source, layer, layerTime){
     if (scrubber){
         scrubber.value = video.currentTime / video.duration;
     }
+
+    
 }
 
 }//closure
@@ -2024,7 +2038,7 @@ function addLayer(destId, i){
 //todo
     document.getElementById('layer_speed_' + i).oninput = function() {
         layerTimes[i].speed = parseFloat(this.value);
-        console.log("layer_speed >>",i,  parseFloat(this.value) )
+        // console.log("layer_speed >>",i,  parseFloat(this.value) )
     }
 
 
@@ -2994,6 +3008,8 @@ function initLayerTimes(lt){
         is_playing:false,
         play_mode: c.PLAY_MODE_FORWARD,
         speed: 1.0,
+        lastSpeed: 1.0,
+
         bpm_on: false,
         bpm_mode: c.BPM_MODE_STRETCH,
         bpm_factor: 1.0,
