@@ -95,6 +95,9 @@ import * as THREE from 'three';
   .layer_effect_input{
     width: 120px;
   }
+  .layer_effect_input_short{
+    width: 40px;
+  }
 
  input[type="range"]{
     margin:0px !important;
@@ -478,18 +481,26 @@ import * as THREE from 'three';
                             </div>
 
                             <div class="layer_effect">
-                                C-EFFECT 2  <select id="layer_effect_c2_4"></select>
+                                C-FX 2  <select id="layer_effect_c2_4"></select>
                                 <input id="layer_effect_c2_p1_4" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
                             </div>
                             <div class="layer_effect">
-                                C-EFFECT 1  <select id="layer_effect_c1_4"></select>
+                                C-FX 1  <select id="layer_effect_c1_4"></select>
                                 <input id="layer_effect_c1_p1_4" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
                             </div>
 
                             <div class="layer_effect">
-                                D-EFFECT  <select id="layer_effect_d_4"></select>
+                                D-FX  <select id="layer_effect_d_4"></select>
                                 <input id="layer_effect_d_p1_4" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
                                 <input id="layer_effect_d_p2_4" class="layer_effect_input" type="range" min="0" max="1" step="0.01">
+                            </div>
+                            <div class="layer_effect">
+                                ZOOM 
+                                <input id="layer_zoom_4" class="layer_effect_input_short" type="range" min="0" max="2" step="0.01"><br/>
+                               PAN
+                                <input id="layer_pan_x_4" class="layer_effect_input_short" type="range" min="-1" max="1" step="0.01">
+                                <input id="layer_pan_y_4" class="layer_effect_input_short" type="range" value="0" min="-1" max="1" step="0.01">
+                                
                             </div>
                         </div>
                        

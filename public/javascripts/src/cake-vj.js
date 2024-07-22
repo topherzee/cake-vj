@@ -66,6 +66,18 @@ function addLayer(destId, i){
         console.log("color layer_effect 2 " + i + " >>", parseFloat(this.value) )
     }
 
+    document.getElementById('layer_zoom_' + i).oninput = function() {
+        sources[i].zoom(parseFloat(this.value));
+    }
+    document.getElementById('layer_pan_x_' + i).oninput = function() {
+        sources[i].panX(parseFloat(this.value));
+    }
+    document.getElementById('layer_pan_y_' + i).oninput = function() {
+        sources[i].panY(1.0 - parseFloat(this.value));
+    }
+
+
+
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
         toggleLayerBpmLock(i);
     }

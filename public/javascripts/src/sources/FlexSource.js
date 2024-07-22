@@ -101,6 +101,10 @@ function FlexSource(renderer, options) {
   var gifElement;
   var alpha = 1;
 
+  var zoom = 1.0;
+  var panX = 0.0;
+  var panY = 0.0;
+
   // add to renderer
   renderer.add(_self)
 
@@ -298,30 +302,61 @@ function FlexSource(renderer, options) {
       }
     }
 
-    let ratio = raw_ratio / image_ratio;
-    let widthS = texture_size / ratio;
-    let offsetS = (texture_size - widthS) /2;
-
-
     if (_self.bypass = false) return    
 
 
-    if (_self.type2 == "Video" ){
-      if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
-        canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
+    // let zoom = 0.5;
+
+    // let ratio = raw_ratio / image_ratio;
+
+    // let widthX = texture_size / ratio ;
+    // let widthY = texture_size;
+
+    // let offsetX = (texture_size - widthX) / 2 ;
+    // let offsetY = 0;
+
+    // Define the new variables
+// let zoom = 1.5; // Adjust the zoom level (1.0 means no zoom, >1.0 zooms in, <1.0 zooms out)
+// let shiftX = 0.1; // Shift along the X axis 0-1
+// let shiftY = 0; // Shift along the Y axis 0-1
+let shiftScale = texture_size;
+
+// Existing variables
+let ratio = raw_ratio / image_ratio;
+let widthX = (texture_size / ratio) * zoom;
+let widthY = texture_size * zoom;
+
+// Adjust the offsets to include the shift values
+// let offsetX = (texture_size - widthX) / 2 + shiftX;
+// let offsetY = shiftY;
+let offsetX = (texture_size - widthX) / 2 + panX * zoom * shiftScale;
+let offsetY = (texture_size - widthY) / 2 + panY * zoom* shiftScale;
+
+
+    function drawit(vElement){
+      //image, dx, dy, dWidth, dHeight
+      canvasElementContext.drawImage( vElement, offsetX, offsetY, widthX, widthY );  // send last image
         
-        if ( videoTexture ) videoTexture.needsUpdate = true;
-      }else{
-        canvasElementContext.drawImage( videoElement, offsetS, 0, widthS, texture_size );  // send last image
-        if ( videoTexture ) videoTexture.needsUpdate = true;
-      }
+      if ( videoTexture ){
+        videoTexture.needsUpdate = true;
+      } 
+    }
+
+    if (_self.type2 == "Video" ){
+      // if ( videoElement && videoElement.readyState.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.seeking) {
+      //    drawit(videoElement);
+      // }else{
+      //   drawit(videoElement);
+      // }
+      canvasElementContext.clearRect(0, 0, texture_size, texture_size);
+      drawit(videoElement);
     }
     if (_self.type2 == "Image" ){
       try {
-        canvasElementContext.clearRect(0, 0, 1024, 1024);
-        // canvasElementContext.drawImage( supergifelement.get_canvas(), offsetS, 0, widthS, 1024  );
-        canvasElementContext.drawImage( _self.newImg, offsetS, 0, widthS, 1024  );
-        if ( videoTexture ) videoTexture.needsUpdate = true;
+        canvasElementContext.clearRect(0, 0, texture_size, texture_size);
+        // canvasElementContext.drawImage( supergifelement.get_canvas(), offsetS, 0, widthS, texture_size  );
+        drawit(_self.newImg);
+        
         // if ( gifTexture ) gifTexture.needsUpdate = true;
       }catch(e){
         // not yet
@@ -440,6 +475,16 @@ function FlexSource(renderer, options) {
       videoElement.currentTime = _num;
       return _num;
     }
+  }
+
+  _self.zoom = function( f ) {
+    zoom = f;
+  }
+  _self.panX = function( f ) {
+    panX = f;
+  }
+  _self.panY = function( f ) {
+    panY = f;
   }
 
 
