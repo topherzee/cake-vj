@@ -1701,10 +1701,10 @@ function playVideosClosure(sources, layerTimes, bpm_tap, c){
     function playVideos () {
         if (frameCheck==0){
             updateVideo(sources[1], "1", layerTimes[1]);
-            // updateVideo(sources[2], "2", layerTimes[2]);
+            updateVideo(sources[2], "2", layerTimes[2]);
     
-            // updateVideo(sources[3], "3", layerTimes[3]);
-            // updateVideo(sources[4], "4", layerTimes[4]);
+            updateVideo(sources[3], "3", layerTimes[3]);
+            updateVideo(sources[4], "4", layerTimes[4]);
         }
         frameCheck++;
         if (frameCheck == 3){
@@ -1953,6 +1953,10 @@ function addLayer(destId, i){
     document.getElementById('btn_bpm_layer_' + i).onclick = function() {
         toggleLayerBpmLock(i);
     }
+    document.getElementById('zoom_sound_' + i).onclick = function() {
+        toggleLayerZoomSoundLock(i);
+    }
+
 
     document.getElementById('layer_play_' + i).onclick = function() {
         console.log("play ", i)
@@ -2275,6 +2279,18 @@ function toggleLayerBpmLock(i){
 
     let el = document.getElementById('btn_bpm_layer_' + i);
     if (layerTimes[i].bpm_on){
+        el.classList.add("active");
+    }else{
+        el.classList.remove("active");
+    }
+}
+function toggleLayerZoomSoundLock(i){
+    layerTimes[i].zoom_sound_on = ! layerTimes[i].zoom_sound_on;
+
+    console.log("zoom sound layer " + i + " >>", layerTimes[i].zoom_sound_on )
+
+    let el = document.getElementById('zoom_sound_' + i);
+    if (layerTimes[i].zoom_sound_on){
         el.classList.add("active");
     }else{
         el.classList.remove("active");
@@ -3026,6 +3042,8 @@ function initLayerTimes(lt){
         bpm_mode: c.BPM_MODE_STRETCH,
         bpm_factor: 1.0,
 
+        zoom_sound_on: false,
+
         in:-1,
         out:-1,
         time_last_beat: Date.now(), 
@@ -3236,137 +3254,144 @@ newActiveLayer(1);
 
 //MUSIC VISUALLIZER
 
-        //document.body.addEventListener("click", init);
+document.body.addEventListener("click", init);
 
-        // async function init() {
-        // document.body.removeEventListener("click", init);
+async function init() {
+        document.body.removeEventListener("click", init);
 
-        // const audioCtx = new AudioContext();
-        // const voiceSelect = document.getElementById("voice");
-        // let source;
+        const audioCtx = new AudioContext();
+        const voiceSelect = document.getElementById("voice");
+        let source;
 
-        // // Set up the different audio nodes we will use for the app
-        // const analyser = audioCtx.createAnalyser();
-        // analyser.minDecibels = -90;
-        // analyser.maxDecibels = -10;
-        // analyser.smoothingTimeConstant = 0.60;//.85
+        // Set up the different audio nodes we will use for the app
+        const analyser = audioCtx.createAnalyser();
+        analyser.minDecibels = -90;
+        analyser.maxDecibels = -10;
+        analyser.smoothingTimeConstant = 0.80;//.85
 
-        // const gainNode = audioCtx.createGain();
+        const gainNode = audioCtx.createGain();
 
-        // // Set up canvas context for visualizer
-        // const canvas = document.getElementById("music_canvas");
-        // const canvasCtx = canvas.getContext("2d");
+        // Set up canvas context for visualizer
+        const canvas = document.getElementById("music_canvas");
+        const canvasCtx = canvas.getContext("2d");
 
-        // //   const intendedWidth = document.querySelector(".wrapper").clientWidth;
-        // //   canvas.setAttribute("width", intendedWidth);
+        //   const intendedWidth = document.querySelector(".wrapper").clientWidth;
+        //   canvas.setAttribute("width", intendedWidth);
 
-        // let drawVisual;
+        let drawVisual;
 
-        // // Main block for doing the audio recording
-        // const constraints = { audio: true };
-        // navigator.mediaDevices
-        //     .getUserMedia(constraints)
-        //     .then((stream) => {
-        //         source = audioCtx.createMediaStreamSource(stream);
-        //         source.connect(gainNode);
-        //         gainNode.connect(analyser)
+        // Main block for doing the audio recording
+        const constraints = { audio: true };
+        navigator.mediaDevices
+            .getUserMedia(constraints)
+            .then((stream) => {
+                source = audioCtx.createMediaStreamSource(stream);
+                source.connect(gainNode);
+                gainNode.connect(analyser)
 
-        //     visualize();
+            visualize();
             
-        //     })
-        //     .catch(function (err) {
-        //     console.error("The following gUM error occured: " + err);
-        //     });
+            })
+            .catch(function (err) {
+            console.error("The following gUM error occured: " + err);
+            });
 
 
 
 
-        // function visualize() {
-        //     const WIDTH = canvas.width;
-        //     const HEIGHT = canvas.height / 2;
+        function visualize() {
+            const WIDTH = canvas.width;
+            const HEIGHT = canvas.height / 2;
 
-        //     analyser.fftSize = 256;
-        //     const bufferLengthAlt = analyser.frequencyBinCount;
-        //     console.log("bufferLengthAlt", bufferLengthAlt);
+            analyser.fftSize = 256;
+            const bufferLengthAlt = analyser.frequencyBinCount;
+            console.log("bufferLengthAlt", bufferLengthAlt);
 
-        //     // See comment above for Float32Array()
-        //     const dataArrayAlt = new Uint8Array(bufferLengthAlt);
+            // See comment above for Float32Array()
+            const dataArrayAlt = new Uint8Array(bufferLengthAlt);
 
-        //     canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+            canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
-        //     let bins = [
-        //         {min: 0.02, max: 0.05},
-        //         {min: 0.2, max: 0.25},
-        //         {min: 0.5, max: 0.99},
-        //     ]
+            let bins = [
+                {min: 0.02, max: 0.05},
+                {min: 0.2, max: 0.25},
+                {min: 0.5, max: 0.99},
+            ]
 
-        //     const drawAlt = () => {
-        //         drawVisual = requestAnimationFrame(drawAlt);
+            const drawAlt = () => {
+                drawVisual = requestAnimationFrame(drawAlt);
 
-        //         analyser.getByteFrequencyData(dataArrayAlt);
+                analyser.getByteFrequencyData(dataArrayAlt);
 
-        //         canvasCtx.fillStyle = "rgb(0, 0, 0)";
-        //         canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+                canvasCtx.fillStyle = "rgb(0, 0, 0)";
+                canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
 
-        //         const barWidth = (WIDTH / bufferLengthAlt) * 2.5;
-        //         let x = 0;
+                const barWidth = (WIDTH / bufferLengthAlt) * 2.5;
+                let x = 0;
 
-        //         for (let i = 0; i < bufferLengthAlt; i++) {
-        //             const barHeight = dataArrayAlt[i];
+                for (let i = 0; i < bufferLengthAlt; i++) {
+                    const barHeight = dataArrayAlt[i];
 
-        //             canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
-        //             canvasCtx.fillRect(
-        //             x,
-        //             HEIGHT - barHeight / 2,
-        //             barWidth,
-        //             barHeight / 2
-        //             );
+                    canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
+                    canvasCtx.fillRect(
+                    x,
+                    HEIGHT - barHeight / 2,
+                    barWidth,
+                    barHeight / 2
+                    );
 
-        //             x += barWidth + 1;
-        //         }
+                    x += barWidth + 1;
+                }
 
 
-        //         //LOW MID HIGH
-        //         for (let b=0; b<bins.length; b++){
-        //             bins[b].total = 0;
-        //             bins[b].count = 0;
-        //         }
+                //LOW MID HIGH
+                for (let b=0; b<bins.length; b++){
+                    bins[b].total = 0;
+                    bins[b].count = 0;
+                }
 
-        //         for (let i = 0; i < bufferLengthAlt; i++) {
-        //             const ratio = i / bufferLengthAlt;
+                for (let i = 0; i < bufferLengthAlt; i++) {
+                    const ratio = i / bufferLengthAlt;
 
-        //             for (let b=0; b<bins.length; b++){
-        //                 if (ratio >= bins[b].min && ratio <= bins[b].max){
-        //                     bins[b].total = bins[b].total + dataArrayAlt[i];
-        //                     bins[b].count++;
-        //                 }
-        //             }
-        //         }
-        //         for (let b=0; b<bins.length; b++){
+                    for (let b=0; b<bins.length; b++){
+                        if (ratio >= bins[b].min && ratio <= bins[b].max){
+                            bins[b].total = bins[b].total + dataArrayAlt[i];
+                            bins[b].count++;
+                        }
+                    }
+                }
+                for (let b=0; b<bins.length; b++){
 
-        //             bins[b].average = bins[b].total / bins[b].count
-        //             const barHeight = bins[b].average;
-        //             // const barHeight = bins[b].total ;
-        //             const barWidth = (bins[b].max - bins[b].min) * WIDTH;
-        //             x = bins[b].min * WIDTH ;
+                    bins[b].average = bins[b].total / bins[b].count
+                    const barHeight = bins[b].average;
+                    // const barHeight = bins[b].total ;
+                    const barWidth = (bins[b].max - bins[b].min) * WIDTH;
+                    x = bins[b].min * WIDTH ;
 
-        //             canvasCtx.fillStyle = "rgb(50," + (barHeight + 100) + ",50)";
-        //             canvasCtx.fillRect(
-        //             x,
-        //             HEIGHT - barHeight / 2,
-        //             barWidth,
-        //             barHeight / 2
-        //             );
-        //         }
-        //         //NOW THAT WE HAVE THE SIGNAL - what to do with it?
-        //         sources[1].zoom(1.0 + bins[0].average/100)
-        //     };
+                    canvasCtx.fillStyle = "rgb(50," + (barHeight + 100) + ",50)";
+                    canvasCtx.fillRect(
+                    x,
+                    HEIGHT - barHeight / 2,
+                    barWidth,
+                    barHeight / 2
+                    );
+                }
+                //NOW THAT WE HAVE THE SIGNAL - what to do with it?
+                //sources[1].zoom(1.0 + bins[0].average/100)
+                for (let layer=1; layer<5; layer++){
+                    let lt = layerTimes[layer];
+                    if (lt.zoom_sound_on){
+                        sources[layer].zoom(1.0 + bins[0].average/100)
+                    }
+                }
 
-        //     drawAlt();
+            };
+
+            drawAlt();
             
-        // }
+        }
 
-        // }
+    }
 
 }//start
 

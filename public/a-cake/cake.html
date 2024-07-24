@@ -221,6 +221,14 @@ import * as THREE from 'three';
     background-color:lightgreen;
 }
 
+#cake-mixer .sound_color{
+    background-color:purple;
+}
+#cake-mixer .sound_color.active{
+    background-color:rgb(194, 121, 194);
+}
+
+
 #words{
     position: fixed;
     top: 0px;
@@ -500,7 +508,8 @@ import * as THREE from 'three';
                             </div>
                             <div class="layer_effect">
                                 ZOOM 
-                                <input id="layer_zoom_4" class="layer_effect_input_short" type="range" min="0" max="2" step="0.01"><br/>
+                                <input id="layer_zoom_4" class="layer_effect_input_short" type="range" min="0" max="2" step="0.01">
+                                <button id="zoom_sound_4" data-key="" class="sound_color"></button><br/>
                                PAN
                                 <input id="layer_pan_x_4" class="layer_effect_input_short" type="range" min="-1" max="1" step="0.01">
                                 <input id="layer_pan_y_4" class="layer_effect_input_short" type="range" value="0" min="-1" max="1" step="0.01">
