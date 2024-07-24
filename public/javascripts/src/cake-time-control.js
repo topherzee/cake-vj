@@ -7,10 +7,10 @@ function playVideosClosure(sources, layerTimes, bpm_tap, c){
     function playVideos () {
         if (frameCheck==0){
             updateVideo(sources[1], "1", layerTimes[1]);
-            // updateVideo(sources[2], "2", layerTimes[2]);
+            updateVideo(sources[2], "2", layerTimes[2]);
     
-            // updateVideo(sources[3], "3", layerTimes[3]);
-            // updateVideo(sources[4], "4", layerTimes[4]);
+            updateVideo(sources[3], "3", layerTimes[3]);
+            updateVideo(sources[4], "4", layerTimes[4]);
         }
         frameCheck++;
         if (frameCheck == 3){
