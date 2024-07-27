@@ -724,9 +724,9 @@ sources[2] = new FlexSource(renderer, {src: "", uuid:"Video_2", fragmentChannel:
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
 // var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
-sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
-sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
-// sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
+sources[3] = new FlexSource(renderer, {src: "/video/test-images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
+// sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+sources[4]= new FlexSource(renderer, {src: "/video/test-images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
 
 
 var FILE_URL_1 = "http://localhost:4000/files/DCVS01"

@@ -2596,9 +2596,9 @@ sources[2] = new FlexSource(renderer, {src: "", uuid:"Video_2", fragmentChannel:
 // var sources[2] = new GifSource(renderer, {src: "/images/640X480.gif",});
 // var sources[2] = new VideoSource(renderer, {src: "/video/disco/ymca-nosound.mp4", uuid:"Video_2"});
 // var sources[3] = new VideoSource(renderer, {src: "/video/disco/september-nosound.mp4",});
-sources[3] = new FlexSource(renderer, {src: "/images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
-sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
-// sources[4]= new FlexSource(renderer, {src: "/images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
+sources[3] = new FlexSource(renderer, {src: "/video/test-images/640X480.gif", fragmentChannel:2,  uuid:"Gif_3", elementId:"monitor_3",});
+// sources[4]= new FlexSource(renderer, {src: "/images/animal.gif", fragmentChannel:2, uuid:"Gif_4" , elementId:"monitor_4", });
+sources[4]= new FlexSource(renderer, {src: "/video/test-images/smily1.png", fragmentChannel:2, uuid:"Source_4" , elementId:"monitor_4", });
 
 
 var FILE_URL_1 = "http://localhost:4000/files/DCVS01"
@@ -5970,7 +5970,7 @@ let material_out;//: THREE.MeshBasicMaterial;
        const ASPECT_RATIO = 16.0 / 9.0;
        const PLANE_WIDTH = 71;
        const PLANE_HEIGHT = PLANE_WIDTH / ASPECT_RATIO;
-       const SIDE_SCALE = 0.3;
+       const SIDE_SCALE = 0.39;
        const SEGMENTS = 10;
        
     
@@ -5992,19 +5992,21 @@ let material_out;//: THREE.MeshBasicMaterial;
       
        
 
-
+const SCREEN_X = 28;
+const SCREEN_Y = -11.5;
+const SCREEN_Z = 0;
         // RIGHT SCREEN
         _self.flatGeometry2 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.flatGeometry2.rotateY(Math.PI / 1);
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        _self.surface2.position.set( 25, -13, 1 );
+        _self.surface2.position.set( SCREEN_X, SCREEN_Y, SCREEN_Z );
     
        // LEFT SCREEN
         _self.flatGeometry3 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        _self.surface3.position.set( -25, -13, 1 );
+        _self.surface3.position.set( -SCREEN_X, SCREEN_Y, SCREEN_Z );
     
 
  

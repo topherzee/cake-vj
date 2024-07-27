@@ -256,7 +256,7 @@ let material_out;//: THREE.MeshBasicMaterial;
        const ASPECT_RATIO = 16.0 / 9.0;
        const PLANE_WIDTH = 71;
        const PLANE_HEIGHT = PLANE_WIDTH / ASPECT_RATIO;
-       const SIDE_SCALE = 0.3;
+       const SIDE_SCALE = 0.39;
        const SEGMENTS = 10;
        
     
@@ -278,19 +278,21 @@ let material_out;//: THREE.MeshBasicMaterial;
       
        
 
-
+const SCREEN_X = 28;
+const SCREEN_Y = -11.5;
+const SCREEN_Z = 0;
         // RIGHT SCREEN
         _self.flatGeometry2 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.flatGeometry2.rotateY(Math.PI / 1);
         _self.surface2 = new THREE.Mesh( _self.flatGeometry2, _self.shaderMaterial2 );
         _self.surface2.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        _self.surface2.position.set( 25, -13, 1 );
+        _self.surface2.position.set( SCREEN_X, SCREEN_Y, SCREEN_Z );
     
        // LEFT SCREEN
         _self.flatGeometry3 = new THREE.CircleGeometry( PLANE_HEIGHT/2 ,SEGMENTS * 30);
         _self.surface3 = new THREE.Mesh( _self.flatGeometry3, _self.shaderMaterial2 );
         _self.surface3.scale.set( SIDE_SCALE, SIDE_SCALE, SIDE_SCALE );
-        _self.surface3.position.set( -25, -13, 1 );
+        _self.surface3.position.set( -SCREEN_X, SCREEN_Y, SCREEN_Z );
     
 
  
